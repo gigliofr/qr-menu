@@ -5,12 +5,34 @@ import (
 	"net/http"
 	"os"
 
+	"qr-menu/analytics"
+	"qr-menu/api"
 	"qr-menu/handlers"
+	"qr-menu/logger"
+	"qr-menu/middleware"
 
 	"github.com/gorilla/mux"
 )
 
 func main() {
+	// Inizializza il sistema di logging
+	if err := logger.Init(logger.INFO, "logs"); err != nil {
+		log.Fatalf("Errore nell'inizializzazione del logger: %v", err)
+	}
+	defer logger.Close()
+
+	// Inizializzazione del sistema analytics (usa il singleton globale)
+	_ = analytics.GetAnalytics()
+
+	// Pulizia automatica dei log vecchi (mantiene ultimi 30 giorni)
+	if err := logger.CleanOldLogs(30); err != nil {
+		logger.Warn("Errore nella pulizia dei log", map[string]interface{}{"error": err.Error()})
+	}
+
+	logger.Info("Avvio QR Menu System", map[string]interface{}{
+		"version": "2.0.0",
+		"mode":    "production",
+	})
 	// Crea le directory necessarie se non esistono
 	createDirectories()
 
@@ -19,6 +41,11 @@ func main() {
 
 	// Route per servire file statici
 	r.PathPrefix("/static/").Handler(http.StripPrefix("/static/", http.FileServer(http.Dir("./static/"))))
+
+	// Configura i middleware di logging e sicurezza
+	r.Use(middleware.LoggingMiddleware)
+	r.Use(middleware.SecurityMiddleware) 
+	r.Use(middleware.AuthMiddleware)
 
 	// Route pubbliche (non richiedono autenticazione)
 	r.HandleFunc("/", handlers.HomeHandler).Methods("GET")
@@ -32,8 +59,13 @@ func main() {
 	// Route per servire i QR codes (pubblico)
 	r.PathPrefix("/qr/").Handler(http.StripPrefix("/qr/", http.FileServer(http.Dir("./static/qrcodes/"))))
 
+	// Route per tracking analytics (pubblico)
+	r.HandleFunc("/api/track/share", handlers.TrackShareHandler).Methods("POST")
+
 	// Route protette (richiedono autenticazione)
 	r.HandleFunc("/admin", handlers.RequireAuth(handlers.AdminHandler)).Methods("GET")
+	r.HandleFunc("/admin/analytics", handlers.RequireAuth(handlers.AnalyticsDashboardHandler)).Methods("GET")
+	r.HandleFunc("/api/analytics", handlers.RequireAuth(handlers.AnalyticsAPIHandler)).Methods("GET")
 	r.HandleFunc("/admin/menu/create", handlers.RequireAuth(handlers.CreateMenuHandler)).Methods("GET")
 	r.HandleFunc("/admin/menu/create", handlers.RequireAuth(handlers.CreateMenuPostHandler)).Methods("POST")
 	r.HandleFunc("/admin/menu/{id}", handlers.RequireAuth(handlers.EditMenuHandler)).Methods("GET")
@@ -56,17 +88,26 @@ func main() {
 	r.HandleFunc("/api/menu", handlers.RequireAuth(handlers.CreateMenuAPIHandler)).Methods("POST")
 	r.HandleFunc("/api/menu/{id}/generate-qr", handlers.RequireAuth(handlers.GenerateQRHandler)).Methods("POST")
 
+	// Setup delle nuove API REST v2
+	api.SetupAPIRoutes(r)
+
 	// Avvia il server
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = "8080"
 	}
 
-	log.Printf("🚀 Server QR Menu System avviato su http://localhost:%s", port)
-	log.Printf("🔐 Login: http://localhost:%s/login", port)
-	log.Printf("📝 Registrazione: http://localhost:%s/register", port)
-	log.Printf("⚙️  Interfaccia admin: http://localhost:%s/admin", port)
-	log.Fatal(http.ListenAndServe(":"+port, r))
+	logger.Info("Server QR Menu System avviato", map[string]interface{}{
+		"port":       ":" + port,
+		"admin_url":  "http://localhost:" + port + "/admin",
+		"login_url":  "http://localhost:" + port + "/login",
+		"api_docs":   "http://localhost:" + port + "/api/v1/docs",
+		"api_health": "http://localhost:" + port + "/api/v1/health",
+	})
+
+	if err := http.ListenAndServe(":"+port, r); err != nil {
+		logger.Fatal("Errore nell'avvio del server", map[string]interface{}{"error": err.Error()})
+	}
 }
 
 func createDirectories() {

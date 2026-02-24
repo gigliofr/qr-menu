@@ -9,8 +9,10 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
+	"qr-menu/logger"
 	"qr-menu/models"
 
 	"github.com/google/uuid"
@@ -39,6 +41,21 @@ func init() {
 
 	// Carica restaurants esistenti
 	loadRestaurantsFromStorage()
+
+	logger.Info("Sistema di autenticazione inizializzato", map[string]interface{}{
+		"session_max_age":    86400 * 7,
+		"restaurants_loaded": len(restaurants),
+	})
+
+	logger.Info("Sistema di autenticazione inizializzato", map[string]interface{}{
+		"session_max_age":    86400 * 7,
+		"restaurants_loaded": len(restaurants),
+	})
+
+	logger.Info("Sistema di autenticazione inizializzato", map[string]interface{}{
+		"session_max_age": 86400 * 7,
+		"restaurants_loaded": len(restaurants),
+	})
 }
 
 // getOrCreateSessionKey genera o recupera una chiave segreta per le sessioni
@@ -151,8 +168,18 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	username := r.FormValue("username")
+	username := strings.TrimSpace(r.FormValue("username"))
 	password := r.FormValue("password")
+
+	ip := getClientIP(r)
+	userAgent := r.UserAgent()
+
+	// Log tentativo di login
+	logger.AuditLog("LOGIN_ATTEMPT", "authentication", 
+		"Tentativo di login", "", ip, userAgent, 
+		map[string]interface{}{
+			"username": username,
+		})
 
 	// Trova il ristorante per username o email
 	var restaurant *models.Restaurant
@@ -164,6 +191,14 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if restaurant == nil || !checkPassword(restaurant.PasswordHash, password) {
+		// Log login fallito
+		logger.SecurityEvent("LOGIN_FAILED", "Credenziali non valide", 
+			"", ip, userAgent, 
+			map[string]interface{}{
+				"username": username,
+				"reason":   "invalid_credentials",
+			})
+
 		data := struct {
 			Error string
 		}{
@@ -188,6 +223,14 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	// Aggiorna ultimo login
 	restaurant.LastLogin = time.Now()
 	saveRestaurantToStorage(restaurant)
+
+	// Log login riuscito
+	logger.AuditLog("LOGIN_SUCCESS", "authentication", 
+		"Login completato con successo", restaurant.ID, ip, userAgent, 
+		map[string]interface{}{
+			"username":        username,
+			"restaurant_name": restaurant.Name,
+		})
 
 	// Redirect all'admin
 	http.Redirect(w, r, "/admin", http.StatusFound)
@@ -435,4 +478,18 @@ func loadSessionsFromStorage() {
 	}
 
 	log.Printf("Caricate %d sessioni attive dallo storage", len(sessions_map))
+}
+
+// getClientIP estrae l'IP reale del client considerando proxy e load balancer
+func getClientIP(r *http.Request) string {
+	headers := []string{"X-Forwarded-For", "X-Real-Ip", "X-Client-Ip"}
+	
+	for _, header := range headers {
+		ip := r.Header.Get(header)
+		if ip != "" {
+			return ip
+		}
+	}
+	
+	return r.RemoteAddr
 }

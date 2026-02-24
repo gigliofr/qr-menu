@@ -21,6 +21,7 @@ import (
 	"time"
 
 	"qr-menu/models"
+	"qr-menu/analytics"
 
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
@@ -509,6 +510,20 @@ func GetActiveMenuHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Track della scansione QR code
+	go func() {
+		userAgent := r.Header.Get("User-Agent")
+		clientIP := getClientIP(r)
+		event := analytics.QRScanEvent{
+			RestaurantID: restaurant.ID,
+			MenuID:       restaurant.ActiveMenuID,
+			Timestamp:    time.Now(),
+			UserIP:       clientIP,
+			UserAgent:    userAgent,
+		}
+		analytics.GetAnalytics().TrackQRScan(event)
+	}()
+
 	// Redirect al menu attivo
 	http.Redirect(w, r, fmt.Sprintf("/menu/%s", restaurant.ActiveMenuID), http.StatusFound)
 }
@@ -533,6 +548,21 @@ func PublicMenuHandler(w http.ResponseWriter, r *http.Request) {
 		renderTemplate(w, "404", data)
 		return
 	}
+
+	// Track della visualizzazione del menu
+	go func() {
+		userAgent := r.Header.Get("User-Agent")
+		clientIP := getClientIP(r)
+		event := analytics.ViewEvent{
+			RestaurantID: menu.RestaurantID,
+			MenuID:       menuID,
+			Timestamp:    time.Now(),
+			UserIP:       clientIP,
+			UserAgent:    userAgent,
+			Referrer:     r.Header.Get("Referer"),
+		}
+		analytics.GetAnalytics().TrackView(event)
+	}()
 
 	// Ottieni i dati del ristorante
 	restaurant, exists := restaurants[menu.RestaurantID]
@@ -1243,6 +1273,21 @@ func ShareMenuHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Track dell'accesso alla pagina di condivisione
+	go func() {
+		userAgent := r.Header.Get("User-Agent")
+		clientIP := getClientIP(r)
+		event := analytics.ShareEvent{
+			RestaurantID: menu.RestaurantID,
+			MenuID:       menuID,
+			Platform:     "share_page",
+			Timestamp:    time.Now(),
+			UserIP:       clientIP,
+			UserAgent:    userAgent,
+		}
+		analytics.GetAnalytics().TrackShare(event)
+	}()
+
 	// Ottieni dati del ristorante
 	restaurant, exists := restaurants[menu.RestaurantID]
 	if !exists {
@@ -1273,4 +1318,129 @@ func ShareMenuHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	renderTemplate(w, "share_menu", data)
+}
+
+// AnalyticsDashboardHandler gestisce la dashboard analytics
+func AnalyticsDashboardHandler(w http.ResponseWriter, r *http.Request) {
+	// Verifica autenticazione
+	session, err := getSessionFromRequest(r)
+	if err != nil || session.RestaurantID == "" {
+		http.Redirect(w, r, "/login", http.StatusFound)
+		return
+	}
+
+	// Parametri per filtrare i dati
+	days := 7 // default 7 giorni
+	if daysParam := r.URL.Query().Get("days"); daysParam != "" {
+		if parsed, err := strconv.Atoi(daysParam); err == nil && parsed > 0 && parsed <= 365 {
+			days = parsed
+		}
+	}
+
+	// Ottieni dati analytics
+	dashboardData := analytics.GetAnalytics().GetDashboardData(session.RestaurantID, days)
+
+	// Ottieni informazioni ristorante
+	var restaurant *models.Restaurant
+	for _, menu := range menus {
+		if menu.RestaurantID == session.RestaurantID {
+			// Cerca il ristorante per ID
+			if rest, exists := restaurants[menu.RestaurantID]; exists {
+				restaurant = rest
+				break
+			}
+		}
+	}
+
+	if restaurant == nil {
+		// Crea un restaurant di default se non esiste
+		restaurant = &models.Restaurant{
+			Name:        "Il Tuo Ristorante",
+			Address:     "Indirizzo non specificato",
+			Phone:       "Telefono non specificato",
+			Email:       "Email non specificata",
+		}
+	}
+
+	// Prepara i dati per il template
+	data := struct {
+		Restaurant *models.Restaurant
+		Analytics  map[string]interface{}
+	}{
+		Restaurant: restaurant,
+		Analytics:  dashboardData,
+	}
+
+	// Render del template
+	renderTemplate(w, "analytics_dashboard", data)
+}
+
+// AnalyticsAPIHandler gestisce le richieste API per gli analytics
+func AnalyticsAPIHandler(w http.ResponseWriter, r *http.Request) {
+	// Verifica autenticazione
+	session, err := getSessionFromRequest(r)
+	if err != nil || session.RestaurantID == "" {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusUnauthorized)
+		json.NewEncoder(w).Encode(map[string]string{"error": "Non autorizzato"})
+		return
+	}
+
+	// Parametri
+	days := 7
+	if daysParam := r.URL.Query().Get("days"); daysParam != "" {
+		if parsed, err := strconv.Atoi(daysParam); err == nil && parsed > 0 && parsed <= 365 {
+			days = parsed
+		}
+	}
+
+	// Ottieni dati analytics
+	dashboardData := analytics.GetAnalytics().GetDashboardData(session.RestaurantID, days)
+
+	// Restituisci JSON
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(dashboardData)
+}
+
+// TrackShareHandler tracka le condivisioni specifiche per piattaforma
+func TrackShareHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != "POST" {
+		http.Error(w, "Solo POST allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	var requestData struct {
+		MenuID   string `json:"menu_id"`
+		Platform string `json:"platform"`
+	}
+
+	if err := json.NewDecoder(r.Body).Decode(&requestData); err != nil {
+		http.Error(w, "Invalid JSON", http.StatusBadRequest)
+		return
+	}
+
+	// Track della condivisione
+	go func() {
+		userAgent := r.Header.Get("User-Agent")
+		clientIP := getClientIP(r)
+		
+		// Trova il menu per ottenere il restaurantID
+		var restaurantID string
+		if menu, exists := menus[requestData.MenuID]; exists {
+			restaurantID = menu.RestaurantID
+		}
+		
+		event := analytics.ShareEvent{
+			RestaurantID: restaurantID,
+			MenuID:       requestData.MenuID,
+			Platform:     requestData.Platform,
+			Timestamp:    time.Now(),
+			UserIP:       clientIP,
+			UserAgent:    userAgent,
+		}
+		analytics.GetAnalytics().TrackShare(event)
+	}()
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]string{"status": "success"})
 }

@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analytics Dashboard - {{.Restaurant.Name}}</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+        
+        .dashboard-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .dashboard-header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+        
+        .dashboard-title {
+            font-size: 2.5em;
+            font-weight: 700;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 10px;
+        }
+        
+        .dashboard-subtitle {
+            color: #666;
+            font-size: 1.1em;
+            margin-bottom: 20px;
+        }
+        
+        .date-selector {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            margin-top: 20px;
+        }
+        
+        .date-btn {
+            padding: 8px 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            background: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+        
+        .date-btn.active {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border-color: transparent;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .stat-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 16px;
+            padding: 25px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 48px rgba(0, 0, 0, 0.15);
+        }
+        
+        .stat-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            margin-bottom: 15px;
+        }
+        
+        .icon-views { background: linear-gradient(135deg, #ff6b6b, #ee5a52); }
+        .icon-shares { background: linear-gradient(135deg, #4ecdc4, #44a08d); }
+        .icon-qr { background: linear-gradient(135deg, #45b7d1, #96c93d); }
+        .icon-devices { background: linear-gradient(135deg, #f093fb, #f5576c); }
+        
+        .stat-number {
+            font-size: 2.5em;
+            font-weight: 700;
+            color: #2d3748;
+            margin-bottom: 5px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .stat-label {
+            color: #718096;
+            font-weight: 500;
+            margin-bottom: 10px;
+        }
+        
+        .stat-change {
+            font-size: 0.9em;
+            font-weight: 600;
+            padding: 4px 8px;
+            border-radius: 6px;
+            display: inline-block;
+        }
+        
+        .change-positive {
+            background: #c6f6d5;
+            color: #22543d;
+        }
+        
+        .change-negative {
+            background: #fed7d7;
+            color: #c53030;
+        }
+        
+        .charts-container {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+        
+        .chart-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 16px;
+            padding: 25px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+        
+        .chart-title {
+            font-size: 1.3em;
+            font-weight: 600;
+            margin-bottom: 20px;
+            color: #2d3748;
+        }
+        
+        .chart-canvas {
+            max-height: 400px;
+        }
+        
+        .insights-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 20px;
+        }
+        
+        .insight-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 16px;
+            padding: 25px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+        
+        .insight-title {
+            font-size: 1.2em;
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: #2d3748;
+        }
+        
+        .insight-list {
+            list-style: none;
+        }
+        
+        .insight-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        
+        .insight-item:last-child {
+            border-bottom: none;
+        }
+        
+        .insight-label {
+            font-weight: 500;
+        }
+        
+        .insight-value {
+            font-weight: 600;
+            color: #667eea;
+        }
+        
+        .realtime-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(34, 197, 94, 0.1);
+            color: #16a34a;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            font-weight: 500;
+        }
+        
+        .pulse {
+            width: 8px;
+            height: 8px;
+            background: #16a34a;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0% {
+                transform: scale(0.95);
+                box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7);
+            }
+            70% {
+                transform: scale(1);
+                box-shadow: 0 0 0 10px rgba(34, 197, 94, 0);
+            }
+            100% {
+                transform: scale(0.95);
+                box-shadow: 0 0 0 0 rgba(34, 197, 94, 0);
+            }
+        }
+        
+        .export-controls {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        
+        .export-btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .export-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+        
+        @media (max-width: 768px) {
+            .charts-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .dashboard-title {
+                font-size: 2em;
+            }
+            
+            .stats-grid {
+                grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-container">
+        <div class="dashboard-header">
+            <h1 class="dashboard-title">📊 Analytics Dashboard</h1>
+            <p class="dashboard-subtitle">{{.Restaurant.Name}} - Analisi delle performance</p>
+            <div class="realtime-indicator">
+                <div class="pulse"></div>
+                Dati in tempo reale
+            </div>
+            
+            <div class="date-selector">
+                <span>Periodo:</span>
+                <button class="date-btn active" onclick="loadData(7)">7 giorni</button>
+                <button class="date-btn" onclick="loadData(30)">30 giorni</button>
+                <button class="date-btn" onclick="loadData(90)">90 giorni</button>
+            </div>
+            
+            <div class="export-controls">
+                <button class="export-btn" onclick="exportToPDF()">📄 Esporta PDF</button>
+                <button class="export-btn" onclick="exportToCSV()">📊 Esporta CSV</button>
+            </div>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-icon icon-views">👁️</div>
+                <div class="stat-number" id="total-views">{{if .Analytics.total_views}}{{.Analytics.total_views}}{{else}}0{{end}}</div>
+                <div class="stat-label">Visualizzazioni Totali</div>
+                <span class="stat-change change-positive">+12% questa settimana</span>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-icon icon-shares">🔗</div>
+                <div class="stat-number" id="total-shares">{{.Analytics.TotalShares}}</div>
+                <div class="stat-label">Condivisioni</div>
+                <span class="stat-change change-positive">+8% questa settimana</span>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-icon icon-qr">📱</div>
+                <div class="stat-number" id="qr-scans">{{.Analytics.QRScans}}</div>
+                <div class="stat-label">Scansioni QR Code</div>
+                <span class="stat-change change-positive">+15% questa settimana</span>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-icon icon-devices">💻</div>
+                <div class="stat-number" id="unique-views">{{.Analytics.UniqueViews}}</div>
+                <div class="stat-label">Visitatori Unici</div>
+                <span class="stat-change change-positive">+5% questa settimana</span>
+            </div>
+        </div>
+
+        <div class="charts-container">
+            <div class="chart-card">
+                <h3 class="chart-title">📈 Trend Visualizzazioni</h3>
+                <canvas id="viewsTrendChart" class="chart-canvas"></canvas>
+            </div>
+            
+            <div class="chart-card">
+                <h3 class="chart-title">📱 Dispositivi</h3>
+                <canvas id="devicesChart" class="chart-canvas"></canvas>
+            </div>
+        </div>
+
+        <div class="insights-grid">
+            <div class="insight-card">
+                <h3 class="insight-title">🌍 Paesi Top</h3>
+                <ul class="insight-list" id="countries-list">
+                    {{range $country, $count := .Analytics.CountryStats}}
+                    <li class="insight-item">
+                        <span class="insight-label">{{$country}}</span>
+                        <span class="insight-value">{{$count}} visite</span>
+                    </li>
+                    {{end}}
+                </ul>
+            </div>
+            
+            <div class="insight-card">
+                <h3 class="insight-title">🌐 Browser</h3>
+                <ul class="insight-list" id="browsers-list">
+                    {{range $browser, $count := .Analytics.BrowserStats}}
+                    <li class="insight-item">
+                        <span class="insight-label">{{$browser}}</span>
+                        <span class="insight-value">{{$count}} visite</span>
+                    </li>
+                    {{end}}
+                </ul>
+            </div>
+            
+            <div class="insight-card">
+                <h3 class="insight-title">🔗 Condivisioni per Piattaforma</h3>
+                <ul class="insight-list">
+                    <li class="insight-item">
+                        <span class="insight-label">💬 WhatsApp</span>
+                        <span class="insight-value">{{.Analytics.ShareBreakdown.WhatsApp}}</span>
+                    </li>
+                    <li class="insight-item">
+                        <span class="insight-label">✈️ Telegram</span>
+                        <span class="insight-value">{{.Analytics.ShareBreakdown.Telegram}}</span>
+                    </li>
+                    <li class="insight-item">
+                        <span class="insight-label">📘 Facebook</span>
+                        <span class="insight-value">{{.Analytics.ShareBreakdown.Facebook}}</span>
+                    </li>
+                    <li class="insight-item">
+                        <span class="insight-label">🐦 Twitter</span>
+                        <span class="insight-value">{{.Analytics.ShareBreakdown.Twitter}}</span>
+                    </li>
+                    <li class="insight-item">
+                        <span class="insight-label">📋 Copia Link</span>
+                        <span class="insight-value">{{.Analytics.ShareBreakdown.CopyLink}}</span>
+                    </li>
+                </ul>
+            </div>
+            
+            <div class="insight-card">
+                <h3 class="insight-title">⏰ Orari di Maggior Traffico</h3>
+                <canvas id="hourlyChart" class="chart-canvas"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Dati analytics passati dal server
+        const analyticsData = {
+            dailyTrend: {{.Analytics.DailyTrend}},
+            deviceStats: {{.Analytics.DeviceStats}},
+            hourlyStats: {{.Analytics.HourlyStats}},
+            shareStats: {{.Analytics.ShareBreakdown}}
+        };
+        
+        // Configurazione comune per tutti i grafici
+        Chart.defaults.font.family = 'Inter';
+        Chart.defaults.font.size = 12;
+        Chart.defaults.color = '#4a5568';
+        
+        // Trend delle visualizzazioni
+        const trendCtx = document.getElementById('viewsTrendChart').getContext('2d');
+        const trendChart = new Chart(trendCtx, {
+            type: 'line',
+            data: {
+                labels: analyticsData.dailyTrend.map(d => {
+                    const date = new Date(d.date);
+                    return date.toLocaleDateString('it-IT', { month: 'short', day: 'numeric' });
+                }),
+                datasets: [{
+                    label: 'Visualizzazioni',
+                    data: analyticsData.dailyTrend.map(d => d.views),
+                    borderColor: '#667eea',
+                    backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                    borderWidth: 3,
+                    fill: true,
+                    tension: 0.4
+                }, {
+                    label: 'Scansioni QR',
+                    data: analyticsData.dailyTrend.map(d => d.qr_scans),
+                    borderColor: '#48bb78',
+                    backgroundColor: 'rgba(72, 187, 120, 0.1)',
+                    borderWidth: 3,
+                    fill: true,
+                    tension: 0.4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'top'
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        grid: {
+                            borderDash: [5, 5]
+                        }
+                    },
+                    x: {
+                        grid: {
+                            display: false
+                        }
+                    }
+                }
+            }
+        });
+        
+        // Grafico dispositivi
+        const devicesCtx = document.getElementById('devicesChart').getContext('2d');
+        const devicesChart = new Chart(devicesCtx, {
+            type: 'doughnut',
+            data: {
+                labels: Object.keys(analyticsData.deviceStats),
+                datasets: [{
+                    data: Object.values(analyticsData.deviceStats),
+                    backgroundColor: [
+                        '#667eea',
+                        '#764ba2',
+                        '#f093fb',
+                        '#f5576c'
+                    ],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom'
+                    }
+                }
+            }
+        });
+        
+        // Grafico orari (se disponibile)
+        if (analyticsData.hourlyStats && Object.keys(analyticsData.hourlyStats).length > 0) {
+            const hourlyCtx = document.getElementById('hourlyChart').getContext('2d');
+            const hourlyChart = new Chart(hourlyCtx, {
+                type: 'bar',
+                data: {
+                    labels: Object.keys(analyticsData.hourlyStats).map(h => h + ':00'),
+                    datasets: [{
+                        label: 'Visite per ora',
+                        data: Object.values(analyticsData.hourlyStats),
+                        backgroundColor: 'rgba(102, 126, 234, 0.8)',
+                        borderRadius: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        }
+        
+        // Funzioni interattive
+        function loadData(days) {
+            // Aggiorna pulsanti attivi
+            document.querySelectorAll('.date-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            // Ricarica dati (implementare chiamata AJAX)
+            console.log('Caricamento dati per', days, 'giorni');
+            // Qui si farebbe una chiamata fetch() per aggiornare i dati
+        }
+        
+        function exportToPDF() {
+            // Implementare export PDF
+            console.log('Export PDF richiesto');
+            alert('Funzione di export PDF in sviluppo');
+        }
+        
+        function exportToCSV() {
+            // Implementare export CSV
+            console.log('Export CSV richiesto');
+            
+            // Crea CSV dai dati attuali
+            const csvData = [
+                ['Data', 'Visualizzazioni', 'Scansioni QR'],
+                ...analyticsData.dailyTrend.map(d => [d.date, d.views, d.qr_scans])
+            ];
+            
+            const csvContent = csvData.map(row => row.join(',')).join('\\n');
+            const blob = new Blob([csvContent], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'analytics-' + new Date().toISOString().split('T')[0] + '.csv';
+            a.click();
+            
+            window.URL.revokeObjectURL(url);
+        }
+        
+        // Auto-refresh ogni 5 minuti
+        setInterval(() => {
+            console.log('Auto-refresh dati analytics');
+            // Implementare refresh automatico
+        }, 5 * 60 * 1000);
+        
+        // Inizializzazione
+        console.log('Dashboard Analytics caricata');
+    </script>
+</body>
+</html>
