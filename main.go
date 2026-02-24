@@ -7,6 +7,7 @@ import (
 
 	"qr-menu/analytics"
 	"qr-menu/api"
+	"qr-menu/backup"
 	"qr-menu/handlers"
 	"qr-menu/logger"
 	"qr-menu/middleware"
@@ -24,7 +25,21 @@ func main() {
 	// Inizializzazione del sistema analytics (usa il singleton globale)
 	_ = analytics.GetAnalytics()
 
-	// Pulizia automatica dei log vecchi (mantiene ultimi 30 giorni)
+	// Inizializzazione del sistema di backup
+	bm := backup.GetBackupManager()
+	if err := bm.Init("backups", 30); err != nil {
+		logger.Warn("Errore nell'inizializzazione del backup manager", map[string]interface{}{"error": err.Error()})
+	} else {
+		// Avvia il backup automatico giornaliero alle 02:00
+		schedule := backup.BackupSchedule{
+			Type: "daily",
+			Hour: 2,
+		}
+		if err := bm.StartScheduled(schedule); err != nil {
+			logger.Warn("Errore nell'avvio del backup scheduler", map[string]interface{}{"error": err.Error()})
+		}
+		defer bm.Stop()
+	}
 	if err := logger.CleanOldLogs(30); err != nil {
 		logger.Warn("Errore nella pulizia dei log", map[string]interface{}{"error": err.Error()})
 	}
@@ -44,14 +59,14 @@ func main() {
 
 	// Configura i middleware di logging e sicurezza
 	r.Use(middleware.LoggingMiddleware)
-	r.Use(middleware.SecurityMiddleware) 
+	r.Use(middleware.SecurityMiddleware)
 	r.Use(middleware.AuthMiddleware)
 
 	// Route pubbliche (non richiedono autenticazione)
 	r.HandleFunc("/", handlers.HomeHandler).Methods("GET")
 	r.HandleFunc("/login", handlers.LoginHandler).Methods("GET", "POST")
 	r.HandleFunc("/register", handlers.RegisterHandler).Methods("GET", "POST")
-	
+
 	// Route per visualizzazione menu pubblico (non richiedono auth)
 	r.HandleFunc("/menu/{id}", handlers.PublicMenuHandler).Methods("GET")
 	r.HandleFunc("/r/{username}", handlers.GetActiveMenuHandler).Methods("GET")
@@ -91,6 +106,16 @@ func main() {
 	// Setup delle nuove API REST v2
 	api.SetupAPIRoutes(r)
 
+	// Route per il sistema di backup (richiedono autenticazione)
+	r.HandleFunc("/api/backup/create", handlers.RequireAuth(handlers.CreateBackupHandler)).Methods("POST")
+	r.HandleFunc("/api/backup/list", handlers.RequireAuth(handlers.ListBackupsHandler)).Methods("GET")
+	r.HandleFunc("/api/backup/delete", handlers.RequireAuth(handlers.DeleteBackupHandler)).Methods("DELETE")
+	r.HandleFunc("/api/backup/restore", handlers.RequireAuth(handlers.RestoreBackupHandler)).Methods("POST")
+	r.HandleFunc("/api/backup/status", handlers.RequireAuth(handlers.GetBackupStatusHandler)).Methods("GET")
+	r.HandleFunc("/api/backup/schedule", handlers.RequireAuth(handlers.ScheduleBackupHandler)).Methods("POST")
+	r.HandleFunc("/api/backup/stats", handlers.RequireAuth(handlers.GetBackupStatsHandler)).Methods("GET")
+	r.HandleFunc("/api/backup/download", handlers.RequireAuth(handlers.DownloadBackupHandler)).Methods("GET")
+
 	// Avvia il server
 	port := os.Getenv("PORT")
 	if port == "" {
@@ -114,7 +139,7 @@ func createDirectories() {
 	dirs := []string{
 		"storage",
 		"static/qrcodes",
-		"static/css", 
+		"static/css",
 		"static/js",
 		"templates",
 	}

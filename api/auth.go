@@ -61,7 +61,7 @@ func SuccessResponse(w http.ResponseWriter, data interface{}, metadata *Metadata
 		Metadata:  metadata,
 		Timestamp: time.Now().UTC().Format(time.RFC3339),
 	}
-	
+
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(response)
@@ -78,7 +78,7 @@ func ErrorResponse(w http.ResponseWriter, statusCode int, code, message, details
 		},
 		Timestamp: time.Now().UTC().Format(time.RFC3339),
 	}
-	
+
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(statusCode)
 	json.NewEncoder(w).Encode(response)
@@ -91,7 +91,7 @@ func CreatedResponse(w http.ResponseWriter, data interface{}) {
 		Data:      data,
 		Timestamp: time.Now().UTC().Format(time.RFC3339),
 	}
-	
+
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
 	json.NewEncoder(w).Encode(response)
@@ -102,7 +102,7 @@ func CreatedResponse(w http.ResponseWriter, data interface{}) {
 // GenerateJWT genera un token JWT per un ristorante
 func GenerateJWT(restaurant *models.Restaurant) (string, error) {
 	expirationTime := time.Now().Add(24 * time.Hour)
-	
+
 	claims := &Claims{
 		RestaurantID: restaurant.ID,
 		Username:     restaurant.Username,
@@ -147,9 +147,9 @@ func ValidateJWT(tokenString string) (*Claims, error) {
 // RevokeJWT revoca un token JWT
 func RevokeJWT(tokenString string) {
 	revokedTokens[tokenString] = true
-	
-	logger.AuditLog("TOKEN_REVOKED", "authentication", 
-		"Token JWT revocato", "", "", "", 
+
+	logger.AuditLog("TOKEN_REVOKED", "authentication",
+		"Token JWT revocato", "", "", "",
 		map[string]interface{}{
 			"token_hash": hashToken(tokenString),
 		})
@@ -160,13 +160,13 @@ func AuthMiddleware(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		authHeader := r.Header.Get("Authorization")
 		if authHeader == "" {
-			ErrorResponse(w, http.StatusUnauthorized, "MISSING_AUTH_HEADER", 
+			ErrorResponse(w, http.StatusUnauthorized, "MISSING_AUTH_HEADER",
 				"Header Authorization mancante", "Includere 'Authorization: Bearer <token>'")
 			return
 		}
 
 		if len(authHeader) < 7 || authHeader[:7] != "Bearer " {
-			ErrorResponse(w, http.StatusUnauthorized, "INVALID_AUTH_FORMAT", 
+			ErrorResponse(w, http.StatusUnauthorized, "INVALID_AUTH_FORMAT",
 				"Formato Authorization non valido", "Usare 'Bearer <token>'")
 			return
 		}
@@ -174,14 +174,14 @@ func AuthMiddleware(next http.HandlerFunc) http.HandlerFunc {
 		tokenString := authHeader[7:]
 		claims, err := ValidateJWT(tokenString)
 		if err != nil {
-			logger.SecurityEvent("INVALID_JWT", "Token JWT non valido", 
-				"", getClientIP(r), r.UserAgent(), 
+			logger.SecurityEvent("INVALID_JWT", "Token JWT non valido",
+				"", getClientIP(r), r.UserAgent(),
 				map[string]interface{}{
 					"error":      err.Error(),
 					"token_hash": hashToken(tokenString),
 				})
-			
-			ErrorResponse(w, http.StatusUnauthorized, "INVALID_TOKEN", 
+
+			ErrorResponse(w, http.StatusUnauthorized, "INVALID_TOKEN",
 				"Token non valido", err.Error())
 			return
 		}
@@ -189,9 +189,9 @@ func AuthMiddleware(next http.HandlerFunc) http.HandlerFunc {
 		// Aggiungi le claims al contesto della richiesta
 		r.Header.Set("X-Restaurant-ID", claims.RestaurantID)
 		r.Header.Set("X-Username", claims.Username)
-		
-		logger.AuditLog("API_ACCESS", "api", 
-			"Accesso API autorizzato", claims.RestaurantID, getClientIP(r), r.UserAgent(), 
+
+		logger.AuditLog("API_ACCESS", "api",
+			"Accesso API autorizzato", claims.RestaurantID, getClientIP(r), r.UserAgent(),
 			map[string]interface{}{
 				"endpoint": r.URL.Path,
 				"method":   r.Method,
@@ -207,14 +207,14 @@ func RateLimitMiddleware(requestsPerMinute int) func(http.HandlerFunc) http.Hand
 		requests  int
 		resetTime time.Time
 	}
-	
+
 	clients := make(map[string]*clientInfo)
-	
+
 	return func(next http.HandlerFunc) http.HandlerFunc {
 		return func(w http.ResponseWriter, r *http.Request) {
 			ip := getClientIP(r)
 			now := time.Now()
-			
+
 			client, exists := clients[ip]
 			if !exists {
 				client = &clientInfo{
@@ -223,35 +223,35 @@ func RateLimitMiddleware(requestsPerMinute int) func(http.HandlerFunc) http.Hand
 				}
 				clients[ip] = client
 			}
-			
+
 			// Reset contatore se è passato il tempo
 			if now.After(client.resetTime) {
 				client.requests = 0
 				client.resetTime = now.Add(time.Minute)
 			}
-			
+
 			client.requests++
-			
+
 			if client.requests > requestsPerMinute {
-				logger.SecurityEvent("RATE_LIMIT_EXCEEDED", 
-					fmt.Sprintf("Rate limit superato (%d req/min)", requestsPerMinute), 
-					"", ip, r.UserAgent(), 
+				logger.SecurityEvent("RATE_LIMIT_EXCEEDED",
+					fmt.Sprintf("Rate limit superato (%d req/min)", requestsPerMinute),
+					"", ip, r.UserAgent(),
 					map[string]interface{}{
 						"requests": client.requests,
 						"endpoint": r.URL.Path,
 					})
-				
-				ErrorResponse(w, http.StatusTooManyRequests, "RATE_LIMIT_EXCEEDED", 
-					"Troppe richieste", 
+
+				ErrorResponse(w, http.StatusTooManyRequests, "RATE_LIMIT_EXCEEDED",
+					"Troppe richieste",
 					fmt.Sprintf("Maximum %d richieste per minuto", requestsPerMinute))
 				return
 			}
-			
+
 			// Aggiungi header di rate limiting
 			w.Header().Set("X-RateLimit-Limit", strconv.Itoa(requestsPerMinute))
 			w.Header().Set("X-RateLimit-Remaining", strconv.Itoa(requestsPerMinute-client.requests))
 			w.Header().Set("X-RateLimit-Reset", strconv.FormatInt(client.resetTime.Unix(), 10))
-			
+
 			next.ServeHTTP(w, r)
 		}
 	}
@@ -261,14 +261,14 @@ func RateLimitMiddleware(requestsPerMinute int) func(http.HandlerFunc) http.Hand
 
 func getClientIP(r *http.Request) string {
 	headers := []string{"X-Forwarded-For", "X-Real-Ip", "X-Client-Ip"}
-	
+
 	for _, header := range headers {
 		ip := r.Header.Get(header)
 		if ip != "" {
 			return ip
 		}
 	}
-	
+
 	return r.RemoteAddr
 }
 
@@ -284,7 +284,7 @@ func GetRestaurantIDFromRequest(r *http.Request) string {
 	return r.Header.Get("X-Restaurant-ID")
 }
 
-// Funzione per ottenere l'username dalla richiesta  
+// Funzione per ottenere l'username dalla richiesta
 func GetUsernameFromRequest(r *http.Request) string {
 	return r.Header.Get("X-Username")
 }

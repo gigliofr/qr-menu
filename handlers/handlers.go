@@ -20,8 +20,8 @@ import (
 	"strings"
 	"time"
 
-	"qr-menu/models"
 	"qr-menu/analytics"
+	"qr-menu/models"
 
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
@@ -30,10 +30,10 @@ import (
 )
 
 var (
-	templates *template.Template
-	menus     = make(map[string]*models.Menu) // Storage in memoria (temporaneo)
-	csrfTokens = make(map[string]time.Time) // CSRF protection
-	maxFileSize = int64(5 << 20) // 5MB max file size
+	templates         *template.Template
+	menus             = make(map[string]*models.Menu) // Storage in memoria (temporaneo)
+	csrfTokens        = make(map[string]time.Time)    // CSRF protection
+	maxFileSize       = int64(5 << 20)                // 5MB max file size
 	allowedImageTypes = map[string]bool{
 		"image/jpeg": true,
 		"image/jpg":  true,
@@ -132,7 +132,7 @@ func createFallbackTemplates() {
 // HomeHandler gestisce la homepage - redirect al login se non autenticato
 func HomeHandler(w http.ResponseWriter, r *http.Request) {
 	setSecurityHeaders(w)
-	
+
 	// Controlla se l'utente è già loggato
 	_, err := getCurrentRestaurant(r)
 	if err != nil {
@@ -168,10 +168,10 @@ func AdminHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Calcola statistiche e trova menu attivo
 	stats := struct {
-		CompletedCount   int
-		TotalCategories  int
+		CompletedCount  int
+		TotalCategories int
 	}{}
-	
+
 	var activeMenuID string
 	for id, menu := range restaurantMenus {
 		if menu.IsCompleted {
@@ -225,20 +225,20 @@ func CreateMenuPostHandler(w http.ResponseWriter, r *http.Request) {
 
 	menu := &models.Menu{
 		ID:           uuid.New().String(),
-		RestaurantID: restaurant.ID,  // Associa al ristorante loggato
+		RestaurantID: restaurant.ID, // Associa al ristorante loggato
 		Name:         r.FormValue("name"),
 		Description:  r.FormValue("description"),
 		Categories:   []models.MenuCategory{},
 		CreatedAt:    time.Now(),
 		UpdatedAt:    time.Now(),
 		IsCompleted:  false,
-		IsActive:     false,  // Non attivo inizialmente
+		IsActive:     false, // Non attivo inizialmente
 	}
 
 	// Aggiungi categorie e items dal form
 	categoryNames := r.Form["category_name[]"]
 	categoryDescriptions := r.Form["category_description[]"]
-	
+
 	for i, catName := range categoryNames {
 		if catName != "" {
 			category := models.MenuCategory{
@@ -247,17 +247,17 @@ func CreateMenuPostHandler(w http.ResponseWriter, r *http.Request) {
 				Description: "",
 				Items:       []models.MenuItem{},
 			}
-			
+
 			if i < len(categoryDescriptions) {
 				category.Description = categoryDescriptions[i]
 			}
-			
+
 			// Aggiungi i piatti per questa categoria
 			categoryIndex := i + 1
 			itemNames := r.Form[fmt.Sprintf("item_name_%d[]", categoryIndex)]
 			itemDescriptions := r.Form[fmt.Sprintf("item_description_%d[]", categoryIndex)]
 			itemPricesStr := r.Form[fmt.Sprintf("item_price_%d[]", categoryIndex)]
-			
+
 			for j, itemName := range itemNames {
 				if itemName != "" {
 					var price float64 = 0
@@ -266,12 +266,12 @@ func CreateMenuPostHandler(w http.ResponseWriter, r *http.Request) {
 							price = parsedPrice
 						}
 					}
-					
+
 					var description string
 					if j < len(itemDescriptions) {
 						description = itemDescriptions[j]
 					}
-					
+
 					item := models.MenuItem{
 						ID:          uuid.New().String(),
 						Name:        itemName,
@@ -280,11 +280,11 @@ func CreateMenuPostHandler(w http.ResponseWriter, r *http.Request) {
 						Category:    catName,
 						Available:   true,
 					}
-					
+
 					category.Items = append(category.Items, item)
 				}
 			}
-			
+
 			menu.Categories = append(menu.Categories, category)
 		}
 	}
@@ -628,7 +628,7 @@ func CreateMenuAPIHandler(w http.ResponseWriter, r *http.Request) {
 
 	menu := &models.Menu{
 		ID:           uuid.New().String(),
-		RestaurantID: restaurant.ID,  // Forza l'ID del ristorante autenticato
+		RestaurantID: restaurant.ID, // Forza l'ID del ristorante autenticato
 		Name:         menuReq.Name,
 		Description:  menuReq.Description,
 		Categories:   menuReq.Categories,
@@ -730,7 +730,7 @@ func renderTemplate(w http.ResponseWriter, tmpl string, data interface{}) {
 
 func renderFallbackTemplate(w http.ResponseWriter, tmpl string, data interface{}) {
 	w.Header().Set("Content-Type", "text/html")
-	
+
 	switch tmpl {
 	case "admin":
 		fmt.Fprintf(w, `
@@ -826,7 +826,7 @@ func DuplicateItemHandler(w http.ResponseWriter, r *http.Request) {
 
 	vars := mux.Vars(r)
 	menuID := vars["menuId"]
-	categoryID := vars["categoryId"] 
+	categoryID := vars["categoryId"]
 	itemID := vars["itemId"]
 
 	menu, exists := menus[menuID]
@@ -864,13 +864,13 @@ func DuplicateItemHandler(w http.ResponseWriter, r *http.Request) {
 		Description: targetItem.Description,
 		Price:       targetItem.Price,
 		Category:    targetItem.Category,
-		Available:   true,  // Assicura che il piatto duplicato sia disponibile
+		Available:   true, // Assicura che il piatto duplicato sia disponibile
 		ImageURL:    targetItem.ImageURL,
 	}
 
 	// Aggiungi il piatto duplicato alla categoria
 	targetCategory.Items = append(targetCategory.Items, duplicatedItem)
-	
+
 	// Aggiorna timestamp
 	menu.UpdatedAt = time.Now()
 
@@ -908,7 +908,7 @@ func DuplicateMenuHandler(w http.ResponseWriter, r *http.Request) {
 		Categories:   make([]models.MenuCategory, len(originalMenu.Categories)),
 		CreatedAt:    time.Now(),
 		UpdatedAt:    time.Now(),
-		IsCompleted:  false,  // Il menu duplicato inizia come bozza
+		IsCompleted:  false, // Il menu duplicato inizia come bozza
 		IsActive:     false,
 	}
 
@@ -957,7 +957,7 @@ func EditItemHandler(w http.ResponseWriter, r *http.Request) {
 
 	vars := mux.Vars(r)
 	menuID := vars["menuId"]
-	categoryID := vars["categoryId"] 
+	categoryID := vars["categoryId"]
 	itemID := vars["itemId"]
 
 	menu, exists := menus[menuID]
@@ -979,19 +979,19 @@ func EditItemHandler(w http.ResponseWriter, r *http.Request) {
 					// Aggiorna i dati del piatto
 					menu.Categories[i].Items[j].Name = r.FormValue("name")
 					menu.Categories[i].Items[j].Description = r.FormValue("description")
-					
+
 					if priceStr := r.FormValue("price"); priceStr != "" {
 						if price, err := strconv.ParseFloat(priceStr, 64); err == nil {
 							menu.Categories[i].Items[j].Price = price
 						}
 					}
-					
+
 					// Aggiorna timestamp
 					menu.UpdatedAt = time.Now()
-					
+
 					// Salva le modifiche
 					saveMenuToStorage(menu)
-					
+
 					// Redirect back to edit menu
 					http.Redirect(w, r, fmt.Sprintf("/admin/menu/%s", menuID), http.StatusSeeOther)
 					return
@@ -1014,7 +1014,7 @@ func DeleteItemHandler(w http.ResponseWriter, r *http.Request) {
 
 	vars := mux.Vars(r)
 	menuID := vars["menuId"]
-	categoryID := vars["categoryId"] 
+	categoryID := vars["categoryId"]
 	itemID := vars["itemId"]
 
 	menu, exists := menus[menuID]
@@ -1030,15 +1030,15 @@ func DeleteItemHandler(w http.ResponseWriter, r *http.Request) {
 				if item.ID == itemID {
 					// Rimuovi il piatto dalla lista
 					menu.Categories[i].Items = append(
-						menu.Categories[i].Items[:j], 
+						menu.Categories[i].Items[:j],
 						menu.Categories[i].Items[j+1:]...)
-					
+
 					// Aggiorna timestamp
 					menu.UpdatedAt = time.Now()
-					
+
 					// Salva le modifiche
 					saveMenuToStorage(menu)
-					
+
 					// Redirect back to edit menu
 					http.Redirect(w, r, fmt.Sprintf("/admin/menu/%s", menuID), http.StatusSeeOther)
 					return
@@ -1103,13 +1103,13 @@ func AddItemHandler(w http.ResponseWriter, r *http.Request) {
 			}
 
 			menu.Categories[i].Items = append(menu.Categories[i].Items, newItem)
-			
+
 			// Aggiorna timestamp
 			menu.UpdatedAt = time.Now()
-			
+
 			// Salva le modifiche
 			saveMenuToStorage(menu)
-			
+
 			// Redirect back to edit menu
 			http.Redirect(w, r, fmt.Sprintf("/admin/menu/%s", menuID), http.StatusSeeOther)
 			return
@@ -1149,7 +1149,7 @@ func processImageUpload(file multipart.File, header *multipart.FileHeader) (stri
 	// Ridimensiona l'immagine per ottimizzazione (max 800x600)
 	bounds := img.Bounds()
 	width, height := bounds.Max.X, bounds.Max.Y
-	
+
 	if width > 800 || height > 600 {
 		ratio := float64(width) / float64(height)
 		if width > height {
@@ -1159,7 +1159,7 @@ func processImageUpload(file multipart.File, header *multipart.FileHeader) (stri
 			height = 600
 			width = int(600 * ratio)
 		}
-		
+
 		// Crea nuova immagine ridimensionata
 		resized := image.NewRGBA(image.Rect(0, 0, width, height))
 		draw.BiLinear.Scale(resized, resized.Bounds(), img, bounds, draw.Over, nil)
@@ -1190,7 +1190,7 @@ func processImageUpload(file multipart.File, header *multipart.FileHeader) (stri
 // UploadItemImageHandler gestisce l'upload di immagini per i piatti
 func UploadItemImageHandler(w http.ResponseWriter, r *http.Request) {
 	setSecurityHeaders(w)
-	
+
 	// Verifica autenticazione
 	restaurant, err := getCurrentRestaurant(r)
 	if err != nil {
@@ -1200,7 +1200,7 @@ func UploadItemImageHandler(w http.ResponseWriter, r *http.Request) {
 
 	vars := mux.Vars(r)
 	menuID := vars["menuId"]
-	categoryID := vars["categoryId"] 
+	categoryID := vars["categoryId"]
 	itemID := vars["itemId"]
 
 	menu, exists := menus[menuID]
@@ -1241,14 +1241,14 @@ func UploadItemImageHandler(w http.ResponseWriter, r *http.Request) {
 						oldPath := filepath.Join("static", item.ImageURL)
 						os.Remove(oldPath)
 					}
-					
+
 					// Aggiorna con nuova immagine
 					menu.Categories[i].Items[j].ImageURL = imagePath
 					menu.UpdatedAt = time.Now()
-					
+
 					// Salva le modifiche
 					saveMenuToStorage(menu)
-					
+
 					// Redirect back to edit menu
 					http.Redirect(w, r, fmt.Sprintf("/admin/menu/%s", menuID), http.StatusSeeOther)
 					return
@@ -1263,7 +1263,7 @@ func UploadItemImageHandler(w http.ResponseWriter, r *http.Request) {
 // ShareMenuHandler gestisce le richieste di condivisione del menu
 func ShareMenuHandler(w http.ResponseWriter, r *http.Request) {
 	setSecurityHeaders(w)
-	
+
 	vars := mux.Vars(r)
 	menuID := vars["id"]
 
@@ -1355,10 +1355,10 @@ func AnalyticsDashboardHandler(w http.ResponseWriter, r *http.Request) {
 	if restaurant == nil {
 		// Crea un restaurant di default se non esiste
 		restaurant = &models.Restaurant{
-			Name:        "Il Tuo Ristorante",
-			Address:     "Indirizzo non specificato",
-			Phone:       "Telefono non specificato",
-			Email:       "Email non specificata",
+			Name:    "Il Tuo Ristorante",
+			Address: "Indirizzo non specificato",
+			Phone:   "Telefono non specificato",
+			Email:   "Email non specificata",
 		}
 	}
 
@@ -1423,13 +1423,13 @@ func TrackShareHandler(w http.ResponseWriter, r *http.Request) {
 	go func() {
 		userAgent := r.Header.Get("User-Agent")
 		clientIP := getClientIP(r)
-		
+
 		// Trova il menu per ottenere il restaurantID
 		var restaurantID string
 		if menu, exists := menus[requestData.MenuID]; exists {
 			restaurantID = menu.RestaurantID
 		}
-		
+
 		event := analytics.ShareEvent{
 			RestaurantID: restaurantID,
 			MenuID:       requestData.MenuID,

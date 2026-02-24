@@ -8,17 +8,17 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/gorilla/mux"
 	"github.com/google/uuid"
+	"github.com/gorilla/mux"
 )
 
 // Menu API Endpoints
 
 // MenuCreateRequest rappresenta una richiesta di creazione menu
 type MenuCreateRequest struct {
-	Name        string                      `json:"name" validate:"required,min=1,max=100"`
-	Description string                      `json:"description" validate:"max=500"`
-	Categories  []models.MenuCategory       `json:"categories" validate:"dive"`
+	Name        string                `json:"name" validate:"required,min=1,max=100"`
+	Description string                `json:"description" validate:"max=500"`
+	Categories  []models.MenuCategory `json:"categories" validate:"dive"`
 }
 
 // MenuUpdateRequest rappresenta una richiesta di aggiornamento menu
@@ -51,7 +51,7 @@ type CategoryCreateRequest struct {
 
 // Simulazione storage (in produzione usare database)
 var (
-	apiMenus = make(map[string]*models.Menu)
+	apiMenus       = make(map[string]*models.Menu)
 	apiRestaurants = make(map[string]*models.Restaurant)
 )
 
@@ -59,7 +59,7 @@ var (
 func GetMenusHandler(w http.ResponseWriter, r *http.Request) {
 	start := time.Now()
 	restaurantID := GetRestaurantIDFromRequest(r)
-	
+
 	// Query parameters per paginazione
 	page, _ := strconv.Atoi(r.URL.Query().Get("page"))
 	if page < 1 {
@@ -82,7 +82,7 @@ func GetMenusHandler(w http.ResponseWriter, r *http.Request) {
 	total := len(menus)
 	start_idx := (page - 1) * perPage
 	end_idx := start_idx + perPage
-	
+
 	if start_idx >= total {
 		menus = []*models.Menu{}
 	} else {
@@ -118,21 +118,21 @@ func GetMenuHandler(w http.ResponseWriter, r *http.Request) {
 
 	menu, exists := apiMenus[menuID]
 	if !exists {
-		ErrorResponse(w, http.StatusNotFound, "MENU_NOT_FOUND", 
+		ErrorResponse(w, http.StatusNotFound, "MENU_NOT_FOUND",
 			"Menu non trovato", "")
 		return
 	}
 
 	// Verifica ownership
 	if menu.RestaurantID != restaurantID {
-		logger.SecurityEvent("UNAUTHORIZED_ACCESS", "Tentativo di accesso a menu di altro ristorante", 
-			restaurantID, getClientIP(r), r.UserAgent(), 
+		logger.SecurityEvent("UNAUTHORIZED_ACCESS", "Tentativo di accesso a menu di altro ristorante",
+			restaurantID, getClientIP(r), r.UserAgent(),
 			map[string]interface{}{
-				"menu_id":    menuID,
-				"owner_id":   menu.RestaurantID,
+				"menu_id":  menuID,
+				"owner_id": menu.RestaurantID,
 			})
-		
-		ErrorResponse(w, http.StatusForbidden, "ACCESS_DENIED", 
+
+		ErrorResponse(w, http.StatusForbidden, "ACCESS_DENIED",
 			"Accesso negato", "Non hai i permessi per accedere a questo menu")
 		return
 	}
@@ -143,17 +143,17 @@ func GetMenuHandler(w http.ResponseWriter, r *http.Request) {
 // CreateMenuHandler crea un nuovo menu
 func CreateMenuHandler(w http.ResponseWriter, r *http.Request) {
 	restaurantID := GetRestaurantIDFromRequest(r)
-	
+
 	var req MenuCreateRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		ErrorResponse(w, http.StatusBadRequest, "INVALID_JSON", 
+		ErrorResponse(w, http.StatusBadRequest, "INVALID_JSON",
 			"JSON non valido", err.Error())
 		return
 	}
 
 	// Validazione input (implementazione semplificata)
 	if req.Name == "" {
-		ErrorResponse(w, http.StatusBadRequest, "VALIDATION_ERROR", 
+		ErrorResponse(w, http.StatusBadRequest, "VALIDATION_ERROR",
 			"Nome menu richiesto", "")
 		return
 	}
@@ -185,11 +185,11 @@ func CreateMenuHandler(w http.ResponseWriter, r *http.Request) {
 
 	apiMenus[menu.ID] = menu
 
-	logger.AuditLog("MENU_CREATED", "menu", 
-		"Menu creato via API", restaurantID, getClientIP(r), r.UserAgent(), 
+	logger.AuditLog("MENU_CREATED", "menu",
+		"Menu creato via API", restaurantID, getClientIP(r), r.UserAgent(),
 		map[string]interface{}{
-			"menu_id":        menu.ID,
-			"menu_name":      menu.Name,
+			"menu_id":          menu.ID,
+			"menu_name":        menu.Name,
 			"categories_count": len(menu.Categories),
 		})
 
@@ -204,27 +204,27 @@ func UpdateMenuHandler(w http.ResponseWriter, r *http.Request) {
 
 	menu, exists := apiMenus[menuID]
 	if !exists {
-		ErrorResponse(w, http.StatusNotFound, "MENU_NOT_FOUND", 
+		ErrorResponse(w, http.StatusNotFound, "MENU_NOT_FOUND",
 			"Menu non trovato", "")
 		return
 	}
 
 	if menu.RestaurantID != restaurantID {
-		ErrorResponse(w, http.StatusForbidden, "ACCESS_DENIED", 
+		ErrorResponse(w, http.StatusForbidden, "ACCESS_DENIED",
 			"Accesso negato", "")
 		return
 	}
 
 	var req MenuUpdateRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		ErrorResponse(w, http.StatusBadRequest, "INVALID_JSON", 
+		ErrorResponse(w, http.StatusBadRequest, "INVALID_JSON",
 			"JSON non valido", err.Error())
 		return
 	}
 
 	// Validazione
 	if req.Name == "" {
-		ErrorResponse(w, http.StatusBadRequest, "VALIDATION_ERROR", 
+		ErrorResponse(w, http.StatusBadRequest, "VALIDATION_ERROR",
 			"Nome menu richiesto", "")
 		return
 	}
@@ -235,12 +235,12 @@ func UpdateMenuHandler(w http.ResponseWriter, r *http.Request) {
 	menu.Description = req.Description
 	menu.UpdatedAt = time.Now()
 
-	logger.AuditLog("MENU_UPDATED", "menu", 
-		"Menu aggiornato via API", restaurantID, getClientIP(r), r.UserAgent(), 
+	logger.AuditLog("MENU_UPDATED", "menu",
+		"Menu aggiornato via API", restaurantID, getClientIP(r), r.UserAgent(),
 		map[string]interface{}{
-			"menu_id":   menuID,
-			"old_name":  oldName,
-			"new_name":  req.Name,
+			"menu_id":  menuID,
+			"old_name": oldName,
+			"new_name": req.Name,
 		})
 
 	SuccessResponse(w, menu, nil)
@@ -254,28 +254,28 @@ func DeleteMenuHandler(w http.ResponseWriter, r *http.Request) {
 
 	menu, exists := apiMenus[menuID]
 	if !exists {
-		ErrorResponse(w, http.StatusNotFound, "MENU_NOT_FOUND", 
+		ErrorResponse(w, http.StatusNotFound, "MENU_NOT_FOUND",
 			"Menu non trovato", "")
 		return
 	}
 
 	if menu.RestaurantID != restaurantID {
-		ErrorResponse(w, http.StatusForbidden, "ACCESS_DENIED", 
+		ErrorResponse(w, http.StatusForbidden, "ACCESS_DENIED",
 			"Accesso negato", "")
 		return
 	}
 
 	// Verifica se è il menu attivo
 	if menu.IsActive {
-		ErrorResponse(w, http.StatusConflict, "MENU_ACTIVE", 
+		ErrorResponse(w, http.StatusConflict, "MENU_ACTIVE",
 			"Impossibile eliminare menu attivo", "Disattiva il menu prima di eliminarlo")
 		return
 	}
 
 	delete(apiMenus, menuID)
 
-	logger.AuditLog("MENU_DELETED", "menu", 
-		"Menu eliminato via API", restaurantID, getClientIP(r), r.UserAgent(), 
+	logger.AuditLog("MENU_DELETED", "menu",
+		"Menu eliminato via API", restaurantID, getClientIP(r), r.UserAgent(),
 		map[string]interface{}{
 			"menu_id":   menuID,
 			"menu_name": menu.Name,
@@ -292,19 +292,19 @@ func SetActiveMenuHandler(w http.ResponseWriter, r *http.Request) {
 
 	menu, exists := apiMenus[menuID]
 	if !exists {
-		ErrorResponse(w, http.StatusNotFound, "MENU_NOT_FOUND", 
+		ErrorResponse(w, http.StatusNotFound, "MENU_NOT_FOUND",
 			"Menu non trovato", "")
 		return
 	}
 
 	if menu.RestaurantID != restaurantID {
-		ErrorResponse(w, http.StatusForbidden, "ACCESS_DENIED", 
+		ErrorResponse(w, http.StatusForbidden, "ACCESS_DENIED",
 			"Accesso negato", "")
 		return
 	}
 
 	if !menu.IsCompleted {
-		ErrorResponse(w, http.StatusBadRequest, "MENU_INCOMPLETE", 
+		ErrorResponse(w, http.StatusBadRequest, "MENU_INCOMPLETE",
 			"Menu non completato", "Il menu deve essere completo prima di essere attivato")
 		return
 	}
@@ -320,8 +320,8 @@ func SetActiveMenuHandler(w http.ResponseWriter, r *http.Request) {
 	menu.IsActive = true
 	menu.UpdatedAt = time.Now()
 
-	logger.AuditLog("MENU_ACTIVATED", "menu", 
-		"Menu attivato via API", restaurantID, getClientIP(r), r.UserAgent(), 
+	logger.AuditLog("MENU_ACTIVATED", "menu",
+		"Menu attivato via API", restaurantID, getClientIP(r), r.UserAgent(),
 		map[string]interface{}{
 			"menu_id":   menuID,
 			"menu_name": menu.Name,
@@ -338,26 +338,26 @@ func AddCategoryHandler(w http.ResponseWriter, r *http.Request) {
 
 	menu, exists := apiMenus[menuID]
 	if !exists {
-		ErrorResponse(w, http.StatusNotFound, "MENU_NOT_FOUND", 
+		ErrorResponse(w, http.StatusNotFound, "MENU_NOT_FOUND",
 			"Menu non trovato", "")
 		return
 	}
 
 	if menu.RestaurantID != restaurantID {
-		ErrorResponse(w, http.StatusForbidden, "ACCESS_DENIED", 
+		ErrorResponse(w, http.StatusForbidden, "ACCESS_DENIED",
 			"Accesso negato", "")
 		return
 	}
 
 	var req CategoryCreateRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		ErrorResponse(w, http.StatusBadRequest, "INVALID_JSON", 
+		ErrorResponse(w, http.StatusBadRequest, "INVALID_JSON",
 			"JSON non valido", err.Error())
 		return
 	}
 
 	if req.Name == "" {
-		ErrorResponse(w, http.StatusBadRequest, "VALIDATION_ERROR", 
+		ErrorResponse(w, http.StatusBadRequest, "VALIDATION_ERROR",
 			"Nome categoria richiesto", "")
 		return
 	}
@@ -372,8 +372,8 @@ func AddCategoryHandler(w http.ResponseWriter, r *http.Request) {
 	menu.Categories = append(menu.Categories, category)
 	menu.UpdatedAt = time.Now()
 
-	logger.AuditLog("CATEGORY_ADDED", "menu", 
-		"Categoria aggiunta via API", restaurantID, getClientIP(r), r.UserAgent(), 
+	logger.AuditLog("CATEGORY_ADDED", "menu",
+		"Categoria aggiunta via API", restaurantID, getClientIP(r), r.UserAgent(),
 		map[string]interface{}{
 			"menu_id":       menuID,
 			"category_id":   category.ID,
@@ -392,32 +392,32 @@ func AddItemHandler(w http.ResponseWriter, r *http.Request) {
 
 	menu, exists := apiMenus[menuID]
 	if !exists {
-		ErrorResponse(w, http.StatusNotFound, "MENU_NOT_FOUND", 
+		ErrorResponse(w, http.StatusNotFound, "MENU_NOT_FOUND",
 			"Menu non trovato", "")
 		return
 	}
 
 	if menu.RestaurantID != restaurantID {
-		ErrorResponse(w, http.StatusForbidden, "ACCESS_DENIED", 
+		ErrorResponse(w, http.StatusForbidden, "ACCESS_DENIED",
 			"Accesso negato", "")
 		return
 	}
 
 	var req ItemCreateRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		ErrorResponse(w, http.StatusBadRequest, "INVALID_JSON", 
+		ErrorResponse(w, http.StatusBadRequest, "INVALID_JSON",
 			"JSON non valido", err.Error())
 		return
 	}
 
 	// Validazione
 	if req.Name == "" {
-		ErrorResponse(w, http.StatusBadRequest, "VALIDATION_ERROR", 
+		ErrorResponse(w, http.StatusBadRequest, "VALIDATION_ERROR",
 			"Nome piatto richiesto", "")
 		return
 	}
 	if req.Price < 0 {
-		ErrorResponse(w, http.StatusBadRequest, "VALIDATION_ERROR", 
+		ErrorResponse(w, http.StatusBadRequest, "VALIDATION_ERROR",
 			"Prezzo non valido", "")
 		return
 	}
@@ -432,7 +432,7 @@ func AddItemHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if categoryIndex == -1 {
-		ErrorResponse(w, http.StatusNotFound, "CATEGORY_NOT_FOUND", 
+		ErrorResponse(w, http.StatusNotFound, "CATEGORY_NOT_FOUND",
 			"Categoria non trovata", "")
 		return
 	}
@@ -448,8 +448,8 @@ func AddItemHandler(w http.ResponseWriter, r *http.Request) {
 	menu.Categories[categoryIndex].Items = append(menu.Categories[categoryIndex].Items, item)
 	menu.UpdatedAt = time.Now()
 
-	logger.AuditLog("ITEM_ADDED", "menu", 
-		"Piatto aggiunto via API", restaurantID, getClientIP(r), r.UserAgent(), 
+	logger.AuditLog("ITEM_ADDED", "menu",
+		"Piatto aggiunto via API", restaurantID, getClientIP(r), r.UserAgent(),
 		map[string]interface{}{
 			"menu_id":     menuID,
 			"category_id": categoryID,

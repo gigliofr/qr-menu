@@ -29,17 +29,17 @@ func (rw *responseWriter) Write(b []byte) (int, error) {
 func LoggingMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		start := time.Now()
-		
+
 		// Wrapper per catturare response info
 		wrapped := &responseWriter{
 			ResponseWriter: w,
 			statusCode:     200, // default
 		}
-		
+
 		// Estrae informazioni della richiesta
 		ip := getClientIP(r)
 		userAgent := r.UserAgent()
-		
+
 		// Log della richiesta in arrivo
 		logger.InfoWithContext("HTTP Request", map[string]interface{}{
 			"method":     r.Method,
@@ -51,13 +51,13 @@ func LoggingMiddleware(next http.Handler) http.Handler {
 			"host":       r.Host,
 			"request_id": generateRequestID(),
 		}, "", ip, userAgent)
-		
+
 		// Esegue la richiesta
 		next.ServeHTTP(wrapped, r)
-		
+
 		// Calcola durata
 		duration := time.Since(start)
-		
+
 		// Determina il livello di log basato sullo status code
 		logLevel := "info"
 		if wrapped.statusCode >= 400 && wrapped.statusCode < 500 {
@@ -65,7 +65,7 @@ func LoggingMiddleware(next http.Handler) http.Handler {
 		} else if wrapped.statusCode >= 500 {
 			logLevel = "error"
 		}
-		
+
 		// Log della risposta
 		logData := map[string]interface{}{
 			"method":        r.Method,
@@ -74,9 +74,9 @@ func LoggingMiddleware(next http.Handler) http.Handler {
 			"response_size": wrapped.size,
 			"duration_ms":   duration.Milliseconds(),
 		}
-		
+
 		message := "HTTP Response"
-		
+
 		switch logLevel {
 		case "warn":
 			logger.WarnWithContext(message, logData, "", ip, userAgent)
@@ -85,7 +85,7 @@ func LoggingMiddleware(next http.Handler) http.Handler {
 		default:
 			logger.InfoWithContext(message, logData, "", ip, userAgent)
 		}
-		
+
 		// Log performance se la richiesta è lenta
 		if duration > time.Second {
 			logger.PerformanceLog("HTTP Request", duration, map[string]interface{}{
@@ -101,7 +101,7 @@ func SecurityMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		ip := getClientIP(r)
 		userAgent := r.UserAgent()
-		
+
 		// Controlla per pattern sospetti nell'URL
 		suspiciousPatterns := []string{
 			"../", "..\\", // Directory traversal
@@ -109,13 +109,13 @@ func SecurityMiddleware(next http.Handler) http.Handler {
 			"SELECT ", "INSERT ", "UPDATE ", "DELETE ", // SQL injection
 			"eval(", "javascript:", // Code injection
 		}
-		
+
 		url := r.URL.String()
 		for _, pattern := range suspiciousPatterns {
 			if containsCaseInsensitive(url, pattern) {
-				logger.SecurityEvent("SUSPICIOUS_URL", 
-					"Pattern sospetto rilevato nell'URL", 
-					"", ip, userAgent, 
+				logger.SecurityEvent("SUSPICIOUS_URL",
+					"Pattern sospetto rilevato nell'URL",
+					"", ip, userAgent,
 					map[string]interface{}{
 						"url":     url,
 						"pattern": pattern,
@@ -124,18 +124,18 @@ func SecurityMiddleware(next http.Handler) http.Handler {
 				break
 			}
 		}
-		
+
 		// Controlla User-Agent sospetti
 		suspiciousAgents := []string{
 			"sqlmap", "nikto", "nmap", "masscan", "zap",
 			"burp", "grabber", "w3af", "havij",
 		}
-		
+
 		for _, agent := range suspiciousAgents {
 			if containsCaseInsensitive(userAgent, agent) {
-				logger.SecurityEvent("SUSPICIOUS_USER_AGENT", 
-					"User-Agent sospetto rilevato", 
-					"", ip, userAgent, 
+				logger.SecurityEvent("SUSPICIOUS_USER_AGENT",
+					"User-Agent sospetto rilevato",
+					"", ip, userAgent,
 					map[string]interface{}{
 						"detected_tool": agent,
 						"url":           url,
@@ -143,17 +143,17 @@ func SecurityMiddleware(next http.Handler) http.Handler {
 				break
 			}
 		}
-		
+
 		// Rate limiting check (implementazione base)
 		if isRateLimitExceeded(ip) {
-			logger.SecurityEvent("RATE_LIMIT_EXCEEDED", 
-				"Troppe richieste dal stesso IP", 
-				"", ip, userAgent, 
+			logger.SecurityEvent("RATE_LIMIT_EXCEEDED",
+				"Troppe richieste dal stesso IP",
+				"", ip, userAgent,
 				map[string]interface{}{
 					"url": url,
 				})
 		}
-		
+
 		next.ServeHTTP(w, r)
 	})
 }
@@ -163,18 +163,18 @@ func AuthMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		ip := getClientIP(r)
 		userAgent := r.UserAgent()
-		
+
 		// Log tentativo di accesso a pagine protette
 		if isProtectedRoute(r.URL.Path) {
-			logger.AuditLog("ACCESS_ATTEMPT", "protected_route", 
-				"Tentativo di accesso a risorsa protetta", 
-				"", ip, userAgent, 
+			logger.AuditLog("ACCESS_ATTEMPT", "protected_route",
+				"Tentativo di accesso a risorsa protetta",
+				"", ip, userAgent,
 				map[string]interface{}{
 					"path":   r.URL.Path,
 					"method": r.Method,
 				})
 		}
-		
+
 		next.ServeHTTP(w, r)
 	})
 }
@@ -184,28 +184,28 @@ func AuthMiddleware(next http.Handler) http.Handler {
 func getClientIP(r *http.Request) string {
 	// Cerca in vari header per l'IP reale
 	headers := []string{"X-Forwarded-For", "X-Real-Ip", "X-Client-Ip"}
-	
+
 	for _, header := range headers {
 		ip := r.Header.Get(header)
 		if ip != "" {
 			return ip
 		}
 	}
-	
+
 	return r.RemoteAddr
 }
 
 func generateRequestID() string {
 	// Genera un ID univoco per la richiesta
-	return time.Now().Format("20060102150405") + "-" + 
-		   string(rune('A' + time.Now().Nanosecond()%26))
+	return time.Now().Format("20060102150405") + "-" +
+		string(rune('A'+time.Now().Nanosecond()%26))
 }
 
 func containsCaseInsensitive(s, substr string) bool {
-	return len(s) >= len(substr) && 
-		   (s == substr || 
-		    len(s) > len(substr) && 
-		    containsCaseInsensitiveHelper(s, substr))
+	return len(s) >= len(substr) &&
+		(s == substr ||
+			len(s) > len(substr) &&
+				containsCaseInsensitiveHelper(s, substr))
 }
 
 func containsCaseInsensitiveHelper(s, substr string) bool {
@@ -221,17 +221,17 @@ var ipLastReset = make(map[string]time.Time)
 func isRateLimitExceeded(ip string) bool {
 	const maxRequests = 100 // max richieste per minuto
 	const resetInterval = time.Minute
-	
+
 	now := time.Now()
-	
+
 	// Reset contatore se è passato troppo tempo
 	if lastReset, exists := ipLastReset[ip]; !exists || now.Sub(lastReset) > resetInterval {
 		ipRequestCount[ip] = 0
 		ipLastReset[ip] = now
 	}
-	
+
 	ipRequestCount[ip]++
-	
+
 	return ipRequestCount[ip] > maxRequests
 }
 
@@ -240,12 +240,12 @@ func isProtectedRoute(path string) bool {
 		"/admin",
 		"/api/",
 	}
-	
+
 	for _, protectedPath := range protectedPaths {
 		if strings.HasPrefix(path, protectedPath) {
 			return true
 		}
 	}
-	
+
 	return false
 }

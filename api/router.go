@@ -11,15 +11,15 @@ import (
 func SetupAPIRoutes(r *mux.Router) {
 	// Sottoruter per le API con prefisso /api/v1
 	api := r.PathPrefix("/api/v1").Subrouter()
-	
+
 	// Rate limiting per tutte le API (100 richieste per minuto)
 	rateLimiter := RateLimitMiddleware(100)
-	
+
 	// Authentication endpoints (non richiedono autenticazione)
 	api.HandleFunc("/auth/login", rateLimiter(APILoginHandler)).Methods("POST")
 	api.HandleFunc("/auth/register", rateLimiter(APIRegisterHandler)).Methods("POST")
 	api.HandleFunc("/auth/refresh", rateLimiter(APIRefreshTokenHandler)).Methods("POST")
-	
+
 	// Protected routes (richiedono autenticazione JWT)
 	protected := api.PathPrefix("").Subrouter()
 	protected.Use(func(next http.Handler) http.Handler {
@@ -29,15 +29,15 @@ func SetupAPIRoutes(r *mux.Router) {
 			})(w, r)
 		})
 	})
-	
+
 	// Authentication protected endpoints
 	protected.HandleFunc("/auth/logout", APILogoutHandler).Methods("POST")
 	protected.HandleFunc("/auth/change-password", ChangePasswordHandler).Methods("POST")
-	
+
 	// Restaurant endpoints
 	protected.HandleFunc("/restaurant/profile", GetRestaurantProfileHandler).Methods("GET")
 	protected.HandleFunc("/restaurant/profile", UpdateRestaurantProfileHandler).Methods("PUT")
-	
+
 	// Menu endpoints
 	protected.HandleFunc("/menus", GetMenusHandler).Methods("GET")
 	protected.HandleFunc("/menus", CreateMenuHandler).Methods("POST")
@@ -45,13 +45,13 @@ func SetupAPIRoutes(r *mux.Router) {
 	protected.HandleFunc("/menus/{id}", UpdateMenuHandler).Methods("PUT")
 	protected.HandleFunc("/menus/{id}", DeleteMenuHandler).Methods("DELETE")
 	protected.HandleFunc("/menus/{id}/activate", SetActiveMenuHandler).Methods("POST")
-	
+
 	// Category endpoints
 	protected.HandleFunc("/menus/{id}/categories", AddCategoryHandler).Methods("POST")
-	
-	// Item endpoints  
+
+	// Item endpoints
 	protected.HandleFunc("/menus/{menu_id}/categories/{category_id}/items", AddItemHandler).Methods("POST")
-	
+
 	// API Documentation endpoint
 	api.HandleFunc("/docs", APIDocsHandler).Methods("GET")
 	api.HandleFunc("/health", HealthCheckHandler).Methods("GET")
@@ -73,7 +73,7 @@ func APIDocsHandler(w http.ResponseWriter, r *http.Request) {
 			"requests_per_minute": 100,
 			"headers": []string{
 				"X-RateLimit-Limit",
-				"X-RateLimit-Remaining", 
+				"X-RateLimit-Remaining",
 				"X-RateLimit-Reset",
 			},
 		},
@@ -109,12 +109,12 @@ func APIDocsHandler(w http.ResponseWriter, r *http.Request) {
 					"response": "Nuovo token JWT",
 				},
 				"POST /auth/logout": map[string]interface{}{
-					"description": "Effettua logout e revoca il token",
+					"description":   "Effettua logout e revoca il token",
 					"auth_required": true,
-					"response": "Messaggio di conferma",
+					"response":      "Messaggio di conferma",
 				},
 				"POST /auth/change-password": map[string]interface{}{
-					"description": "Cambia la password del ristorante",
+					"description":   "Cambia la password del ristorante",
 					"auth_required": true,
 					"body": map[string]string{
 						"current_password": "Password attuale",
@@ -174,7 +174,7 @@ func APIDocsHandler(w http.ResponseWriter, r *http.Request) {
 					"description":   "Aggiorna un menu esistente",
 					"auth_required": true,
 					"path_params": map[string]string{
-						"id": "ID univoco del menu", 
+						"id": "ID univoco del menu",
 					},
 					"body": map[string]string{
 						"name":        "Nome del menu",
@@ -255,7 +255,7 @@ func APIDocsHandler(w http.ResponseWriter, r *http.Request) {
 			"500": "Internal Server Error - Errore interno del server",
 		},
 	}
-	
+
 	SuccessResponse(w, docs, nil)
 }
 
@@ -265,7 +265,7 @@ func HealthCheckHandler(w http.ResponseWriter, r *http.Request) {
 		"status":    "healthy",
 		"timestamp": time.Now().UTC().Format(time.RFC3339),
 		"version":   "2.0.0",
-		"uptime":    "N/A", // Implementare se necessario
+		"uptime":    "N/A",       // Implementare se necessario
 		"database":  "in-memory", // Cambiare quando si usa database reale
 		"services": map[string]string{
 			"authentication": "running",
@@ -273,11 +273,11 @@ func HealthCheckHandler(w http.ResponseWriter, r *http.Request) {
 			"rate_limiting":  "running",
 		},
 		"stats": map[string]interface{}{
-			"restaurants": len(apiRestaurants),
-			"menus":       len(apiMenus),
+			"restaurants":   len(apiRestaurants),
+			"menus":         len(apiMenus),
 			"active_tokens": len(revokedTokens), // Numero token revocati
 		},
 	}
-	
+
 	SuccessResponse(w, health, nil)
 }

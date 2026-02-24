@@ -99,13 +99,22 @@ func Close() {
 	}
 }
 
+// GetDefaultLogger restituisce l'istanza del logger globale
+func GetDefaultLogger() *Logger {
+	if defaultLogger == nil {
+		// Se non è stato inizializzato, crea un logger di base
+		Init(INFO, "logs")
+	}
+	return defaultLogger
+}
+
 // getSource ottiene informazioni sulla funzione chiamante
 func getSource() string {
 	_, file, line, ok := runtime.Caller(3)
 	if !ok {
 		return "unknown"
 	}
-	
+
 	// Estrae solo il nome del file senza il percorso completo
 	filename := filepath.Base(file)
 	return fmt.Sprintf("%s:%d", filename, line)
@@ -209,7 +218,7 @@ func SecurityEvent(eventType, message string, userID, ip, userAgent string, data
 	}
 	data["security_event"] = true
 	data["event_type"] = eventType
-	
+
 	WarnWithContext(fmt.Sprintf("SECURITY: %s - %s", eventType, message), data, userID, ip, userAgent)
 }
 
@@ -221,7 +230,7 @@ func AuditLog(action, resource, message string, userID, ip, userAgent string, da
 	data["audit"] = true
 	data["action"] = action
 	data["resource"] = resource
-	
+
 	InfoWithContext(fmt.Sprintf("AUDIT: %s on %s - %s", action, resource, message), data, userID, ip, userAgent)
 }
 
@@ -233,7 +242,7 @@ func PerformanceLog(operation string, duration time.Duration, data map[string]in
 	data["performance"] = true
 	data["operation"] = operation
 	data["duration_ms"] = duration.Milliseconds()
-	
+
 	if duration > time.Second {
 		Warn(fmt.Sprintf("PERFORMANCE: Operazione lenta - %s (durata: %v)", operation, duration), data)
 	} else {
@@ -248,7 +257,7 @@ func CleanOldLogs(daysToKeep int) error {
 	}
 
 	cutoff := time.Now().AddDate(0, 0, -daysToKeep)
-	
+
 	entries, err := os.ReadDir(defaultLogger.logDir)
 	if err != nil {
 		return fmt.Errorf("errore nella lettura della directory log: %v", err)
@@ -261,7 +270,7 @@ func CleanOldLogs(daysToKeep int) error {
 			if err != nil {
 				continue
 			}
-			
+
 			if info.ModTime().Before(cutoff) {
 				filePath := filepath.Join(defaultLogger.logDir, entry.Name())
 				if err := os.Remove(filePath); err == nil {

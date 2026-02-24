@@ -24,7 +24,7 @@ var (
 	// Store per le sessioni (usa cookie sicuri)
 	store *sessions.CookieStore
 	// Storage in memoria per utenti e sessioni (in produzione usare database)
-	restaurants = make(map[string]*models.Restaurant)
+	restaurants  = make(map[string]*models.Restaurant)
 	sessions_map = make(map[string]*models.Session)
 )
 
@@ -53,7 +53,7 @@ func init() {
 	})
 
 	logger.Info("Sistema di autenticazione inizializzato", map[string]interface{}{
-		"session_max_age": 86400 * 7,
+		"session_max_age":    86400 * 7,
 		"restaurants_loaded": len(restaurants),
 	})
 }
@@ -61,7 +61,7 @@ func init() {
 // getOrCreateSessionKey genera o recupera una chiave segreta per le sessioni
 func getOrCreateSessionKey() string {
 	keyPath := "storage/session_key.txt"
-	
+
 	if data, err := os.ReadFile(keyPath); err == nil {
 		return string(data)
 	}
@@ -73,7 +73,7 @@ func getOrCreateSessionKey() string {
 	}
 
 	keyStr := hex.EncodeToString(key)
-	
+
 	// Salva la chiave
 	os.MkdirAll("storage", 0755)
 	if err := os.WriteFile(keyPath, []byte(keyStr), 0600); err != nil {
@@ -111,7 +111,7 @@ func createSession(restaurantID string, r *http.Request) (*models.Session, error
 
 	sessions_map[session.ID] = session
 	saveSessionToStorage(session)
-	
+
 	return session, nil
 }
 
@@ -175,8 +175,8 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	userAgent := r.UserAgent()
 
 	// Log tentativo di login
-	logger.AuditLog("LOGIN_ATTEMPT", "authentication", 
-		"Tentativo di login", "", ip, userAgent, 
+	logger.AuditLog("LOGIN_ATTEMPT", "authentication",
+		"Tentativo di login", "", ip, userAgent,
 		map[string]interface{}{
 			"username": username,
 		})
@@ -192,8 +192,8 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 
 	if restaurant == nil || !checkPassword(restaurant.PasswordHash, password) {
 		// Log login fallito
-		logger.SecurityEvent("LOGIN_FAILED", "Credenziali non valide", 
-			"", ip, userAgent, 
+		logger.SecurityEvent("LOGIN_FAILED", "Credenziali non valide",
+			"", ip, userAgent,
 			map[string]interface{}{
 				"username": username,
 				"reason":   "invalid_credentials",
@@ -225,8 +225,8 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	saveRestaurantToStorage(restaurant)
 
 	// Log login riuscito
-	logger.AuditLog("LOGIN_SUCCESS", "authentication", 
-		"Login completato con successo", restaurant.ID, ip, userAgent, 
+	logger.AuditLog("LOGIN_SUCCESS", "authentication",
+		"Login completato con successo", restaurant.ID, ip, userAgent,
 		map[string]interface{}{
 			"username":        username,
 			"restaurant_name": restaurant.Name,
@@ -294,21 +294,21 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 
 	if len(errors) > 0 {
 		data := struct {
-			Errors   []string
-			Username string
-			Email    string
+			Errors         []string
+			Username       string
+			Email          string
 			RestaurantName string
-			Description string
-			Address string
-			Phone string
+			Description    string
+			Address        string
+			Phone          string
 		}{
-			Errors: errors,
-			Username: username,
-			Email: email,
+			Errors:         errors,
+			Username:       username,
+			Email:          email,
 			RestaurantName: restaurantName,
-			Description: description,
-			Address: address,
-			Phone: phone,
+			Description:    description,
+			Address:        address,
+			Phone:          phone,
 		}
 		renderTemplate(w, "register", data)
 		return
@@ -483,13 +483,13 @@ func loadSessionsFromStorage() {
 // getClientIP estrae l'IP reale del client considerando proxy e load balancer
 func getClientIP(r *http.Request) string {
 	headers := []string{"X-Forwarded-For", "X-Real-Ip", "X-Client-Ip"}
-	
+
 	for _, header := range headers {
 		ip := r.Header.Get(header)
 		if ip != "" {
 			return ip
 		}
 	}
-	
+
 	return r.RemoteAddr
 }
