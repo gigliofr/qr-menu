@@ -9,6 +9,7 @@ import (
 	"qr-menu/api"
 	"qr-menu/backup"
 	"qr-menu/handlers"
+	"qr-menu/localization"
 	"qr-menu/logger"
 	"qr-menu/middleware"
 	"qr-menu/notifications"
@@ -52,6 +53,17 @@ func main() {
 			logger.Warn("Errore nell'avvio del notification manager", map[string]interface{}{"error": err.Error()})
 		}
 		defer nm.Stop()
+	}
+
+	// Inizializzazione del sistema di localizzazione
+	lm := localization.GetLocalizationManager()
+	// Crea i file di traduzione di default se non esistono
+	if err := lm.CreateDefaultTranslationFiles("translations"); err != nil {
+		logger.Warn("Errore creazione file traduzioni", map[string]interface{}{"error": err.Error()})
+	}
+	// Inizializza il localization manager
+	if err := lm.Init("translations"); err != nil {
+		logger.Warn("Errore nell'inizializzazione del localization manager", map[string]interface{}{"error": err.Error()})
 	}
 
 	if err := logger.CleanOldLogs(30); err != nil {
@@ -139,6 +151,14 @@ func main() {
 	r.HandleFunc("/api/notifications/history", handlers.RequireAuth(handlers.GetNotificationHistoryHandler)).Methods("GET")
 	r.HandleFunc("/api/notifications/mark-read", handlers.RequireAuth(handlers.MarkAsReadHandler)).Methods("POST")
 	r.HandleFunc("/api/notifications/stats", handlers.RequireAuth(handlers.GetNotificationStatsHandler)).Methods("GET")
+
+	// Route per il sistema di localizzazione
+	r.HandleFunc("/api/localization/translations", handlers.GetTranslationsHandler).Methods("GET")
+	r.HandleFunc("/api/localization/locales", handlers.GetSupportedLocalesHandler).Methods("GET")
+	r.HandleFunc("/api/localization/set-locale", handlers.RequireAuth(handlers.SetUserLocaleHandler)).Methods("POST")
+	r.HandleFunc("/api/localization/user-locale", handlers.RequireAuth(handlers.GetUserLocaleHandler)).Methods("GET")
+	r.HandleFunc("/api/localization/translation", handlers.RequireAuth(handlers.GetTranslationHandler)).Methods("GET")
+	r.HandleFunc("/api/localization/format-currency", handlers.RequireAuth(handlers.FormatCurrencyHandler)).Methods("GET")
 
 	// Avvia il server
 	port := os.Getenv("PORT")
