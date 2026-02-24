@@ -16,6 +16,7 @@ type Config struct {
 	Logger         LoggerConfig
 	Analytics      AnalyticsConfig
 	Security       SecurityConfig
+	Cache          CacheConfig
 }
 
 // ServerConfig holds server-specific configuration
@@ -111,6 +112,17 @@ type SecurityConfig struct {
 	KeyFile          string
 }
 
+// CacheConfig holds caching configuration
+type CacheConfig struct {
+	Enabled              bool
+	ResponseCacheTTL     time.Duration // Time-to-live for response cache entries
+	QueryCacheTTL        time.Duration // Time-to-live for query cache entries
+	MaxResponseCacheSize int           // Maximum number of cached responses
+	MaxQueryCacheSize    int           // Maximum number of cached query results
+	InvalidateOnMutation bool          // Whether to invalidate cache on mutations
+}
+
+
 // Load loads configuration from environment variables and returns a Config struct
 func Load() *Config {
 	return &Config{
@@ -195,6 +207,14 @@ func Load() *Config {
 			EnableHTTPS:        getEnvBool("SECURITY_ENABLE_HTTPS", false),
 			CertFile:           getEnv("SECURITY_CERT_FILE", ""),
 			KeyFile:            getEnv("SECURITY_KEY_FILE", ""),
+		},
+		Cache: CacheConfig{
+			Enabled:              getEnvBool("CACHE_ENABLED", true),
+			ResponseCacheTTL:     getEnvDuration("CACHE_RESPONSE_TTL", 5*time.Minute),
+			QueryCacheTTL:        getEnvDuration("CACHE_QUERY_TTL", 10*time.Minute),
+			MaxResponseCacheSize: getEnvInt("CACHE_MAX_RESPONSE_SIZE", 1000),
+			MaxQueryCacheSize:    getEnvInt("CACHE_MAX_QUERY_SIZE", 500),
+			InvalidateOnMutation: getEnvBool("CACHE_INVALIDATE_ON_MUTATION", true),
 		},
 	}
 }

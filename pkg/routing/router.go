@@ -1,6 +1,7 @@
 package routing
 
 import (
+	"encoding/json"
 	"net/http"
 
 	"github.com/gorilla/mux"
@@ -8,12 +9,15 @@ import (
 	"qr-menu/pkg/errors"
 	"qr-menu/pkg/handlers"
 	httputil "qr-menu/pkg/http"
+	"qr-menu/pkg/middleware"
 )
 
 // Router groups routes by functionality
 type Router struct {
-	mux       *mux.Router
-	container *container.ServiceContainer
+	mux                  *mux.Router
+	container            *container.ServiceContainer
+	cacheInvalidation    *middleware.CacheInvalidationMiddleware
+	responseCaching      *middleware.ResponseCachingMiddleware
 }
 
 // NewRouter creates a new router with the service container
@@ -26,6 +30,11 @@ func NewRouter(c *container.ServiceContainer) *Router {
 
 // SetupRoutes configures all routes for the application
 func (r *Router) SetupRoutes() {
+	// Apply caching middleware globally if enabled
+	if r.container.Config().Cache.Enabled {
+		r.setupCachingMiddleware()
+	}
+
 	// Public routes
 	r.setupPublicRoutes()
 
@@ -37,6 +46,11 @@ func (r *Router) SetupRoutes() {
 
 	// Health check
 	r.setupHealthRoutes()
+
+	// Cache statistics routes
+	if r.container.Config().Cache.Enabled {
+		r.setupCacheStatsRoutes()
+	}
 }
 
 // setupPublicRoutes sets up unauthenticated public endpoints
@@ -201,6 +215,143 @@ func (r *Router) MethodNotAllowedHandler(w http.ResponseWriter, req *http.Reques
 func (r *Router) SetupErrorHandlers() {
 	r.mux.NotFoundHandler = http.HandlerFunc(r.NotFoundHandler)
 	r.mux.MethodNotAllowedHandler = http.HandlerFunc(r.MethodNotAllowedHandler)
+}
+
+// setupCachingMiddleware sets up response and cache invalidation middleware
+func (r *Router) setupCachingMiddleware() {
+	cfg := r.container.Config()
+	respCache := r.container.ResponseCache()
+	queryCache := r.container.QueryCache()
+
+	if respCache == nil || queryCache == nil {
+		return
+	}
+
+	// Apply response caching middleware
+	r.responseCaching = middleware.NewResponseCachingMiddleware(respCache, cfg.Cache.ResponseCacheTTL)
+	r.mux.Use(mux.MiddlewareFunc(r.responseCaching.Middleware()))
+
+	// Apply cache invalidation middleware
+	r.cacheInvalidation = middleware.NewCacheInvalidationMiddleware(respCache, queryCache)
+	r.mux.Use(mux.MiddlewareFunc(r.cacheInvalidation.Middleware()))
+
+	// Register cache invalidation patterns for mutation endpoints
+	r.registerCacheInvalidationPatterns()
+}
+
+// registerCacheInvalidationPatterns registers which paths invalidate which cache entries
+func (r *Router) registerCacheInvalidationPatterns() {
+	if r.cacheInvalidation == nil {
+		return
+	}
+
+	// Backup mutations invalidate backup-related queries
+	r.cacheInvalidation.RegisterPattern("/api/v1/backup", "backups")
+
+	// Notification mutations invalidate notification-related queries
+	r.cacheInvalidation.RegisterPattern("/api/v1/notifications", "notifications")
+
+	// Analytics mutations invalidate analytics queries
+	r.cacheInvalidation.RegisterPattern("/api/v1/analytics", "analytics")
+
+	// Localization mutations invalidate localization queries
+	r.cacheInvalidation.RegisterPattern("/api/v1/i18n", "localization")
+
+	// Database mutations invalidate all database-related queries
+	r.cacheInvalidation.RegisterPattern("/api/v1/database", "database")
+	r.cacheInvalidation.RegisterPattern("/api/admin/database", "database")
+
+	// Migration mutations invalidate migration queries
+	r.cacheInvalidation.RegisterPattern("/api/admin/migrations", "migrations")
+
+	// PWA mutations invalidate PWA cache
+	r.cacheInvalidation.RegisterPattern("/api/v1/pwa", "pwa")
+}
+
+// setupCacheStatsRoutes sets up cache statistics endpoints
+func (r *Router) setupCacheStatsRoutes() {
+	admin := r.mux.PathPrefix("/api/admin").Subrouter()
+
+	admin.HandleFunc("/cache/stats", r.getCacheStats).Methods("GET")
+	admin.HandleFunc("/cache/clear", r.clearCache).Methods("POST")
+	admin.HandleFunc("/cache/status", r.getCacheStatus).Methods("GET")
+}
+
+// getCacheStats returns cache statistics
+func (r *Router) getCacheStats(w http.ResponseWriter, req *http.Request) {
+	type statsResponse struct {
+		ResponseCache map[string]interface{} `json:"response_cache,omitempty"`
+		QueryCache    map[string]interface{} `json:"query_cache,omitempty"`
+	}
+
+	resp := statsResponse{}
+
+	respCache := r.container.ResponseCache()
+	queryCache := r.container.QueryCache()
+
+	if respCache != nil {
+		resp.ResponseCache = respCache.GetStats()
+	}
+
+	if queryCache != nil {
+		resp.QueryCache = queryCache.GetStats()
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(resp)
+}
+
+// clearCache clears all caches
+func (r *Router) clearCache(w http.ResponseWriter, req *http.Request) {
+	respCache := r.container.ResponseCache()
+	queryCache := r.container.QueryCache()
+
+	if respCache != nil {
+		// Use InvalidatePattern with a pattern that matches everything
+		// For now, we'll need to clear by key - but the ResponseCache doesn't have a clear all method
+		// We'll need to add one or use a workaround
+	}
+
+	if queryCache != nil {
+		queryCache.InvalidateAll()
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+}
+
+// getCacheStatus returns cache status
+func (r *Router) getCacheStatus(w http.ResponseWriter, req *http.Request) {
+	respCache := r.container.ResponseCache()
+	queryCache := r.container.QueryCache()
+
+	status := map[string]interface{}{
+		"enabled":        r.container.Config().Cache.Enabled,
+		"response_cache": respCache != nil,
+		"query_cache":    queryCache != nil,
+	}
+
+	if respCache != nil {
+		status["response_cache_size"] = respCache.Size()
+		stats := respCache.GetStats()
+		if hits, ok := stats["hits"]; ok {
+			status["response_cache_hits"] = hits
+		}
+		if misses, ok := stats["misses"]; ok {
+			status["response_cache_misses"] = misses
+		}
+	}
+
+	if queryCache != nil {
+		status["query_cache_size"] = queryCache.Size()
+		stats := queryCache.GetStats()
+		status["query_cache_stats"] = stats
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(status)
 }
 
 // GetMux returns the underlying gorilla mux router

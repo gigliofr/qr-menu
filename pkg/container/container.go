@@ -11,6 +11,7 @@ import (
 	"qr-menu/localization"
 	"qr-menu/logger"
 	"qr-menu/notifications"
+	"qr-menu/pkg/cache"
 	"qr-menu/pkg/config"
 	"qr-menu/pkg/errors"
 	"qr-menu/pwa"
@@ -26,6 +27,8 @@ type ServiceContainer struct {
 	pwa             *pwa.PWAManager
 	database        *db.DatabaseManager
 	migration       *db.MigrationManager
+	responseCache   *cache.ResponseCache
+	queryCache      *cache.QueryResultCache
 	isInitialized   bool
 	mu              sync.RWMutex
 	shutdownHandlers []func(ctx context.Context) error
@@ -86,9 +89,14 @@ func NewServiceContainer(cfg *config.Config) (*ServiceContainer, error) {
 		// Non-critical service
 	}
 
+	if err := c.initCache(); err != nil {
+		logger.Warn("Cache initialization failed", map[string]interface{}{"error": err.Error()})
+		// Non-critical service
+	}
+
 	c.isInitialized = true
 	logger.Info("Service container initialized successfully", map[string]interface{}{
-		"services": "logger, analytics, backup, notifications, localization, pwa, database, migration",
+		"services": "logger, analytics, backup, notifications, localization, pwa, database, migration, cache",
 	})
 
 	return c, nil
@@ -223,6 +231,35 @@ func (c *ServiceContainer) initMigration() error {
 	return nil
 }
 
+func (c *ServiceContainer) initCache() error {
+	if !c.config.Cache.Enabled {
+		logger.Info("Cache is disabled", nil)
+		return nil
+	}
+
+	// Initialize in-memory cache instances
+	responseCoreCache := cache.NewInMemoryCache()
+	queryCoreCache := cache.NewInMemoryCache()
+
+	// Initialize response cache wrapper
+	respCache := cache.NewResponseCache(responseCoreCache)
+
+	// Initialize query result cache wrapper
+	queryCache := cache.NewQueryResultCache(queryCoreCache)
+
+	c.responseCache = respCache
+	c.queryCache = queryCache
+
+	logger.Info("Cache initialized successfully", map[string]interface{}{
+		"response_cache_max_size": c.config.Cache.MaxResponseCacheSize,
+		"query_cache_max_size":    c.config.Cache.MaxQueryCacheSize,
+		"response_cache_ttl":      c.config.Cache.ResponseCacheTTL.String(),
+		"query_cache_ttl":         c.config.Cache.QueryCacheTTL.String(),
+	})
+
+	return nil
+}
+
 // Getter methods
 
 // Config returns the configuration
@@ -281,6 +318,20 @@ func (c *ServiceContainer) Migration() *db.MigrationManager {
 	return c.migration
 }
 
+// ResponseCache returns the response cache
+func (c *ServiceContainer) ResponseCache() *cache.ResponseCache {
+	c.mu.RLock()
+	defer c.mu.RUnlock()
+	return c.responseCache
+}
+
+// QueryCache returns the query result cache
+func (c *ServiceContainer) QueryCache() *cache.QueryResultCache {
+	c.mu.RLock()
+	defer c.mu.RUnlock()
+	return c.queryCache
+}
+
 // IsInitialized returns true if container is fully initialized
 func (c *ServiceContainer) IsInitialized() bool {
 	c.mu.RLock()
@@ -332,6 +383,8 @@ func (c *ServiceContainer) Health() map[string]interface{} {
 			"pwa":            c.pwa != nil,
 			"database":       c.database != nil,
 			"migration":      c.migration != nil,
+			"response_cache": c.responseCache != nil,
+			"query_cache":    c.queryCache != nil,
 		},
 	}
 
