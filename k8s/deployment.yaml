@@ -1,0 +1,61 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: qr-menu
+  labels:
+    app: qr-menu
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: qr-menu
+  template:
+    metadata:
+      labels:
+        app: qr-menu
+    spec:
+      containers:
+        - name: qr-menu
+          image: qr-menu:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8080
+          env:
+            - name: PORT
+              value: "8080"
+            - name: ENVIRONMENT
+              value: "production"
+            - name: CACHE_ENABLED
+              value: "true"
+            - name: CACHE_RESPONSE_TTL
+              value: "30s"
+            - name: CACHE_QUERY_TTL
+              value: "60s"
+            - name: CACHE_MAX_RESPONSE_SIZE
+              value: "1000"
+            - name: CACHE_MAX_QUERY_SIZE
+              value: "1000"
+            - name: CACHE_INVALIDATE_ON_MUTATION
+              value: "true"
+          envFrom:
+            - secretRef:
+                name: qr-menu-secrets
+          readinessProbe:
+            httpGet:
+              path: /api/v1/health
+              port: 8080
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /api/v1/health
+              port: 8080
+            initialDelaySeconds: 10
+            periodSeconds: 20
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+            limits:
+              cpu: "500m"
+              memory: "512Mi"

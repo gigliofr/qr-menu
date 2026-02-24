@@ -44,6 +44,7 @@ type Restaurant struct {
 	Username     string    `json:"username"` // Username unico per login
 	Email        string    `json:"email"`    // Email unica
 	PasswordHash string    `json:"-"`        // Password hash (non serializzata in JSON)
+	Role         string    `json:"role"`     // Role for RBAC (owner/admin/manager/staff/viewer)
 	Name         string    `json:"name"`     // Nome del ristorante
 	Description  string    `json:"description"`
 	Address      string    `json:"address"`

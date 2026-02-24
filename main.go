@@ -5,235 +5,46 @@ import (
 	"net/http"
 	"os"
 
-	"qr-menu/analytics"
-	"qr-menu/api"
-	"qr-menu/backup"
-	"qr-menu/db"
-	"qr-menu/handlers"
-	"qr-menu/localization"
 	"qr-menu/logger"
-	"qr-menu/middleware"
-	"qr-menu/notifications"
-	"qr-menu/pwa"
-
-	"github.com/gorilla/mux"
+	"qr-menu/pkg/app"
 )
 
 func main() {
-	// Inizializza il sistema di logging
-	if err := logger.Init(logger.INFO, "logs"); err != nil {
-		log.Fatalf("Errore nell'inizializzazione del logger: %v", err)
+	// Configurazione
+	cfg := app.DefaultConfig()
+	cfg.DatabaseURL = os.Getenv("DATABASE_URL")
+	
+	// Inizializza tutti i servizi
+	services, err := app.InitializeServices(cfg)
+	if err != nil {
+		log.Fatalf("Failed to initialize services: %v", err)
 	}
-	defer logger.Close()
-
-	// Inizializzazione del sistema analytics (usa il singleton globale)
-	_ = analytics.GetAnalytics()
-
-	// Inizializzazione del sistema di backup
-	bm := backup.GetBackupManager()
-	if err := bm.Init("backups", 30); err != nil {
-		logger.Warn("Errore nell'inizializzazione del backup manager", map[string]interface{}{"error": err.Error()})
-	} else {
-		// Avvia il backup automatico giornaliero alle 02:00
-		schedule := backup.BackupSchedule{
-			Type: "daily",
-			Hour: 2,
-		}
-		if err := bm.StartScheduled(schedule); err != nil {
-			logger.Warn("Errore nell'avvio del backup scheduler", map[string]interface{}{"error": err.Error()})
-		}
-		defer bm.Stop()
-	}
-
-	// Inizializzazione del sistema di notifiche
-	nm := notifications.GetNotificationManager()
-	if err := nm.Init(100); err != nil {
-		logger.Warn("Errore nell'inizializzazione del notification manager", map[string]interface{}{"error": err.Error()})
-	} else {
-		// Avvia i worker per processare le notifiche (3 worker in parallelo)
-		if err := nm.Start(3); err != nil {
-			logger.Warn("Errore nell'avvio del notification manager", map[string]interface{}{"error": err.Error()})
-		}
-		defer nm.Stop()
-	}
-
-	// Inizializzazione del sistema di localizzazione
-	lm := localization.GetLocalizationManager()
-	// Crea i file di traduzione di default se non esistono
-	if err := lm.CreateDefaultTranslationFiles("translations"); err != nil {
-		logger.Warn("Errore creazione file traduzioni", map[string]interface{}{"error": err.Error()})
-	}
-	// Inizializza il localization manager
-	if err := lm.Init("translations"); err != nil {
-		logger.Warn("Errore nell'inizializzazione del localization manager", map[string]interface{}{"error": err.Error()})
-	}
-
-	// Inizializzazione del sistema PWA
-	pm := pwa.GetPWAManager()
-	pwaConfig := pwa.PWAConfig{
-		AppName:            "QR Menu System",
-		AppShortName:       "QR Menu",
-		AppDescription:     "Digital QR Code Menu System for Restaurants",
-		AppStartURL:        "/",
-		AppScope:           "/",
-		AppThemeColor:      "#2E7D32",
-		AppBackgroundColor: "#FFFFFF",
-		StaticPath:         "static",
-	}
-	if err := pm.Init(pwaConfig); err != nil {
-		logger.Warn("Errore nell'inizializzazione del PWA manager", map[string]interface{}{"error": err.Error()})
-	}
-
-	// Inizializzazione del migration manager
-	mm := db.GetMigrationManager()
-	if err := mm.Init(db.MigrationConfig{
-		MigrationsPath: "db/migrations",
-		DatabaseType:   "postgres",
-	}); err != nil {
-		logger.Warn("Errore nell'inizializzazione del migration manager", map[string]interface{}{"error": err.Error()})
-	}
-	// Crea i file di migrazione di default
-	if err := mm.CreateDefaultMigrations(); err != nil {
-		logger.Warn("Errore creazione file migrazioni", map[string]interface{}{"error": err.Error()})
-	}
-
-	// Inizializzazione del database manager (opzionale - usare solo se necessario)
-	dm := db.GetDatabaseManager()
-	// Configura solo se hai le credenziali database
-	if dsn := os.Getenv("DATABASE_URL"); dsn != "" {
-		if err := dm.Init(db.DatabaseConfig{
-			Type: "postgres",
-			DSN:  dsn,
-		}); err != nil {
-			logger.Warn("Errore nell'inizializzazione del database", map[string]interface{}{"error": err.Error()})
-		}
-	}
-
-	if err := logger.CleanOldLogs(30); err != nil {
-		logger.Warn("Errore nella pulizia dei log", map[string]interface{}{"error": err.Error()})
-	}
-
-	logger.Info("Avvio QR Menu System", map[string]interface{}{
-		"version": "2.0.0",
-		"mode":    "production",
-	})
-	// Crea le directory necessarie se non esistono
+	defer services.Shutdown()
+	
+	// Crea le directory necessarie
 	createDirectories()
-
-	// Inizializza il router
-	r := mux.NewRouter()
-
-	// Route per servire file statici
-	r.PathPrefix("/static/").Handler(http.StripPrefix("/static/", http.FileServer(http.Dir("./static/"))))
-
-	// Configura i middleware di logging e sicurezza
-	r.Use(middleware.LoggingMiddleware)
-	r.Use(middleware.SecurityMiddleware)
-	r.Use(middleware.AuthMiddleware)
-	r.Use(handlers.PWAHeadersMiddleware)
-
-	// Route pubbliche (non richiedono autenticazione)
-	r.HandleFunc("/", handlers.HomeHandler).Methods("GET")
-	r.HandleFunc("/login", handlers.LoginHandler).Methods("GET", "POST")
-	r.HandleFunc("/register", handlers.RegisterHandler).Methods("GET", "POST")
-
-	// Route per visualizzazione menu pubblico (non richiedono auth)
-	r.HandleFunc("/menu/{id}", handlers.PublicMenuHandler).Methods("GET")
-	r.HandleFunc("/r/{username}", handlers.GetActiveMenuHandler).Methods("GET")
-
-	// Route per servire i QR codes (pubblico)
-	r.PathPrefix("/qr/").Handler(http.StripPrefix("/qr/", http.FileServer(http.Dir("./static/qrcodes/"))))
-
-	// Route per tracking analytics (pubblico)
-	r.HandleFunc("/api/track/share", handlers.TrackShareHandler).Methods("POST")
-
-	// Route protette (richiedono autenticazione)
-	r.HandleFunc("/admin", handlers.RequireAuth(handlers.AdminHandler)).Methods("GET")
-	r.HandleFunc("/admin/analytics", handlers.RequireAuth(handlers.AnalyticsDashboardHandler)).Methods("GET")
-	r.HandleFunc("/api/analytics", handlers.RequireAuth(handlers.AnalyticsAPIHandler)).Methods("GET")
-	r.HandleFunc("/admin/menu/create", handlers.RequireAuth(handlers.CreateMenuHandler)).Methods("GET")
-	r.HandleFunc("/admin/menu/create", handlers.RequireAuth(handlers.CreateMenuPostHandler)).Methods("POST")
-	r.HandleFunc("/admin/menu/{id}", handlers.RequireAuth(handlers.EditMenuHandler)).Methods("GET")
-	r.HandleFunc("/admin/menu/{id}/update", handlers.RequireAuth(handlers.UpdateMenuHandler)).Methods("POST")
-	r.HandleFunc("/admin/menu/{id}/complete", handlers.RequireAuth(handlers.CompleteMenuHandler)).Methods("POST")
-	r.HandleFunc("/admin/menu/{id}/activate", handlers.RequireAuth(handlers.SetActiveMenuHandler)).Methods("POST")
-	r.HandleFunc("/admin/menu/{id}/delete", handlers.RequireAuth(handlers.DeleteMenuHandler)).Methods("POST")
-	r.HandleFunc("/admin/menu/{id}/duplicate", handlers.RequireAuth(handlers.DuplicateMenuHandler)).Methods("POST")
-	r.HandleFunc("/admin/menu/{menuId}/category/{categoryId}/item/{itemId}/duplicate", handlers.RequireAuth(handlers.DuplicateItemHandler)).Methods("POST")
-	r.HandleFunc("/admin/menu/{menuId}/category/{categoryId}/item/{itemId}/edit", handlers.RequireAuth(handlers.EditItemHandler)).Methods("POST")
-	r.HandleFunc("/admin/menu/{menuId}/category/{categoryId}/item/{itemId}/delete", handlers.RequireAuth(handlers.DeleteItemHandler)).Methods("POST")
-	r.HandleFunc("/admin/menu/{menuId}/category/{categoryId}/item/{itemId}/upload-image", handlers.RequireAuth(handlers.UploadItemImageHandler)).Methods("POST")
-	r.HandleFunc("/admin/menu/{id}/add-item", handlers.RequireAuth(handlers.AddItemHandler)).Methods("POST")
-	r.HandleFunc("/menu/{id}/share", handlers.ShareMenuHandler).Methods("GET")
-	r.HandleFunc("/logout", handlers.LogoutHandler).Methods("GET", "POST")
-
-	// Route per l'API JSON (richiedono autenticazione)
-	r.HandleFunc("/api/menus", handlers.RequireAuth(handlers.GetMenusHandler)).Methods("GET")
-	r.HandleFunc("/api/menu/{id}", handlers.GetMenuHandler).Methods("GET") // Pubblico per compatibilità
-	r.HandleFunc("/api/menu", handlers.RequireAuth(handlers.CreateMenuAPIHandler)).Methods("POST")
-	r.HandleFunc("/api/menu/{id}/generate-qr", handlers.RequireAuth(handlers.GenerateQRHandler)).Methods("POST")
-
-	// Setup delle nuove API REST v2
-	api.SetupAPIRoutes(r)
-
-	// Route per il sistema di backup (richiedono autenticazione)
-	r.HandleFunc("/api/backup/create", handlers.RequireAuth(handlers.CreateBackupHandler)).Methods("POST")
-	r.HandleFunc("/api/backup/list", handlers.RequireAuth(handlers.ListBackupsHandler)).Methods("GET")
-	r.HandleFunc("/api/backup/delete", handlers.RequireAuth(handlers.DeleteBackupHandler)).Methods("DELETE")
-	r.HandleFunc("/api/backup/restore", handlers.RequireAuth(handlers.RestoreBackupHandler)).Methods("POST")
-	r.HandleFunc("/api/backup/status", handlers.RequireAuth(handlers.GetBackupStatusHandler)).Methods("GET")
-	r.HandleFunc("/api/backup/schedule", handlers.RequireAuth(handlers.ScheduleBackupHandler)).Methods("POST")
-	r.HandleFunc("/api/backup/stats", handlers.RequireAuth(handlers.GetBackupStatsHandler)).Methods("GET")
-	r.HandleFunc("/api/backup/download", handlers.RequireAuth(handlers.DownloadBackupHandler)).Methods("GET")
-
-	// Route per il sistema di notifiche (richiedono autenticazione)
-	r.HandleFunc("/api/notifications/send", handlers.RequireAuth(handlers.SendNotificationHandler)).Methods("POST")
-	r.HandleFunc("/api/notifications/preferences", handlers.RequireAuth(handlers.GetPreferencesHandler)).Methods("GET")
-	r.HandleFunc("/api/notifications/preferences", handlers.RequireAuth(handlers.UpdatePreferencesHandler)).Methods("PUT")
-	r.HandleFunc("/api/notifications/fcm-token", handlers.RequireAuth(handlers.RegisterFCMTokenHandler)).Methods("POST")
-	r.HandleFunc("/api/notifications/fcm-token", handlers.RequireAuth(handlers.RemoveFCMTokenHandler)).Methods("DELETE")
-	r.HandleFunc("/api/notifications/history", handlers.RequireAuth(handlers.GetNotificationHistoryHandler)).Methods("GET")
-	r.HandleFunc("/api/notifications/mark-read", handlers.RequireAuth(handlers.MarkAsReadHandler)).Methods("POST")
-	r.HandleFunc("/api/notifications/stats", handlers.RequireAuth(handlers.GetNotificationStatsHandler)).Methods("GET")
-
-	// Route per il sistema di localizzazione
-	r.HandleFunc("/api/localization/translations", handlers.GetTranslationsHandler).Methods("GET")
-	r.HandleFunc("/api/localization/locales", handlers.GetSupportedLocalesHandler).Methods("GET")
-	r.HandleFunc("/api/localization/set-locale", handlers.RequireAuth(handlers.SetUserLocaleHandler)).Methods("POST")
-	r.HandleFunc("/api/localization/user-locale", handlers.RequireAuth(handlers.GetUserLocaleHandler)).Methods("GET")
-	r.HandleFunc("/api/localization/translation", handlers.RequireAuth(handlers.GetTranslationHandler)).Methods("GET")
-	r.HandleFunc("/api/localization/format-currency", handlers.RequireAuth(handlers.FormatCurrencyHandler)).Methods("GET")
-
-	// Route per il sistema PWA
-	r.HandleFunc("/manifest.json", handlers.ManifestHandler).Methods("GET")
-	r.HandleFunc("/service-worker.js", handlers.ServiceWorkerHandler).Methods("GET")
-	r.HandleFunc("/offline.html", handlers.OfflineHandler).Methods("GET")
-	r.HandleFunc("/ping", handlers.HealthCheckHandler).Methods("GET", "HEAD")
-
-	// Route per il sistema di migrazioni/database (richiedono autenticazione ADMIN)
-	r.HandleFunc("/api/admin/migrations/status", handlers.RequireAuth(handlers.GetMigrationStatusHandler)).Methods("GET")
-	r.HandleFunc("/api/admin/migrations/list", handlers.RequireAuth(handlers.ListMigrationsHandler)).Methods("GET")
-	r.HandleFunc("/api/admin/migrations/applied", handlers.RequireAuth(handlers.GetAppliedMigrationsHandler)).Methods("GET")
-	r.HandleFunc("/api/admin/migrations/pending", handlers.RequireAuth(handlers.GetPendingMigrationsHandler)).Methods("GET")
-	r.HandleFunc("/api/admin/migrations/create-files", handlers.RequireAuth(handlers.CreateMigrationFilesHandler)).Methods("POST")
-	r.HandleFunc("/api/admin/database/health", handlers.RequireAuth(handlers.GetDatabaseHealthHandler)).Methods("GET")
-
-	// Avvia il server
+	
+	// Setup router con tutte le route
+	router := app.SetupRouter(services)
+	
+	// Determina porta
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = "8080"
 	}
 
-	logger.Info("Server QR Menu System avviato", map[string]interface{}{
-		"port":       ":" + port,
+	// Log startup
+	logger.Info("QR Menu System ready", map[string]interface{}{
+		"port":       port,
 		"admin_url":  "http://localhost:" + port + "/admin",
 		"login_url":  "http://localhost:" + port + "/login",
 		"api_docs":   "http://localhost:" + port + "/api/v1/docs",
 		"api_health": "http://localhost:" + port + "/api/v1/health",
 	})
 
-	if err := http.ListenAndServe(":"+port, r); err != nil {
-		logger.Fatal("Errore nell'avvio del server", map[string]interface{}{"error": err.Error()})
+	// Avvia server
+	if err := http.ListenAndServe(":"+port, router); err != nil {
+		logger.Fatal("Server failed", map[string]interface{}{"error": err.Error()})
 	}
 }
 

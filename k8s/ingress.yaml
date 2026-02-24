@@ -1,0 +1,18 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: qr-menu
+  annotations:
+    kubernetes.io/ingress.class: nginx
+spec:
+  rules:
+    - host: qr-menu.local
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: qr-menu
+                port:
+                  number: 80

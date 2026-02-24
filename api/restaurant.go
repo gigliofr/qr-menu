@@ -109,6 +109,10 @@ func APILoginHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if restaurant.Role == "" {
+		restaurant.Role = defaultRole
+	}
+
 	// Verifica password
 	if err := bcrypt.CompareHashAndPassword([]byte(restaurant.PasswordHash), []byte(req.Password)); err != nil {
 		logger.SecurityEvent("API_LOGIN_FAILED", "Password errata",
@@ -206,6 +210,7 @@ func APIRegisterHandler(w http.ResponseWriter, r *http.Request) {
 		Username:     strings.TrimSpace(req.Username),
 		Email:        strings.TrimSpace(strings.ToLower(req.Email)),
 		PasswordHash: string(passwordHash),
+		Role:         defaultRole,
 		Name:         strings.TrimSpace(req.RestaurantName),
 		Description:  strings.TrimSpace(req.Description),
 		Address:      strings.TrimSpace(req.Address),

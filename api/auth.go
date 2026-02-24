@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 
 	"qr-menu/logger"
@@ -41,7 +42,53 @@ type Metadata struct {
 type Claims struct {
 	RestaurantID string `json:"restaurant_id"`
 	Username     string `json:"username"`
+	Role         string `json:"role"`
 	jwt.RegisteredClaims
+}
+
+const (
+	defaultRole = "owner"
+	RoleOwner   = "owner"
+	RoleAdmin   = "admin"
+	RoleManager = "manager"
+	RoleStaff   = "staff"
+	RoleViewer  = "viewer"
+
+	PermMenusRead        = "menus:read"
+	PermMenusWrite       = "menus:write"
+	PermMenusDelete      = "menus:delete"
+	PermMenusActivate    = "menus:activate"
+	PermRestaurantRead   = "restaurant:read"
+	PermRestaurantWrite  = "restaurant:write"
+	PermAuthChangePass   = "auth:change-password"
+	PermBillingRead      = "billing:read"
+	PermBillingWrite     = "billing:write"
+	PermWebhooksRead     = "webhooks:read"
+	PermWebhooksWrite    = "webhooks:write"
+	PermWebhooksDeliver  = "webhooks:deliver"
+)
+
+var allPermissions = []string{
+	PermMenusRead,
+	PermMenusWrite,
+	PermMenusDelete,
+	PermMenusActivate,
+	PermRestaurantRead,
+	PermRestaurantWrite,
+	PermAuthChangePass,
+	PermBillingRead,
+	PermBillingWrite,
+	PermWebhooksRead,
+	PermWebhooksWrite,
+	PermWebhooksDeliver,
+}
+
+var rolePermissions = map[string]map[string]bool{
+	RoleOwner:   permissionSet(allPermissions...),
+	RoleAdmin:   permissionSet(allPermissions...),
+	RoleManager: permissionSet(PermMenusRead, PermMenusWrite, PermMenusActivate, PermRestaurantRead, PermRestaurantWrite, PermAuthChangePass, PermBillingRead, PermWebhooksRead, PermWebhooksWrite, PermWebhooksDeliver),
+	RoleStaff:   permissionSet(PermMenusRead, PermRestaurantRead),
+	RoleViewer:  permissionSet(PermMenusRead, PermRestaurantRead),
 }
 
 var (
@@ -102,10 +149,15 @@ func CreatedResponse(w http.ResponseWriter, data interface{}) {
 // GenerateJWT genera un token JWT per un ristorante
 func GenerateJWT(restaurant *models.Restaurant) (string, error) {
 	expirationTime := time.Now().Add(24 * time.Hour)
+	role := normalizeRole(restaurant.Role)
+	if restaurant.Role != role {
+		restaurant.Role = role
+	}
 
 	claims := &Claims{
 		RestaurantID: restaurant.ID,
 		Username:     restaurant.Username,
+		Role:         role,
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(expirationTime),
 			IssuedAt:  jwt.NewNumericDate(time.Now()),
@@ -189,6 +241,7 @@ func AuthMiddleware(next http.HandlerFunc) http.HandlerFunc {
 		// Aggiungi le claims al contesto della richiesta
 		r.Header.Set("X-Restaurant-ID", claims.RestaurantID)
 		r.Header.Set("X-Username", claims.Username)
+		r.Header.Set("X-Role", normalizeRole(claims.Role))
 
 		logger.AuditLog("API_ACCESS", "api",
 			"Accesso API autorizzato", claims.RestaurantID, getClientIP(r), r.UserAgent(),
@@ -198,6 +251,33 @@ func AuthMiddleware(next http.HandlerFunc) http.HandlerFunc {
 			})
 
 		next.ServeHTTP(w, r)
+	}
+}
+
+// RBAC middleware: require permissions
+func RequirePermissions(perms ...string) func(http.HandlerFunc) http.HandlerFunc {
+	return func(next http.HandlerFunc) http.HandlerFunc {
+		return func(w http.ResponseWriter, r *http.Request) {
+			role := GetRoleFromRequest(r)
+			for _, perm := range perms {
+				if !roleHasPermission(role, perm) {
+					logger.SecurityEvent("ACCESS_DENIED", "Permesso mancante",
+						GetRestaurantIDFromRequest(r), getClientIP(r), r.UserAgent(),
+						map[string]interface{}{
+							"role":       role,
+							"permission": perm,
+							"endpoint":   r.URL.Path,
+							"method":     r.Method,
+						})
+
+					ErrorResponse(w, http.StatusForbidden, "ACCESS_DENIED",
+						"Accesso negato", "Permessi insufficienti")
+					return
+				}
+			}
+
+			next.ServeHTTP(w, r)
+		}
 	}
 }
 
@@ -287,4 +367,33 @@ func GetRestaurantIDFromRequest(r *http.Request) string {
 // Funzione per ottenere l'username dalla richiesta
 func GetUsernameFromRequest(r *http.Request) string {
 	return r.Header.Get("X-Username")
+}
+
+// Funzione per ottenere il ruolo dalla richiesta
+func GetRoleFromRequest(r *http.Request) string {
+	return normalizeRole(r.Header.Get("X-Role"))
+}
+
+func normalizeRole(role string) string {
+	role = strings.ToLower(strings.TrimSpace(role))
+	if role == "" {
+		return defaultRole
+	}
+	return role
+}
+
+func roleHasPermission(role, perm string) bool {
+	role = normalizeRole(role)
+	if perms, ok := rolePermissions[role]; ok {
+		return perms[perm]
+	}
+	return rolePermissions[defaultRole][perm]
+}
+
+func permissionSet(perms ...string) map[string]bool {
+	set := make(map[string]bool, len(perms))
+	for _, perm := range perms {
+		set[perm] = true
+	}
+	return set
 }

@@ -1,0 +1,17 @@
+name: qr_menu_mobile
+version: 2.0.0+1
+description: Enterprise QR Menu mobile app
+publish_to: "none"
+
+environment:
+  sdk: ">=3.3.0 <4.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  http: ^1.2.0
+  qr_flutter: ^4.1.0
+  mobile_scanner: ^5.1.1
+
+flutter:
+  uses-material-design: true

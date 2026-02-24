@@ -1,0 +1,20 @@
+services:
+  qr-menu:
+    build: .
+    container_name: qr-menu
+    ports:
+      - "8080:8080"
+    environment:
+      - PORT=8080
+      - ENVIRONMENT=production
+      - CACHE_ENABLED=true
+      - CACHE_RESPONSE_TTL=30s
+      - CACHE_QUERY_TTL=60s
+      - CACHE_MAX_RESPONSE_SIZE=1000
+      - CACHE_MAX_QUERY_SIZE=1000
+      - CACHE_INVALIDATE_ON_MUTATION=true
+      - STRIPE_SECRET_KEY=
+      - STRIPE_WEBHOOK_SECRET=
+    volumes:
+      - ./storage:/app/storage
+    restart: unless-stopped

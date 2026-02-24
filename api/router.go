@@ -3,6 +3,7 @@ package api
 import (
 	"net/http"
 	"time"
+	"qr-menu/security"
 
 	"github.com/gorilla/mux"
 )
@@ -35,22 +36,63 @@ func SetupAPIRoutes(r *mux.Router) {
 	protected.HandleFunc("/auth/change-password", ChangePasswordHandler).Methods("POST")
 
 	// Restaurant endpoints
-	protected.HandleFunc("/restaurant/profile", GetRestaurantProfileHandler).Methods("GET")
-	protected.HandleFunc("/restaurant/profile", UpdateRestaurantProfileHandler).Methods("PUT")
+	protected.HandleFunc("/restaurant/profile", RequirePermissions(PermRestaurantRead)(GetRestaurantProfileHandler)).Methods("GET")
+	protected.HandleFunc("/restaurant/profile", RequirePermissions(PermRestaurantWrite)(UpdateRestaurantProfileHandler)).Methods("PUT")
 
 	// Menu endpoints
-	protected.HandleFunc("/menus", GetMenusHandler).Methods("GET")
-	protected.HandleFunc("/menus", CreateMenuHandler).Methods("POST")
-	protected.HandleFunc("/menus/{id}", GetMenuHandler).Methods("GET")
-	protected.HandleFunc("/menus/{id}", UpdateMenuHandler).Methods("PUT")
-	protected.HandleFunc("/menus/{id}", DeleteMenuHandler).Methods("DELETE")
-	protected.HandleFunc("/menus/{id}/activate", SetActiveMenuHandler).Methods("POST")
+	protected.HandleFunc("/menus", RequirePermissions(PermMenusRead)(GetMenusHandler)).Methods("GET")
+	protected.HandleFunc("/menus", RequirePermissions(PermMenusWrite)(CreateMenuHandler)).Methods("POST")
+	protected.HandleFunc("/menus/{id}", RequirePermissions(PermMenusRead)(GetMenuHandler)).Methods("GET")
+	protected.HandleFunc("/menus/{id}", RequirePermissions(PermMenusWrite)(UpdateMenuHandler)).Methods("PUT")
+	protected.HandleFunc("/menus/{id}", RequirePermissions(PermMenusDelete)(DeleteMenuHandler)).Methods("DELETE")
+	protected.HandleFunc("/menus/{id}/activate", RequirePermissions(PermMenusActivate)(SetActiveMenuHandler)).Methods("POST")
 
 	// Category endpoints
-	protected.HandleFunc("/menus/{id}/categories", AddCategoryHandler).Methods("POST")
+	protected.HandleFunc("/menus/{id}/categories", RequirePermissions(PermMenusWrite)(AddCategoryHandler)).Methods("POST")
 
 	// Item endpoints
-	protected.HandleFunc("/menus/{menu_id}/categories/{category_id}/items", AddItemHandler).Methods("POST")
+	protected.HandleFunc("/menus/{menu_id}/categories/{category_id}/items", RequirePermissions(PermMenusWrite)(AddItemHandler)).Methods("POST")
+
+	// Billing endpoints
+	protected.HandleFunc("/billing/plans", RequirePermissions(PermBillingRead)(GetBillingPlansHandler)).Methods("GET")
+	protected.HandleFunc("/billing/subscription", RequirePermissions(PermBillingRead)(GetSubscriptionHandler)).Methods("GET")
+	protected.HandleFunc("/billing/subscription", RequirePermissions(PermBillingWrite)(CreateSubscriptionHandler)).Methods("POST")
+	protected.HandleFunc("/billing/subscription/cancel", RequirePermissions(PermBillingWrite)(CancelSubscriptionHandler)).Methods("POST")
+	protected.HandleFunc("/billing/portal", RequirePermissions(PermBillingWrite)(CreateBillingPortalHandler)).Methods("POST")
+
+	// Webhook endpoints
+	protected.HandleFunc("/webhooks", RequirePermissions(PermWebhooksRead)(ListWebhooksHandler)).Methods("GET")
+	protected.HandleFunc("/webhooks", RequirePermissions(PermWebhooksWrite)(CreateWebhookHandler)).Methods("POST")
+	protected.HandleFunc("/webhooks/{id}", RequirePermissions(PermWebhooksWrite)(DeleteWebhookHandler)).Methods("DELETE")
+	protected.HandleFunc("/webhooks/{id}/test", RequirePermissions(PermWebhooksDeliver)(TestWebhookHandler)).Methods("POST")
+	protected.HandleFunc("/webhooks/deliveries", RequirePermissions(PermWebhooksRead)(ListWebhookDeliveriesHandler)).Methods("GET")
+
+	// ML & Analytics endpoints
+	protected.HandleFunc("/ml/recommendations", GetRecommendationsHandler).Methods("GET")
+	protected.HandleFunc("/ml/items/{id}/similar", GetSimilarItemsHandler).Methods("GET")
+	protected.HandleFunc("/ml/items/trending", GetTrendingItemsHandler).Methods("GET")
+	protected.HandleFunc("/ml/interactions", TrackInteractionHandler).Methods("POST")
+	protected.HandleFunc("/ml/recommendations/train", TrainRecommendationsHandler).Methods("POST")
+	
+	protected.HandleFunc("/ml/forecast", ForecastDemandHandler).Methods("GET")
+	protected.HandleFunc("/ml/seasonality", DetectSeasonalityHandler).Methods("GET")
+	protected.HandleFunc("/ml/trend", AnalyzeTrendHandler).Methods("GET")
+	protected.HandleFunc("/ml/peak-times", PredictPeakTimesHandler).Methods("GET")
+	protected.HandleFunc("/ml/inventory/{item_id}/optimize", OptimizeInventoryHandler).Methods("GET")
+	protected.HandleFunc("/ml/data-points", AddDataPointHandler).Methods("POST")
+	
+	protected.HandleFunc("/ml/experiments", CreateExperimentHandler).Methods("POST")
+	protected.HandleFunc("/ml/experiments", ListExperimentsHandler).Methods("GET")
+	protected.HandleFunc("/ml/experiments/{id}/start", StartExperimentHandler).Methods("POST")
+	protected.HandleFunc("/ml/experiments/{id}/stop", StopExperimentHandler).Methods("POST")
+	protected.HandleFunc("/ml/experiments/{id}/results", GetExperimentResultsHandler).Methods("GET")
+	protected.HandleFunc("/ml/experiments/{id}/assign", AssignVariantHandler).Methods("POST")
+	protected.HandleFunc("/ml/experiments/conversions", TrackConversionHandler).Methods("POST")
+	
+	protected.HandleFunc("/ml/stats", GetMLStatsHandler).Methods("GET")
+
+	// Billing webhook (no auth)
+	api.HandleFunc("/billing/webhook", BillingWebhookHandler).Methods("POST")
 
 	// API Documentation endpoint
 	api.HandleFunc("/docs", APIDocsHandler).Methods("GET")
@@ -254,6 +296,75 @@ func APIDocsHandler(w http.ResponseWriter, r *http.Request) {
 			"429": "Too Many Requests - Rate limit superato",
 			"500": "Internal Server Error - Errore interno del server",
 		},
+		"billing": map[string]interface{}{
+			"GET /billing/plans": map[string]interface{}{
+				"description":   "Lista dei piani disponibili",
+				"auth_required": true,
+				"response":      "Array di piani di abbonamento",
+			},
+			"GET /billing/subscription": map[string]interface{}{
+				"description":   "Ottieni abbonamento attivo del ristorante",
+				"auth_required": true,
+				"response":      "Oggetto Subscription",
+			},
+			"POST /billing/subscription": map[string]interface{}{
+				"description":   "Crea una sessione di checkout per sottoscrizione",
+				"auth_required": true,
+				"body": map[string]string{
+					"plan_id":     "ID del piano",
+					"success_url": "URL di successo (opzionale)",
+					"cancel_url":  "URL di annullamento (opzionale)",
+				},
+				"response": "Checkout session (Stripe o mock)",
+			},
+			"POST /billing/subscription/cancel": map[string]interface{}{
+				"description":   "Cancella l'abbonamento attivo",
+				"auth_required": true,
+				"response":      "Oggetto Subscription aggiornato",
+			},
+			"POST /billing/portal": map[string]interface{}{
+				"description":   "Crea una sessione per il portale di fatturazione",
+				"auth_required": true,
+				"response":      "URL portale billing",
+			},
+			"POST /billing/webhook": map[string]interface{}{
+				"description":   "Webhook per eventi billing (Stripe)",
+				"auth_required": false,
+				"response":      "Ack",
+			},
+		},
+		"webhooks": map[string]interface{}{
+			"GET /webhooks": map[string]interface{}{
+				"description":   "Lista dei webhook configurati",
+				"auth_required": true,
+				"response":      "Array di webhook",
+			},
+			"POST /webhooks": map[string]interface{}{
+				"description":   "Crea un webhook",
+				"auth_required": true,
+				"body": map[string]string{
+					"url":    "URL webhook",
+					"events": "Array di eventi (o '*')",
+					"secret": "Segreto opzionale (autogenerato se omesso)",
+				},
+				"response": "Oggetto Webhook",
+			},
+			"DELETE /webhooks/{id}": map[string]interface{}{
+				"description":   "Elimina un webhook",
+				"auth_required": true,
+				"response":      "Conferma eliminazione",
+			},
+			"POST /webhooks/{id}/test": map[string]interface{}{
+				"description":   "Invia un evento di test",
+				"auth_required": true,
+				"response":      "Evento messo in coda",
+			},
+			"GET /webhooks/deliveries": map[string]interface{}{
+				"description":   "Lista consegne webhook",
+				"auth_required": true,
+				"response":      "Array di consegne",
+			},
+		},
 	}
 
 	SuccessResponse(w, docs, nil)
@@ -280,4 +391,22 @@ func HealthCheckHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	SuccessResponse(w, health, nil)
+}
+
+// SetupSecurityRoutes configura le route per sicurezza e compliance
+func SetupSecurityRoutes(r *mux.Router, auditLogger *security.AuditLogger, gdprMgr *security.GDPRManager) {
+	api := r.PathPrefix("/api/v1").Subrouter()
+	
+	// GDPR endpoints (richiedono autenticazione)
+	api.HandleFunc("/gdpr/my-data", GetMyDataHandler(gdprMgr)).Methods("GET")
+	api.HandleFunc("/gdpr/request-deletion", RequestDataDeletionHandler(gdprMgr)).Methods("POST")
+	api.HandleFunc("/gdpr/cancel-deletion", CancelDataDeletionHandler(gdprMgr)).Methods("POST")
+	api.HandleFunc("/gdpr/deletion-request", GetDeletionRequestHandler(gdprMgr)).Methods("GET")
+	api.HandleFunc("/gdpr/consent", RecordConsentHandler(gdprMgr)).Methods("POST")
+	api.HandleFunc("/gdpr/consents", GetConsentsHandler(gdprMgr)).Methods("GET")
+	
+	// Audit log endpoints
+	api.HandleFunc("/audit/logs", GetAuditLogsHandler(auditLogger)).Methods("GET") // Admin only
+	api.HandleFunc("/audit/my-logs", GetMyAuditLogsHandler(auditLogger)).Methods("GET")
+	api.HandleFunc("/audit/export", ExportAuditLogsHandler(auditLogger)).Methods("GET") // Admin only
 }

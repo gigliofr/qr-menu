@@ -28,6 +28,8 @@ var (
 	sessions_map = make(map[string]*models.Session)
 )
 
+const defaultRestaurantRole = "owner"
+
 func init() {
 	// Inizializza il session store con una chiave segreta
 	sessionKey := getOrCreateSessionKey()
@@ -327,6 +329,7 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 		Username:     username,
 		Email:        email,
 		PasswordHash: passwordHash,
+		Role:         defaultRestaurantRole,
 		Name:         restaurantName,
 		Description:  description,
 		Address:      address,
@@ -434,6 +437,10 @@ func loadRestaurantsFromStorage() {
 			log.Printf("Errore nel decode del restaurant da %s: %v", filename, err)
 			file.Close()
 			continue
+		}
+
+		if restaurant.Role == "" {
+			restaurant.Role = defaultRestaurantRole
 		}
 
 		restaurants[restaurant.ID] = &restaurant
