@@ -11,6 +11,7 @@ import (
 	"qr-menu/handlers"
 	"qr-menu/logger"
 	"qr-menu/middleware"
+	"qr-menu/notifications"
 
 	"github.com/gorilla/mux"
 )
@@ -40,6 +41,19 @@ func main() {
 		}
 		defer bm.Stop()
 	}
+
+	// Inizializzazione del sistema di notifiche
+	nm := notifications.GetNotificationManager()
+	if err := nm.Init(100); err != nil {
+		logger.Warn("Errore nell'inizializzazione del notification manager", map[string]interface{}{"error": err.Error()})
+	} else {
+		// Avvia i worker per processare le notifiche (3 worker in parallelo)
+		if err := nm.Start(3); err != nil {
+			logger.Warn("Errore nell'avvio del notification manager", map[string]interface{}{"error": err.Error()})
+		}
+		defer nm.Stop()
+	}
+
 	if err := logger.CleanOldLogs(30); err != nil {
 		logger.Warn("Errore nella pulizia dei log", map[string]interface{}{"error": err.Error()})
 	}
@@ -115,6 +129,16 @@ func main() {
 	r.HandleFunc("/api/backup/schedule", handlers.RequireAuth(handlers.ScheduleBackupHandler)).Methods("POST")
 	r.HandleFunc("/api/backup/stats", handlers.RequireAuth(handlers.GetBackupStatsHandler)).Methods("GET")
 	r.HandleFunc("/api/backup/download", handlers.RequireAuth(handlers.DownloadBackupHandler)).Methods("GET")
+
+	// Route per il sistema di notifiche (richiedono autenticazione)
+	r.HandleFunc("/api/notifications/send", handlers.RequireAuth(handlers.SendNotificationHandler)).Methods("POST")
+	r.HandleFunc("/api/notifications/preferences", handlers.RequireAuth(handlers.GetPreferencesHandler)).Methods("GET")
+	r.HandleFunc("/api/notifications/preferences", handlers.RequireAuth(handlers.UpdatePreferencesHandler)).Methods("PUT")
+	r.HandleFunc("/api/notifications/fcm-token", handlers.RequireAuth(handlers.RegisterFCMTokenHandler)).Methods("POST")
+	r.HandleFunc("/api/notifications/fcm-token", handlers.RequireAuth(handlers.RemoveFCMTokenHandler)).Methods("DELETE")
+	r.HandleFunc("/api/notifications/history", handlers.RequireAuth(handlers.GetNotificationHistoryHandler)).Methods("GET")
+	r.HandleFunc("/api/notifications/mark-read", handlers.RequireAuth(handlers.MarkAsReadHandler)).Methods("POST")
+	r.HandleFunc("/api/notifications/stats", handlers.RequireAuth(handlers.GetNotificationStatsHandler)).Methods("GET")
 
 	// Avvia il server
 	port := os.Getenv("PORT")
