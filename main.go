@@ -8,6 +8,7 @@ import (
 	"qr-menu/analytics"
 	"qr-menu/api"
 	"qr-menu/backup"
+	"qr-menu/db"
 	"qr-menu/handlers"
 	"qr-menu/localization"
 	"qr-menu/logger"
@@ -81,6 +82,31 @@ func main() {
 	}
 	if err := pm.Init(pwaConfig); err != nil {
 		logger.Warn("Errore nell'inizializzazione del PWA manager", map[string]interface{}{"error": err.Error()})
+	}
+
+	// Inizializzazione del migration manager
+	mm := db.GetMigrationManager()
+	if err := mm.Init(db.MigrationConfig{
+		MigrationsPath: "db/migrations",
+		DatabaseType:   "postgres",
+	}); err != nil {
+		logger.Warn("Errore nell'inizializzazione del migration manager", map[string]interface{}{"error": err.Error()})
+	}
+	// Crea i file di migrazione di default
+	if err := mm.CreateDefaultMigrations(); err != nil {
+		logger.Warn("Errore creazione file migrazioni", map[string]interface{}{"error": err.Error()})
+	}
+
+	// Inizializzazione del database manager (opzionale - usare solo se necessario)
+	dm := db.GetDatabaseManager()
+	// Configura solo se hai le credenziali database
+	if dsn := os.Getenv("DATABASE_URL"); dsn != "" {
+		if err := dm.Init(db.DatabaseConfig{
+			Type: "postgres",
+			DSN:  dsn,
+		}); err != nil {
+			logger.Warn("Errore nell'inizializzazione del database", map[string]interface{}{"error": err.Error()})
+		}
 	}
 
 	if err := logger.CleanOldLogs(30); err != nil {
@@ -183,6 +209,14 @@ func main() {
 	r.HandleFunc("/service-worker.js", handlers.ServiceWorkerHandler).Methods("GET")
 	r.HandleFunc("/offline.html", handlers.OfflineHandler).Methods("GET")
 	r.HandleFunc("/ping", handlers.HealthCheckHandler).Methods("GET", "HEAD")
+
+	// Route per il sistema di migrazioni/database (richiedono autenticazione ADMIN)
+	r.HandleFunc("/api/admin/migrations/status", handlers.RequireAuth(handlers.GetMigrationStatusHandler)).Methods("GET")
+	r.HandleFunc("/api/admin/migrations/list", handlers.RequireAuth(handlers.ListMigrationsHandler)).Methods("GET")
+	r.HandleFunc("/api/admin/migrations/applied", handlers.RequireAuth(handlers.GetAppliedMigrationsHandler)).Methods("GET")
+	r.HandleFunc("/api/admin/migrations/pending", handlers.RequireAuth(handlers.GetPendingMigrationsHandler)).Methods("GET")
+	r.HandleFunc("/api/admin/migrations/create-files", handlers.RequireAuth(handlers.CreateMigrationFilesHandler)).Methods("POST")
+	r.HandleFunc("/api/admin/database/health", handlers.RequireAuth(handlers.GetDatabaseHealthHandler)).Methods("GET")
 
 	// Avvia il server
 	port := os.Getenv("PORT")
