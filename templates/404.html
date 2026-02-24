@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pagina Non Trovata - QR Menu</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #333;
+        }
+        .error-container {
+            background: white;
+            padding: 60px 40px;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            text-align: center;
+            max-width: 500px;
+            width: 90%;
+        }
+        .error-icon {
+            font-size: 120px;
+            margin-bottom: 20px;
+            animation: bounce 2s infinite;
+        }
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+            40% { transform: translateY(-10px); }
+            60% { transform: translateY(-5px); }
+        }
+        .error-title {
+            font-size: 2.5em;
+            color: #2c3e50;
+            margin-bottom: 15px;
+            font-weight: bold;
+        }
+        .error-subtitle {
+            font-size: 1.3em;
+            color: #7f8c8d;
+            margin-bottom: 30px;
+        }
+        .error-message {
+            font-size: 1.1em;
+            color: #555;
+            line-height: 1.6;
+            margin-bottom: 40px;
+        }
+        .btn {
+            display: inline-block;
+            padding: 15px 30px;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: bold;
+            font-size: 1.1em;
+            transition: all 0.3s ease;
+            margin: 0 10px;
+        }
+        .btn-primary {
+            background: #3498db;
+            color: white;
+        }
+        .btn-primary:hover {
+            background: #2980b9;
+            transform: translateY(-2px);
+        }
+        .btn-secondary {
+            background: #95a5a6;
+            color: white;
+        }
+        .btn-secondary:hover {
+            background: #7f8c8d;
+            transform: translateY(-2px);
+        }
+        .help-text {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #ecf0f1;
+            font-size: 0.9em;
+            color: #7f8c8d;
+        }
+        @media (max-width: 600px) {
+            .error-container {
+                padding: 40px 20px;
+            }
+            .error-title {
+                font-size: 2em;
+            }
+            .error-subtitle {
+                font-size: 1.1em;
+            }
+            .btn {
+                display: block;
+                margin: 10px 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="error-container">
+        <div class="error-icon">🔍</div>
+        <h1 class="error-title">Oops! 404</h1>
+        <h2 class="error-subtitle">{{if .Title}}{{.Title}}{{else}}Pagina Non Trovata{{end}}</h2>
+        
+        <div class="error-message">
+            {{if .Message}}
+                {{.Message}}
+            {{else}}
+                La pagina che stai cercando non esiste o è stata rimossa.<br>
+                Potrebbe essere un menu che non è più disponibile o un link non valido.
+            {{end}}
+        </div>
+
+        <div>
+            <a href="/" class="btn btn-primary">🏠 Torna alla Home</a>
+            <a href="javascript:history.back()" class="btn btn-secondary">← Indietro</a>
+        </div>
+
+        <div class="help-text">
+            <p><strong>Suggerimenti:</strong></p>
+            <ul style="text-align: left; display: inline-block;">
+                <li>Controlla che il link sia corretto</li>
+                <li>Il menu potrebbe essere stato rimosso dal ristorante</li>
+                <li>Prova a scansionare nuovamente il QR code</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        // Effetto parallasse leggero sui movimenti del mouse
+        document.addEventListener('mousemove', function(e) {
+            const container = document.querySelector('.error-container');
+            const x = (e.clientX / window.innerWidth) * 10;
+            const y = (e.clientY / window.innerHeight) * 10;
+            container.style.transform = `translate(${x}px, ${y}px)`;
+        });
+
+        // Log per debugging
+        console.log('404 Page loaded at:', new Date().toLocaleString('it-IT'));
+    </script>
+</body>
+</html>

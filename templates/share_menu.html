@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Condividi {{.Menu.Name}} - {{.Restaurant.Name}}</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .share-container {
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            text-align: center;
+            max-width: 500px;
+            width: 100%;
+            position: relative;
+            overflow: hidden;
+        }
+        .share-container::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(45deg, transparent, rgba(255,255,255,0.1), transparent);
+            transform: rotate(45deg);
+            animation: shimmer 3s infinite;
+        }
+        @keyframes shimmer {
+            0% { transform: translateX(-100%) translateY(-100%) rotate(45deg); }
+            100% { transform: translateX(100%) translateY(100%) rotate(45deg); }
+        }
+        .share-header {
+            margin-bottom: 30px;
+            position: relative;
+            z-index: 1;
+        }
+        .share-icon {
+            font-size: 4em;
+            margin-bottom: 20px;
+        }
+        .share-title {
+            font-size: 2em;
+            color: #2c3e50;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+        .share-subtitle {
+            color: #7f8c8d;
+            font-size: 1.1em;
+        }
+        .menu-info {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px 0;
+            border-left: 5px solid #3498db;
+        }
+        .menu-name {
+            font-size: 1.3em;
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 5px;
+        }
+        .restaurant-name {
+            color: #7f8c8d;
+        }
+        .share-buttons {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 15px;
+            margin: 30px 0;
+        }
+        .share-btn {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px 15px;
+            text-decoration: none;
+            border-radius: 15px;
+            color: white;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        .share-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.5s;
+        }
+        .share-btn:hover::before {
+            left: 100%;
+        }
+        .share-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+        }
+        .whatsapp { background: linear-gradient(135deg, #25D366 0%, #128C7E 100%); }
+        .telegram { background: linear-gradient(135deg, #0088cc 0%, #005580 100%); }
+        .facebook { background: linear-gradient(135deg, #1877F2 0%, #0C63D4 100%); }
+        .twitter { background: linear-gradient(135deg, #1DA1F2 0%, #0C85D0 100%); }
+        .native { background: linear-gradient(135deg, #6c757d 0%, #495057 100%); }
+        .qr { background: linear-gradient(135deg, #e83e8c 0%, #c2185b 100%); }
+        .share-btn-icon {
+            font-size: 2em;
+            margin-bottom: 8px;
+        }
+        .share-btn-text {
+            font-size: 0.9em;
+        }
+        .url-copy {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 20px 0;
+            border: 2px dashed #dee2e6;
+        }
+        .url-input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ced4da;
+            border-radius: 5px;
+            font-family: monospace;
+            font-size: 0.9em;
+            margin-bottom: 10px;
+        }
+        .copy-btn {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+        .copy-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(40, 167, 69, 0.4);
+        }
+        .back-btn {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(255,255,255,0.9);
+            border: none;
+            padding: 10px;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .back-btn:hover {
+            background: white;
+            transform: scale(1.1);
+        }
+        @media (max-width: 600px) {
+            .share-container {
+                padding: 20px;
+                margin: 10px;
+            }
+            .share-title {
+                font-size: 1.5em;
+            }
+            .share-buttons {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="share-container">
+        <button class="back-btn" onclick="history.back()">←</button>
+        
+        <div class="share-header">
+            <div class="share-icon">📤</div>
+            <h1 class="share-title">Condividi Menu</h1>
+            <p class="share-subtitle">Fai conoscere il tuo menu ai clienti!</p>
+        </div>
+
+        <div class="menu-info">
+            <div class="menu-name">{{.Menu.Name}}</div>
+            <div class="restaurant-name">{{.Restaurant.Name}}</div>
+        </div>
+
+        <div class="share-buttons">
+            <a href="{{.WhatsAppURL}}" class="share-btn whatsapp" target="_blank">
+                <div class="share-btn-icon">📱</div>
+                <div class="share-btn-text">WhatsApp</div>
+            </a>
+            
+            <a href="{{.TelegramURL}}" class="share-btn telegram" target="_blank">
+                <div class="share-btn-icon">✈️</div>
+                <div class="share-btn-text">Telegram</div>
+            </a>
+            
+            <a href="{{.FacebookURL}}" class="share-btn facebook" target="_blank">
+                <div class="share-btn-icon">👥</div>
+                <div class="share-btn-text">Facebook</div>
+            </a>
+            
+            <a href="{{.TwitterURL}}" class="share-btn twitter" target="_blank">
+                <div class="share-btn-icon">🐦</div>
+                <div class="share-btn-text">Twitter</div>
+            </a>
+            
+            <a href="#" class="share-btn native" onclick="shareNative()">
+                <div class="share-btn-icon">🔗</div>
+                <div class="share-btn-text">Condividi</div>
+            </a>
+            
+            <a href="/menu/{{.Menu.ID}}/qr-download" class="share-btn qr">
+                <div class="share-btn-icon">📱</div>
+                <div class="share-btn-text">QR Code</div>
+            </a>
+        </div>
+
+        <div class="url-copy">
+            <input type="text" class="url-input" value="{{.MenuURL}}" readonly id="menuUrl">
+            <button class="copy-btn" onclick="copyUrl()">📋 Copia Link</button>
+        </div>
+    </div>
+
+    <script>
+        function copyUrl() {
+            const input = document.getElementById('menuUrl');
+            input.select();
+            input.setSelectionRange(0, 99999);
+            
+            navigator.clipboard.writeText(input.value).then(function() {
+                const btn = document.querySelector('.copy-btn');
+                const originalText = btn.innerHTML;
+                btn.innerHTML = '✅ Copiato!';
+                btn.style.background = 'linear-gradient(135deg, #28a745 0%, #20c997 100%)';
+                
+                setTimeout(() => {
+                    btn.innerHTML = originalText;
+                    btn.style.background = 'linear-gradient(135deg, #28a745 0%, #20c997 100%)';
+                }, 2000);
+            }).catch(function() {
+                alert('Link copiato: ' + input.value);
+            });
+        }
+
+        function shareNative() {
+            if (navigator.share) {
+                navigator.share({
+                    title: '{{.ShareText}}',
+                    text: 'Scopri il nostro menu digitale!',
+                    url: '{{.MenuURL}}'
+                }).catch(console.error);
+            } else {
+                copyUrl();
+            }
+        }
+
+        // Effetti di animazione
+        document.addEventListener('DOMContentLoaded', function() {
+            const buttons = document.querySelectorAll('.share-btn');
+            buttons.forEach((btn, index) => {
+                btn.style.animationDelay = `${index * 0.1}s`;
+                btn.style.animation = 'fadeInUp 0.6s ease-out forwards';
+            });
+        });
+
+        // CSS per animazione
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes fadeInUp {
+                from {
+                    opacity: 0;
+                    transform: translateY(30px);
+                }
+                to {
+                    opacity: 1;
+                    transform: translateY(0);
+                }
+            }
+            .share-btn { opacity: 0; }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

@@ -1,0 +1,304 @@
+{
+  "restaurant_example": {
+    "restaurant_id": "Osteria del Borgo",
+    "name": "Menu Degustazione Autunnale", 
+    "description": "Menu stagionale con prodotti del territorio",
+    "categories": [
+      {
+        "id": "antipasti-001",
+        "name": "Antipasti della Casa",
+        "description": "Per iniziare il vostro viaggio culinario",
+        "items": [
+          {
+            "id": "item-001",
+            "name": "Crudo di Ricciola",
+            "description": "Ricciola marinata con agrumi, olio EVO e erbe aromatiche",
+            "price": 16.00,
+            "category": "Antipasti della Casa",
+            "available": true
+          },
+          {
+            "id": "item-002", 
+            "name": "Burrata con Fichi",
+            "description": "Burrata pugliese con fichi caramellati e noci",
+            "price": 14.00,
+            "category": "Antipasti della Casa",
+            "available": true
+          },
+          {
+            "id": "item-003",
+            "name": "Tagliere di Salumi",
+            "description": "Selezione di salumi artigianali con focaccia calda",
+            "price": 18.00,
+            "category": "Antipasti della Casa", 
+            "available": true
+          }
+        ]
+      },
+      {
+        "id": "primi-001",
+        "name": "Primi Piatti",
+        "description": "Pasta fresca fatta in casa e risotti cremosi",
+        "items": [
+          {
+            "id": "item-004",
+            "name": "Tagliatelle ai Porcini",
+            "description": "Tagliatelle fresche con funghi porcini e tartufo nero",
+            "price": 16.00,
+            "category": "Primi Piatti",
+            "available": true
+          },
+          {
+            "id": "item-005",
+            "name": "Risotto all'Amarone", 
+            "description": "Risotto mantecato con Amarone della Valpolicella DOCG",
+            "price": 18.00,
+            "category": "Primi Piatti",
+            "available": true
+          },
+          {
+            "id": "item-006",
+            "name": "Gnocchi di Patate",
+            "description": "Gnocchi fatti a mano con gorgonzola e noci",
+            "price": 14.00,
+            "category": "Primi Piatti",
+            "available": true
+          }
+        ]
+      },
+      {
+        "id": "secondi-001",
+        "name": "Secondi Piatti", 
+        "description": "Carni e pesci di prima scelta",
+        "items": [
+          {
+            "id": "item-007",
+            "name": "Branzino in Crosta di Sale",
+            "description": "Branzino fresco cotto in crosta di sale con contorno",
+            "price": 24.00,
+            "category": "Secondi Piatti",
+            "available": true
+          },
+          {
+            "id": "item-008",
+            "name": "Bistecca alla Fiorentina", 
+            "description": "Bistecca di Chianina da 800g per 2 persone",
+            "price": 45.00,
+            "category": "Secondi Piatti",
+            "available": true
+          },
+          {
+            "id": "item-009",
+            "name": "Agnello alle Erbe",
+            "description": "Cosciotto d'agnello arrosto con patate novelle",
+            "price": 22.00,
+            "category": "Secondi Piatti",
+            "available": true
+          }
+        ]
+      },
+      {
+        "id": "dolci-001",
+        "name": "Dolci della Tradizione",
+        "description": "Dolci fatti in casa dalla nostra pasticcera",
+        "items": [
+          {
+            "id": "item-010",
+            "name": "Tiramisù della Casa",
+            "description": "Il nostro tiramisù con savoiardi fatti in casa",
+            "price": 8.00,
+            "category": "Dolci della Tradizione", 
+            "available": true
+          },
+          {
+            "id": "item-011",
+            "name": "Panna Cotta ai Frutti di Bosco",
+            "description": "Panna cotta con coulis di frutti di bosco",
+            "price": 7.00,
+            "category": "Dolci della Tradizione",
+            "available": true
+          },
+          {
+            "id": "item-012",
+            "name": "Cannolo Siciliano", 
+            "description": "Cannolo con ricotta fresca e granella di pistacchi",
+            "price": 6.00,
+            "category": "Dolci della Tradizione",
+            "available": true
+          }
+        ]
+      },
+      {
+        "id": "bevande-001",
+        "name": "Bevande e Vini",
+        "description": "Selezione di vini locali e bevande",
+        "items": [
+          {
+            "id": "item-013",
+            "name": "Chianti Classico DOCG",
+            "description": "Bottiglia 0.75cl - Annata 2019",
+            "price": 28.00,
+            "category": "Bevande e Vini",
+            "available": true
+          },
+          {
+            "id": "item-014",
+            "name": "Acqua Naturale",
+            "description": "Bottiglia 1L",
+            "price": 3.00,
+            "category": "Bevande e Vini", 
+            "available": true
+          },
+          {
+            "id": "item-015",
+            "name": "Caffè Espresso",
+            "description": "Miscela della casa",
+            "price": 1.50,
+            "category": "Bevande e Vini",
+            "available": true
+          }
+        ]
+      }
+    ]
+  },
+  
+  "pizza_example": {
+    "restaurant_id": "Pizzeria Napoletana",
+    "name": "Menu Pizze Napoletane",
+    "description": "Pizze cotte nel forno a legna secondo la tradizione napoletana",
+    "categories": [
+      {
+        "id": "pizze-classiche",
+        "name": "Pizze Classiche", 
+        "description": "Le nostre pizze della tradizione",
+        "items": [
+          {
+            "id": "margherita",
+            "name": "Margherita",
+            "description": "Pomodoro, mozzarella di bufala, basilico, olio EVO",
+            "price": 8.00,
+            "category": "Pizze Classiche",
+            "available": true
+          },
+          {
+            "id": "marinara",
+            "name": "Marinara",
+            "description": "Pomodoro, aglio, origano, olio EVO",
+            "price": 6.00,
+            "category": "Pizze Classiche",
+            "available": true
+          },
+          {
+            "id": "napoli", 
+            "name": "Napoli",
+            "description": "Pomodoro, mozzarella, acciughe, origano",
+            "price": 9.00,
+            "category": "Pizze Classiche",
+            "available": true
+          }
+        ]
+      },
+      {
+        "id": "pizze-speciali",
+        "name": "Pizze Speciali",
+        "description": "Le nostre creazioni gourmet",
+        "items": [
+          {
+            "id": "diavola",
+            "name": "Diavola",
+            "description": "Pomodoro, mozzarella, salame piccante, peperoncino",
+            "price": 10.00,
+            "category": "Pizze Speciali",
+            "available": true
+          },
+          {
+            "id": "quattro-stagioni",
+            "name": "Quattro Stagioni", 
+            "description": "Pomodoro, mozzarella, funghi, carciofi, prosciutto, olive",
+            "price": 12.00,
+            "category": "Pizze Speciali",
+            "available": true
+          },
+          {
+            "id": "capricciosa",
+            "name": "Capricciosa",
+            "description": "Pomodoro, mozzarella, funghi, prosciutto, carciofi, olive, uovo",
+            "price": 13.00,
+            "category": "Pizze Speciali", 
+            "available": true
+          }
+        ]
+      }
+    ]
+  },
+  
+  "bar_example": {
+    "restaurant_id": "Bar Centrale",
+    "name": "Menu Colazioni e Aperitivi",
+    "description": "Colazioni fresche e aperitivi della tradizione italiana",
+    "categories": [
+      {
+        "id": "colazioni",
+        "name": "Colazioni",
+        "description": "Per iniziare la giornata con energia",
+        "items": [
+          {
+            "id": "cornetto-vuoto",
+            "name": "Cornetto Semplice",
+            "description": "Cornetto classico appena sfornato",
+            "price": 1.20,
+            "category": "Colazioni",
+            "available": true
+          },
+          {
+            "id": "cornetto-crema", 
+            "name": "Cornetto alla Crema",
+            "description": "Cornetto ripieno di crema pasticcera",
+            "price": 1.50,
+            "category": "Colazioni", 
+            "available": true
+          },
+          {
+            "id": "cappuccino",
+            "name": "Cappuccino",
+            "description": "Espresso con latte montato e cacao",
+            "price": 1.30,
+            "category": "Colazioni",
+            "available": true
+          }
+        ]
+      },
+      {
+        "id": "aperitivi",
+        "name": "Aperitivi",
+        "description": "Per un momento di relax",
+        "items": [
+          {
+            "id": "spritz",
+            "name": "Spritz Veneziano",
+            "description": "Aperol, Prosecco, Seltz, olive e patatine",
+            "price": 5.00,
+            "category": "Aperitivi",
+            "available": true
+          },
+          {
+            "id": "negroni",
+            "name": "Negroni", 
+            "description": "Gin, Campari, Vermouth Rosso",
+            "price": 7.00,
+            "category": "Aperitivi",
+            "available": true
+          },
+          {
+            "id": "hugo",
+            "name": "Hugo",
+            "description": "Prosecco, Sciroppo Sambuco, Menta, Lime",
+            "price": 5.50,
+            "category": "Aperitivi",
+            "available": true
+          }
+        ]
+      }
+    ]
+  }
+}

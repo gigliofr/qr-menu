@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registrazione - QR Menu System</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .register-container {
+            background: white;
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 600px;
+            margin: 20px auto;
+            animation: slideUp 0.6s ease-out;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .logo {
+            font-size: 3em;
+            margin-bottom: 10px;
+        }
+
+        h1 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+            font-size: 2em;
+        }
+
+        .subtitle {
+            color: #7f8c8d;
+            font-size: 1.1em;
+            margin-bottom: 20px;
+        }
+
+        .section-title {
+            color: #2c3e50;
+            font-size: 1.3em;
+            font-weight: 600;
+            margin: 25px 0 15px 0;
+            padding-bottom: 5px;
+            border-bottom: 2px solid #e9ecef;
+        }
+
+        .form-row {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .form-group {
+            flex: 1;
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #2c3e50;
+            font-weight: 600;
+        }
+
+        .required {
+            color: #e74c3c;
+        }
+
+        input[type="text"],
+        input[type="email"],
+        input[type="password"],
+        input[type="tel"],
+        textarea {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            font-family: inherit;
+        }
+
+        input:focus,
+        textarea:focus {
+            outline: none;
+            border-color: #3498db;
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+        }
+
+        textarea {
+            height: 80px;
+            resize: vertical;
+        }
+
+        .password-requirements {
+            font-size: 0.85em;
+            color: #7f8c8d;
+            margin-top: 5px;
+            line-height: 1.4;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #27ae60 0%, #219a52 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 20px 0 15px 0;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(39, 174, 96, 0.3);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .login-link {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .login-link a {
+            color: #3498db;
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .login-link a:hover {
+            text-decoration: underline;
+        }
+
+        .errors {
+            background: #e74c3c;
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .errors ul {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+        }
+
+        .errors li {
+            margin-bottom: 5px;
+        }
+
+        .errors li::before {
+            content: "⚠️ ";
+            margin-right: 5px;
+        }
+
+        .password-match {
+            font-size: 0.85em;
+            margin-top: 5px;
+            font-weight: 600;
+        }
+
+        .password-match.valid {
+            color: #27ae60;
+        }
+
+        .password-match.invalid {
+            color: #e74c3c;
+        }
+
+        /* Mobile responsiveness */
+        @media (max-width: 768px) {
+            .register-container {
+                padding: 30px 20px;
+                margin: 10px;
+            }
+
+            .form-row {
+                flex-direction: column;
+                gap: 0;
+            }
+
+            h1 {
+                font-size: 1.8em;
+            }
+
+            .logo {
+                font-size: 2.5em;
+            }
+        }
+
+        /* Animation per campi validi/non validi */
+        .field-valid {
+            border-color: #27ae60 !important;
+            box-shadow: 0 0 0 3px rgba(39, 174, 96, 0.1) !important;
+        }
+
+        .field-invalid {
+            border-color: #e74c3c !important;
+            box-shadow: 0 0 0 3px rgba(231, 76, 60, 0.1) !important;
+        }
+    </style>
+</head>
+<body>
+    <div class="register-container">
+        <div class="header">
+            <div class="logo">🍽️</div>
+            <h1>Registra il tuo Ristorante</h1>
+            <p class="subtitle">Crea il tuo account per gestire menu digitali con QR code</p>
+        </div>
+
+        {{if .Errors}}
+        <div class="errors">
+            <ul>
+                {{range .Errors}}
+                <li>{{.}}</li>
+                {{end}}
+            </ul>
+        </div>
+        {{end}}
+
+        <form method="POST" action="/register" id="registerForm">
+            <div class="section-title">👤 Dati di Accesso</div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="username">Username <span class="required">*</span></label>
+                    <input type="text" id="username" name="username" required 
+                           placeholder="Scegli un username unico"
+                           value="{{if .Username}}{{.Username}}{{end}}">
+                    <div class="password-requirements">Minimo 3 caratteri, solo lettere e numeri</div>
+                </div>
+                <div class="form-group">
+                    <label for="email">Email <span class="required">*</span></label>
+                    <input type="email" id="email" name="email" required 
+                           placeholder="email@ristorante.com"
+                           value="{{if .Email}}{{.Email}}{{end}}">
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="password">Password <span class="required">*</span></label>
+                    <input type="password" id="password" name="password" required 
+                           placeholder="Crea una password sicura">
+                    <div class="password-requirements">Minimo 6 caratteri</div>
+                </div>
+                <div class="form-group">
+                    <label for="confirm_password">Conferma Password <span class="required">*</span></label>
+                    <input type="password" id="confirm_password" name="confirm_password" required 
+                           placeholder="Ripeti la password">
+                    <div class="password-match" id="passwordMatch"></div>
+                </div>
+            </div>
+
+            <div class="section-title">🏪 Informazioni Ristorante</div>
+
+            <div class="form-group">
+                <label for="restaurant_name">Nome Ristorante <span class="required">*</span></label>
+                <input type="text" id="restaurant_name" name="restaurant_name" required 
+                       placeholder="Nome del tuo ristorante"
+                       value="{{if .RestaurantName}}{{.RestaurantName}}{{end}}">
+            </div>
+
+            <div class="form-group">
+                <label for="description">Descrizione</label>
+                <textarea id="description" name="description" 
+                          placeholder="Descrivi brevemente il tuo ristorante, la cucina, l'atmosfera...">{{if .Description}}{{.Description}}{{end}}</textarea>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="address">Indirizzo</label>
+                    <input type="text" id="address" name="address" 
+                           placeholder="Via, città, CAP"
+                           value="{{if .Address}}{{.Address}}{{end}}">
+                </div>
+                <div class="form-group">
+                    <label for="phone">Telefono</label>
+                    <input type="tel" id="phone" name="phone" 
+                           placeholder="+39 123 456 7890"
+                           value="{{if .Phone}}{{.Phone}}{{end}}">
+                </div>
+            </div>
+
+            <button type="submit" class="btn">🚀 Registra Ristorante</button>
+        </form>
+
+        <div class="login-link">
+            Hai già un account? <a href="/login">🔐 Accedi qui</a>
+        </div>
+    </div>
+
+    <script>
+        // Validazione in tempo reale
+        const password = document.getElementById('password');
+        const confirmPassword = document.getElementById('confirm_password');
+        const passwordMatch = document.getElementById('passwordMatch');
+        const username = document.getElementById('username');
+
+        // Controllo match password
+        function checkPasswordMatch() {
+            const pass = password.value;
+            const confirmPass = confirmPassword.value;
+
+            if (confirmPass === '') {
+                passwordMatch.textContent = '';
+                passwordMatch.className = 'password-match';
+                return;
+            }
+
+            if (pass === confirmPass) {
+                passwordMatch.textContent = '✅ Le password coincidono';
+                passwordMatch.className = 'password-match valid';
+                confirmPassword.classList.remove('field-invalid');
+                confirmPassword.classList.add('field-valid');
+            } else {
+                passwordMatch.textContent = '❌ Le password non coincidono';
+                passwordMatch.className = 'password-match invalid';
+                confirmPassword.classList.remove('field-valid');
+                confirmPassword.classList.add('field-invalid');
+            }
+        }
+
+        password.addEventListener('input', checkPasswordMatch);
+        confirmPassword.addEventListener('input', checkPasswordMatch);
+
+        // Validazione username
+        username.addEventListener('input', function() {
+            const value = this.value;
+            if (value.length >= 3 && /^[a-zA-Z0-9]+$/.test(value)) {
+                this.classList.remove('field-invalid');
+                this.classList.add('field-valid');
+            } else if (value.length > 0) {
+                this.classList.remove('field-valid');
+                this.classList.add('field-invalid');
+            } else {
+                this.classList.remove('field-valid', 'field-invalid');
+            }
+        });
+
+        // Validazione form completa
+        document.getElementById('registerForm').addEventListener('submit', function(e) {
+            const pass = password.value;
+            const confirmPass = confirmPassword.value;
+            const user = username.value.trim();
+            const email = document.getElementById('email').value.trim();
+            const restaurantName = document.getElementById('restaurant_name').value.trim();
+
+            let errors = [];
+
+            if (user.length < 3) {
+                errors.push('Username deve essere di almeno 3 caratteri');
+            }
+
+            if (!/^[a-zA-Z0-9]+$/.test(user)) {
+                errors.push('Username può contenere solo lettere e numeri');
+            }
+
+            if (!email) {
+                errors.push('Email è richiesta');
+            }
+
+            if (pass.length < 6) {
+                errors.push('Password deve essere di almeno 6 caratteri');
+            }
+
+            if (pass !== confirmPass) {
+                errors.push('Le password non coincidono');
+            }
+
+            if (!restaurantName) {
+                errors.push('Nome ristorante è richiesto');
+            }
+
+            if (errors.length > 0) {
+                e.preventDefault();
+                alert(errors.join('\n'));
+            }
+        });
+
+        // Focus sul primo campo
+        document.addEventListener('DOMContentLoaded', function() {
+            username.focus();
+        });
+
+        // Animazione per errori esistenti
+        const errorDiv = document.querySelector('.errors');
+        if (errorDiv) {
+            errorDiv.style.animation = 'shake 0.5s ease-in-out';
+        }
+
+        // Keyframe per shake animation
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

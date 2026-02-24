@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Modifica Menu: {{.Menu.Name}} - QR Menu</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
+        .header { background: #2c3e50; color: white; padding: 20px; margin: -20px -20px 20px -20px; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; }
+        input, textarea { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box; }
+        textarea { height: 80px; resize: vertical; }
+        .btn { padding: 10px 20px; margin: 5px; text-decoration: none; color: white; border: none; border-radius: 4px; cursor: pointer; }
+        .btn-primary { background: #3498db; }
+        .btn-success { background: #27ae60; }
+        .btn-secondary { background: #95a5a6; }
+        .btn-warning { background: #f39c12; }
+        .status-banner { padding: 15px; margin: 20px 0; border-radius: 5px; }
+        .status-completed { background: #d5f4e6; color: #155724; }
+        .status-draft { background: #fff3cd; color: #856404; }
+        .category-item { background: #f8f9fa; padding: 15px; margin: 10px 0; border-radius: 5px; border-left: 4px solid #3498db; }
+        .qr-section { text-align: center; margin: 20px 0; padding: 20px; background: #f8f9fa; border-radius: 5px; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>✏️ Modifica Menu: {{.Menu.Name}}</h1>
+        <p>ID Menu: {{.Menu.ID}}</p>
+    </div>
+
+    {{if .Menu.IsCompleted}}
+    <div class="status-banner status-completed">
+        ✅ <strong>Menu Completato!</strong> Questo menu è attivo e disponibile tramite QR code.
+    </div>
+    {{else}}
+    <div class="status-banner status-draft">
+        ⏳ <strong>Menu in lavorazione</strong> - Completa il menu per generare il QR code.
+    </div>
+    {{end}}
+
+    <form method="POST" action="/admin/menu/{{.Menu.ID}}/update">
+        <div class="form-group">
+            <label for="name">Nome del Menu:</label>
+            <input type="text" id="name" name="name" value="{{.Menu.Name}}" required>
+        </div>
+
+        <div class="form-group">
+            <label for="description">Descrizione del Menu:</label>
+            <textarea id="description" name="description">{{.Menu.Description}}</textarea>
+        </div>
+
+        <div class="form-group">
+            <label>ID Ristorante:</label>
+            <input type="text" value="{{.Menu.RestaurantID}}" readonly style="background: #f5f5f5;">
+            <small>L'ID ristorante non può essere modificato dopo la creazione.</small>
+        </div>
+
+        <div class="form-group">
+            <button type="submit" class="btn btn-success">💾 Salva Modifiche</button>
+            <a href="/admin" class="btn btn-secondary">❌ Annulla</a>
+        </div>
+    </form>
+
+    <hr style="margin: 30px 0;">
+
+    <h3>📋 Categorie del Menu ({{len .Menu.Categories}})</h3>
+    {{if .Menu.Categories}}
+        {{range $index, $category := .Menu.Categories}}
+        <div class="category-item">
+            <h4>{{$category.Name}}</h4>
+            {{if $category.Description}}<p><em>{{$category.Description}}</em></p>{{end}}
+            <p><strong>Piatti:</strong> {{len $category.Items}}</p>
+            
+            <!-- Form per aggiungere nuovo piatto -->
+            <div style="background: #f8f9fa; padding: 15px; margin: 10px 0; border-radius: 5px; border-left: 4px solid #27ae60;">
+                <h5 style="color: #27ae60; margin-bottom: 10px;">➕ Aggiungi Nuovo Piatto</h5>
+                <form method="POST" action="/admin/menu/{{$.Menu.ID}}/add-item">
+                    <input type="hidden" name="category_id" value="{{$category.ID}}">
+                    <div style="display: flex; gap: 10px; margin-bottom: 10px; flex-wrap: wrap;">
+                        <input type="text" name="name" placeholder="Nome piatto" required style="flex: 2; min-width: 200px; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                        <input type="text" name="description" placeholder="Descrizione" style="flex: 3; min-width: 250px; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                        <input type="number" step="0.01" name="price" placeholder="Prezzo" required style="flex: 1; min-width: 100px; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                        <button type="submit" class="btn" style="background: #27ae60; color: white; padding: 8px 15px; font-size: 0.9em;">➕ Aggiungi</button>
+                    </div>
+                </form>
+            </div>
+
+            {{if $category.Items}}
+                <div style="margin-top: 15px;">
+                {{range $category.Items}}
+                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 15px; margin: 8px 0; background: white; border: 1px solid #e0e0e0; border-radius: 6px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);" id="item-{{.ID}}">
+                        <div style="flex: 1;" class="item-display">
+                            <strong>{{.Name}}</strong> - €{{printf "%.2f" .Price}}
+                            {{if .Description}}<br><em style="color: #666;">{{.Description}}</em>{{end}}
+                        </div>
+                        
+                        <!-- Form di editing nascosto -->
+                        <div style="flex: 1; display: none;" class="item-edit-form">
+                            <form method="POST" action="/admin/menu/{{$.Menu.ID}}/category/{{$category.ID}}/item/{{.ID}}/edit" style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                                <input type="text" name="name" value="{{.Name}}" required style="flex: 2; min-width: 150px; padding: 6px; border: 1px solid #ddd; border-radius: 4px; font-size: 0.9em;">
+                                <input type="text" name="description" value="{{.Description}}" style="flex: 3; min-width: 200px; padding: 6px; border: 1px solid #ddd; border-radius: 4px; font-size: 0.9em;">
+                                <input type="number" step="0.01" name="price" value="{{.Price}}" required style="flex: 1; min-width: 80px; padding: 6px; border: 1px solid #ddd; border-radius: 4px; font-size: 0.9em;">
+                                <button type="submit" class="btn" style="background: #27ae60; color: white; padding: 6px 10px; font-size: 0.8em;">💾 Salva</button>
+                                <button type="button" onclick="cancelEdit('{{.ID}}')" class="btn" style="background: #95a5a6; color: white; padding: 6px 10px; font-size: 0.8em;">❌ Annulla</button>
+                            </form>
+                        </div>
+                        
+                        <div style="margin-left: 15px; display: flex; gap: 5px; flex-wrap: wrap;">
+                            {{if .ImageURL}}
+                            <div style="margin-bottom: 10px; text-align: center;">
+                                <img src="/{{.ImageURL}}" alt="{{.Name}}" style="max-width: 80px; max-height: 80px; border-radius: 8px; object-fit: cover; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                            </div>
+                            {{end}}
+                            <button onclick="editItem('{{.ID}}')" class="btn" style="background: #3498db; color: white; font-size: 0.8em; padding: 5px 8px;" title="Modifica piatto">✏️ Modifica</button>
+                            <button onclick="uploadImage('{{$.Menu.ID}}', '{{$category.ID}}', '{{.ID}}')" class="btn" style="background: #9b59b6; color: white; font-size: 0.8em; padding: 5px 8px;" title="Carica immagine">📷 Foto</button>
+                            <form method="POST" action="/admin/menu/{{$.Menu.ID}}/category/{{$category.ID}}/item/{{.ID}}/duplicate" style="display: inline;">
+                                <button type="submit" class="btn" style="background: #f39c12; color: white; font-size: 0.8em; padding: 5px 8px;" title="Duplica questo piatto">📋 Duplica</button>
+                            </form>
+                            <form method="POST" action="/admin/menu/{{$.Menu.ID}}/category/{{$category.ID}}/item/{{.ID}}/delete" style="display: inline;" onsubmit="return confirm('Sicuro di voler eliminare questo piatto?');">
+                                <button type="submit" class="btn" style="background: #e74c3c; color: white; font-size: 0.8em; padding: 5px 8px;" title="Elimina piatto">🗑️ Elimina</button>
+                            </form>
+                        </div>
+                    </div>
+                {{end}}
+                </div>
+            {{else}}
+                <p><em>Nessun piatto in questa categoria. Usa il form qui sopra per aggiungerne uno!</em></p>
+            {{end}}
+        </div>
+        {{end}}
+    {{else}}
+        <div class="category-item">
+            <p><em>Nessuna categoria definita per questo menu.</em></p>
+        </div>
+    {{end}}
+
+    <script>
+    function editItem(itemId) {
+        const itemDiv = document.getElementById('item-' + itemId);
+        const displayDiv = itemDiv.querySelector('.item-display');
+        const editDiv = itemDiv.querySelector('.item-edit-form');
+        
+        displayDiv.style.display = 'none';
+        editDiv.style.display = 'flex';
+    }
+    
+    function cancelEdit(itemId) {
+        const itemDiv = document.getElementById('item-' + itemId);
+        const displayDiv = itemDiv.querySelector('.item-display');
+        const editDiv = itemDiv.querySelector('.item-edit-form');
+        
+        displayDiv.style.display = 'block';
+        editDiv.style.display = 'none';
+    }
+    
+    function uploadImage(menuId, categoryId, itemId) {
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = 'image/*';
+        input.multiple = false;
+        
+        input.onchange = function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            
+            // Validazione file
+            if (!file.type.startsWith('image/')) {
+                alert('Per favore seleziona un file immagine valido.');
+                return;
+            }
+            
+            if (file.size > 5 * 1024 * 1024) { // 5MB
+                alert('Il file è troppo grande. Massimo 5MB.');
+                return;
+            }
+            
+            // Crea form per upload
+            const formData = new FormData();
+            formData.append('image', file);
+            
+            const uploadUrl = `/admin/menu/${menuId}/category/${categoryId}/item/${itemId}/upload-image`;
+            
+            // Mostra indicatore di caricamento
+            const button = event.target;
+            const originalText = button.innerHTML;
+            button.innerHTML = '⏳ Caricamento...';
+            button.disabled = true;
+            
+            fetch(uploadUrl, {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => {
+                if (response.ok) {
+                    // Ricarica la pagina per mostrare l'immagine
+                    location.reload();
+                } else {
+                    throw new Error('Errore nel caricamento');
+                }
+            })
+            .catch(error => {
+                console.error('Errore:', error);
+                alert('Errore nel caricamento dell\'immagine. Riprova.');
+                button.innerHTML = originalText;
+                button.disabled = false;
+            });
+        };
+        
+        input.click();
+    }
+    </script>
+
+    {{if .Menu.IsCompleted}}
+    <div class="qr-section">
+        <h3>🔗 Menu Pubblico & QR Code</h3>
+        <div style="display: flex; align-items: center; gap: 30px; justify-content: center; flex-wrap: wrap;">
+            {{if .Menu.QRCodePath}}
+            <div style="text-align: center;">
+                <p><strong>QR Code per accesso diretto:</strong></p>
+                <img src="/{{.Menu.QRCodePath}}" alt="QR Code" style="max-width: 200px; border: 2px solid #3498db; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
+            </div>
+            {{end}}
+            <div style="flex: 1; min-width: 300px;">
+                <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; border-left: 4px solid #3498db;">
+                    <p><strong>Link Pubblico del Menu:</strong></p>
+                    <div style="display: flex; align-items: center; gap: 10px; margin: 10px 0;">
+                        <input type="text" value="http://localhost:8080/menu/{{.Menu.ID}}" readonly style="flex: 1; padding: 8px; border: 1px solid #ddd; border-radius: 4px; background: white; font-family: monospace; font-size: 0.9em;">
+                        <button onclick="copyToClipboard('http://localhost:8080/menu/{{.Menu.ID}}')" class="btn" style="background: #27ae60; color: white; padding: 8px 12px; font-size: 0.8em;">📋 Copia</button>
+                    </div>
+                    <div style="margin-top: 15px;">
+                        <a href="/menu/{{.Menu.ID}}" target="_blank" class="btn btn-primary">👁️ Visualizza Menu Pubblico</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+    function copyToClipboard(text) {
+        navigator.clipboard.writeText(text).then(function() {
+            alert('Link copiato negli appunti!');
+        }, function(err) {
+            console.error('Errore nella copia: ', err);
+            // Fallback per browser più vecchi
+            const textArea = document.createElement("textarea");
+            textArea.value = text;
+            document.body.appendChild(textArea);
+            textArea.focus();
+            textArea.select();
+            try {
+                document.execCommand('copy');
+                alert('Link copiato negli appunti!');
+            } catch (err) {
+                alert('Impossibile copiare automaticamente. Copia manualmente: ' + text);
+            }
+            document.body.removeChild(textArea);
+        });
+    }
+    </script>
+    {{else}}
+    <div class="qr-section">
+        <h3>🎯 Finalizza Menu</h3>
+        <p>Una volta soddisfatto del menu, completalo per generare il QR code e renderlo accessibile ai clienti.</p>
+        <form method="POST" action="/admin/menu/{{.Menu.ID}}/complete">
+            <button type="submit" class="btn btn-warning" onclick="return confirm('Sicuro di voler completare questo menu? Verrà generato il QR code e il menu diventerà pubblico.')">🎯 Completa Menu e Genera QR Code</button>
+        </form>
+    </div>
+    {{end}}
+
+    <hr style="margin: 30px 0;">
+
+    <div style="text-align: center;">
+        <a href="/admin" class="btn btn-secondary">← Torna all'Amministrazione</a>
+        <a href="/menu/{{.Menu.ID}}" target="_blank" class="btn btn-primary">👁️ Anteprima Menu</a>
+    </div>
+
+    <div style="margin-top: 30px; padding: 15px; background: #f8f9fa; border-radius: 5px; font-size: 0.9em;">
+        <strong>Informazioni Menu:</strong>
+        <ul>
+            <li>Creato: {{.Menu.CreatedAt.Format "02/01/2006 alle 15:04"}}</li>
+            <li>Ultima modifica: {{.Menu.UpdatedAt.Format "02/01/2006 alle 15:04"}}</li>
+            <li>Stato: {{if .Menu.IsCompleted}}Completato e pubblico{{else}}In lavorazione{{end}}</li>
+        </ul>
+    </div>
+</body>
+</html>

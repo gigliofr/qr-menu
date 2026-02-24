@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{.Menu.Name}} - Menu Digitale</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            min-height: 100vh;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+        }
+        .header {
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+            color: white;
+            padding: 30px 20px;
+            text-align: center;
+            position: relative;
+        }
+        .header::after {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0;
+            height: 0;
+            border-left: 15px solid transparent;
+            border-right: 15px solid transparent;
+            border-top: 10px solid #2c3e50;
+        }
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        .header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+        .restaurant-info {
+            background: #f8f9fa;
+            padding: 20px;
+            border-bottom: 1px solid #e9ecef;
+            text-align: center;
+        }
+        .restaurant-info h2 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+        .menu-content {
+            padding: 20px;
+        }
+        .category {
+            margin-bottom: 40px;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .category-header {
+            background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+        .category-header h3 {
+            font-size: 1.8em;
+            margin-bottom: 5px;
+        }
+        .category-items {
+            background: white;
+        }
+        .menu-item {
+            padding: 20px;
+            border-bottom: 1px solid #f0f0f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+            gap: 15px;
+        }
+        .menu-item:hover {
+            background-color: #f8f9fa;
+            transform: translateX(5px);
+        }
+        .menu-item:last-child {
+            border-bottom: none;
+        }
+        .item-image {
+            flex-shrink: 0;
+            width: 80px;
+            height: 80px;
+            border-radius: 12px;
+            overflow: hidden;
+            background: #f8f9fa;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .item-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.3s ease;
+        }
+        .item-image:hover img {
+            transform: scale(1.1);
+        }
+        .item-info {
+            flex: 1;
+            margin-right: 20px;
+        }
+        .item-name {
+            font-size: 1.3em;
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 8px;
+        }
+        .item-description {
+            color: #666;
+            font-style: italic;
+            line-height: 1.4;
+        }
+        .item-price {
+            font-size: 1.4em;
+            font-weight: bold;
+            color: #27ae60;
+            white-space: nowrap;
+        }
+        .no-items {
+            padding: 30px;
+            text-align: center;
+            color: #666;
+            font-style: italic;
+        }
+        .footer {
+            background: #2c3e50;
+            color: white;
+            padding: 20px;
+            text-align: center;
+            margin-top: 40px;
+        }
+        .footer p {
+            margin-bottom: 10px;
+        }
+        .generated-info {
+            background: #e8f6f3;
+            padding: 15px;
+            margin: 20px;
+            border-radius: 8px;
+            text-align: center;
+            font-size: 0.9em;
+            color: #155724;
+        }
+        
+        /* Mobile responsiveness */
+        @media (max-width: 600px) {
+            .header h1 { font-size: 2em; }
+            .header p { font-size: 1em; }
+            .menu-item {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+            }
+            .item-image {
+                width: 100%;
+                height: 200px;
+                align-self: stretch;
+            }
+            .item-info {
+                margin-right: 0;
+                margin-bottom: 10px;
+            }
+            .menu-content { padding: 15px; }
+        }
+
+        /* Animazioni */
+        .category {
+            animation: fadeInUp 0.6s ease-out;
+        }
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🍽️ {{.Menu.Name}}</h1>
+            {{if .Menu.Description}}
+            <p>{{.Menu.Description}}</p>
+            {{end}}
+        </div>
+
+        <div class="restaurant-info">
+            <h2>{{.Restaurant.Name}}</h2>
+            <p>📱 Menu digitale accessibile via QR Code</p>
+        </div>
+
+        <div class="menu-content">
+            {{if .Menu.Categories}}
+                {{range $categoryIndex, $category := .Menu.Categories}}
+                <div class="category">
+                    <div class="category-header">
+                        <h3>{{$category.Name}}</h3>
+                        {{if $category.Description}}
+                        <p style="opacity: 0.9;">{{$category.Description}}</p>
+                        {{end}}
+                    </div>
+                    
+                    <div class="category-items">
+                        {{if $category.Items}}
+                            {{range $category.Items}}
+                            <div class="menu-item">
+                                {{if .ImageURL}}
+                                <div class="item-image">
+                                    <img src="/{{.ImageURL}}" alt="{{.Name}}" loading="lazy">
+                                </div>
+                                {{end}}
+                                <div class="item-info">
+                                    <div class="item-name">{{.Name}}</div>
+                                    {{if .Description}}
+                                    <div class="item-description">{{.Description}}</div>
+                                    {{end}}
+                                </div>
+                                <div class="item-price">€{{printf "%.2f" .Price}}</div>
+                            </div>
+                            {{end}}
+                        {{else}}
+                        <div class="no-items">
+                            <p>Nessun piatto disponibile in questa categoria al momento.</p>
+                        </div>
+                        {{end}}
+                    </div>
+                </div>
+                {{end}}
+            {{else}}
+            <div class="category">
+                <div class="no-items">
+                    <h3>Menu in preparazione</h3>
+                    <p>Il menu è attualmente in fase di aggiornamento. Riprovare più tardi.</p>
+                </div>
+            </div>
+            {{end}}
+        </div>
+
+        <div class="generated-info">
+            <p>📅 <strong>Menu aggiornato il:</strong> {{.Menu.UpdatedAt.Format "02/01/2006 alle 15:04"}}</p>
+            <p>🔗 Menu generato con QR Menu System</p>
+        </div>
+
+        <div class="footer">
+            <p>Grazie per aver scelto <strong>{{.Restaurant.Name}}</strong></p>
+            <p>🍴 Buon appetito!</p>
+            <p style="font-size: 0.8em; opacity: 0.7; margin-top: 15px;">
+                Menu ID: {{.Menu.ID}}
+            </p>
+        </div>
+    </div>
+
+    <script>
+        // Aggiungi un po' di interattività
+        document.addEventListener('DOMContentLoaded', function() {
+            // Animazione al caricamento
+            const categories = document.querySelectorAll('.category');
+            categories.forEach((category, index) => {
+                setTimeout(() => {
+                    category.style.opacity = '1';
+                }, index * 200);
+            });
+
+            // Effetto click sui menu items
+            const menuItems = document.querySelectorAll('.menu-item');
+            menuItems.forEach(item => {
+                item.addEventListener('click', function() {
+                    this.style.transform = 'scale(0.98)';
+                    setTimeout(() => {
+                        this.style.transform = 'scale(1)';
+                    }, 150);
+                });
+            });
+
+            // Mostra data e ora di visualizzazione
+            console.log('Menu visualizzato il:', new Date().toLocaleString('it-IT'));
+        });
+    </script>
+</body>
+</html>
