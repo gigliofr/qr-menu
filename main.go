@@ -13,6 +13,7 @@ import (
 	"qr-menu/logger"
 	"qr-menu/middleware"
 	"qr-menu/notifications"
+	"qr-menu/pwa"
 
 	"github.com/gorilla/mux"
 )
@@ -66,6 +67,22 @@ func main() {
 		logger.Warn("Errore nell'inizializzazione del localization manager", map[string]interface{}{"error": err.Error()})
 	}
 
+	// Inizializzazione del sistema PWA
+	pm := pwa.GetPWAManager()
+	pwaConfig := pwa.PWAConfig{
+		AppName:            "QR Menu System",
+		AppShortName:       "QR Menu",
+		AppDescription:     "Digital QR Code Menu System for Restaurants",
+		AppStartURL:        "/",
+		AppScope:           "/",
+		AppThemeColor:      "#2E7D32",
+		AppBackgroundColor: "#FFFFFF",
+		StaticPath:         "static",
+	}
+	if err := pm.Init(pwaConfig); err != nil {
+		logger.Warn("Errore nell'inizializzazione del PWA manager", map[string]interface{}{"error": err.Error()})
+	}
+
 	if err := logger.CleanOldLogs(30); err != nil {
 		logger.Warn("Errore nella pulizia dei log", map[string]interface{}{"error": err.Error()})
 	}
@@ -87,6 +104,7 @@ func main() {
 	r.Use(middleware.LoggingMiddleware)
 	r.Use(middleware.SecurityMiddleware)
 	r.Use(middleware.AuthMiddleware)
+	r.Use(handlers.PWAHeadersMiddleware)
 
 	// Route pubbliche (non richiedono autenticazione)
 	r.HandleFunc("/", handlers.HomeHandler).Methods("GET")
@@ -159,6 +177,12 @@ func main() {
 	r.HandleFunc("/api/localization/user-locale", handlers.RequireAuth(handlers.GetUserLocaleHandler)).Methods("GET")
 	r.HandleFunc("/api/localization/translation", handlers.RequireAuth(handlers.GetTranslationHandler)).Methods("GET")
 	r.HandleFunc("/api/localization/format-currency", handlers.RequireAuth(handlers.FormatCurrencyHandler)).Methods("GET")
+
+	// Route per il sistema PWA
+	r.HandleFunc("/manifest.json", handlers.ManifestHandler).Methods("GET")
+	r.HandleFunc("/service-worker.js", handlers.ServiceWorkerHandler).Methods("GET")
+	r.HandleFunc("/offline.html", handlers.OfflineHandler).Methods("GET")
+	r.HandleFunc("/ping", handlers.HealthCheckHandler).Methods("GET", "HEAD")
 
 	// Avvia il server
 	port := os.Getenv("PORT")
