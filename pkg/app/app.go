@@ -5,11 +5,11 @@ import (
 	"net/http"
 	"time"
 
-	"qr-menu/logger"
-	"qr-menu/pkg/config"
-	"qr-menu/pkg/container"
-	"qr-menu/pkg/errors"
-	"qr-menu/pkg/routing"
+	"github.com/gigliofr/qr-menu/logger"
+	"github.com/gigliofr/qr-menu/pkg/config"
+	"github.com/gigliofr/qr-menu/pkg/container"
+	"github.com/gigliofr/qr-menu/pkg/errors"
+	"github.com/gigliofr/qr-menu/pkg/routing"
 )
 
 // Application represents the main application

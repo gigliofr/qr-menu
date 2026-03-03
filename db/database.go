@@ -6,7 +6,7 @@ import (
 	"sync"
 	"time"
 
-	"qr-menu/logger"
+	"github.com/gigliofr/qr-menu/logger"
 )
 
 // DatabaseManager gestisce la connessione al database
