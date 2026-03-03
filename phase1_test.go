@@ -7,9 +7,9 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"qr-menu/pkg/config"
-	"qr-menu/pkg/errors"
-	httputil "qr-menu/pkg/http"
+	"github.com/gigliofr/qr-menu/pkg/config"
+	"github.com/gigliofr/qr-menu/pkg/errors"
+	httputil "github.com/gigliofr/qr-menu/pkg/http"
 )
 
 // TestErrorPackage tests the error wrapper functionality

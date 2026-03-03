@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"qr-menu/pkg/cache"
+	"github.com/gigliofr/qr-menu/pkg/cache"
 )
 
 // TestResponseCachingMiddlewareWithGET tests caching of GET requests

@@ -6,7 +6,7 @@ import (
 	"strconv"
 	"time"
 
-	"qr-menu/security"
+	"github.com/gigliofr/qr-menu/security"
 )
 
 // GDPR API Handlers
