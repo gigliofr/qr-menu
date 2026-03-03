@@ -1,4 +1,4 @@
-module github.com/gigliofr/qr-menu
+module qr-menu
 
 go 1.24.0
 

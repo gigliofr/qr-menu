@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/gigliofr/qr-menu/db"
+	"qr-menu/db"
 )
 
 // MigrationResponse è la risposta delle richieste di migrazione

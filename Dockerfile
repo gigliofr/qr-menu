@@ -12,9 +12,6 @@ RUN go mod download
 # Copy source code
 COPY . .
 
-# Tidy modules to resolve local packages
-RUN go mod tidy
-
 # Build the application
 RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o qr-menu
 

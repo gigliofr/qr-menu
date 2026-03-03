@@ -6,8 +6,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/gigliofr/qr-menu/pkg/cache"
-	"github.com/gigliofr/qr-menu/pkg/middleware"
+	"qr-menu/pkg/cache"
+	"qr-menu/pkg/middleware"
 )
 
 // Integration Tests for Complete Caching + Middleware Stack

@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/gigliofr/qr-menu/backup"
+	"qr-menu/backup"
 )
 
 // BackupResponse è la risposta del backup

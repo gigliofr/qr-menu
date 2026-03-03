@@ -12,7 +12,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
-	"github.com/gigliofr/qr-menu/models"
+	"qr-menu/models"
 )
 
 // MongoClient wrapper per MongoDB Atlas con autenticazione X.509

@@ -5,9 +5,9 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/gigliofr/qr-menu/db"
-	"github.com/gigliofr/qr-menu/logger"
-	"github.com/gigliofr/qr-menu/pkg/app"
+	"qr-menu/db"
+	"qr-menu/logger"
+	"qr-menu/pkg/app"
 )
 
 func main() {
