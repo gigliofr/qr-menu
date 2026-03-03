@@ -1,2 +1,39 @@
+# Binaries
+qr-menu
+qr-menu.exe
+*.exe
+*.exe~
 
+# Dependencies
 vendor/
+
+# Build artifacts
+dist/
+build/
+
+# Logs
+logs/
+*.log
+
+# Environment files
+.env
+.env.local
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Temporary files
+tmp/
+temp/
+
+# Backups
+backups/
+*.backup
+*.bak
