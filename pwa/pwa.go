@@ -11,31 +11,31 @@ import (
 
 // PWAManager gestisce le funzionalità Progressive Web App
 type PWAManager struct {
-	mu                sync.RWMutex
-	appName           string
-	appShortName      string
-	appDescription    string
-	appStartURL       string
-	appScope          string
-	appThemeColor     string
+	mu                 sync.RWMutex
+	appName            string
+	appShortName       string
+	appDescription     string
+	appStartURL        string
+	appScope           string
+	appThemeColor      string
 	appBackgroundColor string
-	appIcon           string
-	staticPath        string
-	serviceWorkerPath string
-	manifestPath      string
+	appIcon            string
+	staticPath         string
+	serviceWorkerPath  string
+	manifestPath       string
 }
 
 // PWAConfig contiene la configurazione PWA
 type PWAConfig struct {
-	AppName           string
-	AppShortName      string
-	AppDescription    string
-	AppStartURL       string
-	AppScope          string
-	AppThemeColor     string
+	AppName            string
+	AppShortName       string
+	AppDescription     string
+	AppStartURL        string
+	AppScope           string
+	AppThemeColor      string
 	AppBackgroundColor string
-	AppIcon           string
-	StaticPath        string
+	AppIcon            string
+	StaticPath         string
 }
 
 var (

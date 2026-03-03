@@ -36,10 +36,10 @@ var (
 )
 
 type createWebhookRequest struct {
-	URL     string   `json:"url"`
-	Events  []string `json:"events"`
-	Secret  string   `json:"secret"`
-	Active  *bool    `json:"active"`
+	URL    string   `json:"url"`
+	Events []string `json:"events"`
+	Secret string   `json:"secret"`
+	Active *bool    `json:"active"`
 }
 
 type webhookPayload struct {
@@ -150,7 +150,7 @@ func TestWebhookHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	EmitEvent(restaurantID, EventWebhookTest, map[string]interface{}{
-		"message": "Webhook test event",
+		"message":    "Webhook test event",
 		"webhook_id": webhookID,
 	})
 

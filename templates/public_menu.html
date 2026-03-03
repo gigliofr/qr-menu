@@ -43,6 +43,37 @@
             font-size: 2.5em;
             margin-bottom: 10px;
             text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        .meal-type-badge {
+            display: inline-block;
+            background: rgba(255,255,255,0.2);
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.8em;
+            font-weight: 600;
+            margin-top: 10px;
+            border: 1px solid rgba(255,255,255,0.3);
+            backdrop-filter: blur(10px);
+        }
+        .meal-type-badge.breakfast {
+            background: rgba(255,200,100,0.3);
+            border-color: #FFB84D;
+        }
+        .meal-type-badge.lunch {
+            background: rgba(100,200,255,0.3);
+            border-color: #64C8FF;
+        }
+        .meal-type-badge.dinner {
+            background: rgba(200,100,255,0.3);
+            border-color: #C864FF;
+        }
+        .meal-type-badge.generic {
+            background: rgba(150,150,150,0.3);
+            border-color: #999999;
         }
         .header p {
             font-size: 1.2em;
@@ -201,7 +232,15 @@
 <body>
     <div class="container">
         <div class="header">
-            <h1>🍽️ {{.Menu.Name}}</h1>
+            <div style="width: 100%;">
+                <h1>
+                    {{if eq .Menu.MealType "breakfast"}}🌅{{else if eq .Menu.MealType "lunch"}}☀️{{else if eq .Menu.MealType "dinner"}}🌙{{else}}📋{{end}}
+                    {{.Menu.Name}}
+                </h1>
+                <div class="meal-type-badge {{.Menu.MealType}}">
+                    {{if eq .Menu.MealType "breakfast"}}Colazione{{else if eq .Menu.MealType "lunch"}}Pranzo{{else if eq .Menu.MealType "dinner"}}Cena{{else}}Menu Generico{{end}}
+                </div>
+            </div>
             {{if .Menu.Description}}
             <p>{{.Menu.Description}}</p>
             {{end}}

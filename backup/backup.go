@@ -30,7 +30,7 @@ type BackupMetadata struct {
 	ID           string    `json:"id"`
 	Timestamp    time.Time `json:"timestamp"`
 	Size         int64     `json:"size"`
-	Status       string    `json:"status"` // success, failed, partial
+	Status       string    `json:"status"`   // success, failed, partial
 	Duration     int64     `json:"duration"` // millisecondi
 	FileCount    int       `json:"file_count"`
 	CompressRate float64   `json:"compress_rate"`
@@ -39,11 +39,11 @@ type BackupMetadata struct {
 
 // BackupSchedule definisce la pianificazione dei backup
 type BackupSchedule struct {
-	Type      string        // "hourly", "daily", "weekly", "monthly"
-	Interval  time.Duration // Intervallo custom
-	Hour      int           // Ora del giorno (0-23)
-	Day       int           // Giorno della settimana (0-6) per weekly
-	DayOfMonth int          // Giorno del mese (1-31) per monthly
+	Type       string        // "hourly", "daily", "weekly", "monthly"
+	Interval   time.Duration // Intervallo custom
+	Hour       int           // Ora del giorno (0-23)
+	Day        int           // Giorno della settimana (0-6) per weekly
+	DayOfMonth int           // Giorno del mese (1-31) per monthly
 }
 
 var (
@@ -55,8 +55,8 @@ var (
 func GetBackupManager() *BackupManager {
 	once.Do(func() {
 		defaultManager = &BackupManager{
-			basePath:       "backups",
-			maxBackups:     30, // Mantiene ultimi 30 backup
+			basePath:        "backups",
+			maxBackups:      30, // Mantiene ultimi 30 backup
 			compressBackups: true,
 			directoriesBackup: []string{
 				"storage",
@@ -102,9 +102,9 @@ func (bm *BackupManager) StartScheduled(schedule BackupSchedule) error {
 
 	// Calcola il prossimo tempo di backup
 	nextBackup := bm.calculateNextBackupTime(schedule)
-	
+
 	logger.Info("Backup scheduler avviato", map[string]interface{}{
-		"schedule": schedule.Type,
+		"schedule":    schedule.Type,
 		"next_backup": nextBackup,
 	})
 
@@ -126,7 +126,7 @@ func (bm *BackupManager) StartScheduled(schedule BackupSchedule) error {
 						"backup_id": backupID,
 					})
 				}
-				
+
 				// Calcola il prossimo backup
 				nextBackup = bm.calculateNextBackupTime(schedule)
 			}
@@ -161,7 +161,7 @@ func (bm *BackupManager) CreateBackup() (string, error) {
 		if err != nil {
 			logger.Error("Errore nel backup compresso", map[string]interface{}{
 				"backup_id": backupID,
-				"error": err.Error(),
+				"error":     err.Error(),
 			})
 			return "", err
 		}
@@ -170,7 +170,7 @@ func (bm *BackupManager) CreateBackup() (string, error) {
 		if err != nil {
 			logger.Error("Errore nel backup non compresso", map[string]interface{}{
 				"backup_id": backupID,
-				"error": err.Error(),
+				"error":     err.Error(),
 			})
 			return "", err
 		}
@@ -196,9 +196,9 @@ func (bm *BackupManager) CreateBackup() (string, error) {
 	}
 
 	logger.Info("Backup completato", map[string]interface{}{
-		"backup_id":     backupID,
-		"duration_ms":   duration,
-		"compressed":    bm.compressBackups,
+		"backup_id":   backupID,
+		"duration_ms": duration,
+		"compressed":  bm.compressBackups,
 	})
 
 	// Salva i metadati
@@ -334,7 +334,7 @@ func (bm *BackupManager) RestoreBackup(backupID string, restorePath string) erro
 	defer bm.mu.Unlock()
 
 	logger.Info("Inizio restore backup", map[string]interface{}{
-		"backup_id":     backupID,
+		"backup_id":    backupID,
 		"restore_path": restorePath,
 	})
 
@@ -362,7 +362,7 @@ func (bm *BackupManager) RestoreBackup(backupID string, restorePath string) erro
 		if err != nil {
 			logger.Error("Errore estrazione backup", map[string]interface{}{
 				"backup_id": backupID,
-				"error": err.Error(),
+				"error":     err.Error(),
 			})
 			return err
 		}
@@ -372,7 +372,7 @@ func (bm *BackupManager) RestoreBackup(backupID string, restorePath string) erro
 		if err != nil {
 			logger.Error("Errore copia backup", map[string]interface{}{
 				"backup_id": backupID,
-				"error": err.Error(),
+				"error":     err.Error(),
 			})
 			return err
 		}
@@ -515,7 +515,7 @@ func (bm *BackupManager) cleanupOldBackups() error {
 			if err != nil {
 				logger.Warn("Errore eliminazione backup vecchio", map[string]interface{}{
 					"backup_id": backups[i].ID,
-					"error": err.Error(),
+					"error":     err.Error(),
 				})
 			}
 		}
@@ -563,7 +563,7 @@ func (bm *BackupManager) saveBackupMetadata(metadata BackupMetadata) {
 	logger.Info("Metadati backup salvati", map[string]interface{}{
 		"backup_id": metadata.ID,
 		"timestamp": metadata.Timestamp,
-		"size": metadata.Size,
+		"size":      metadata.Size,
 	})
 }
 

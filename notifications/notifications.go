@@ -10,33 +10,33 @@ import (
 
 // NotificationManager gestisce le notifiche push del sistema
 type NotificationManager struct {
-	mu                 sync.Mutex
-	notificationQueue  chan *Notification
-	queueSize          int
-	isRunning          bool
-	maxRetries         int
-	retryDelay         time.Duration
-	userPreferences    map[string]NotificationPreferences // restaurantID -> preferences
-	notificationHistory map[string][]NotificationRecord   // restaurantID -> history
+	mu                  sync.Mutex
+	notificationQueue   chan *Notification
+	queueSize           int
+	isRunning           bool
+	maxRetries          int
+	retryDelay          time.Duration
+	userPreferences     map[string]NotificationPreferences // restaurantID -> preferences
+	notificationHistory map[string][]NotificationRecord    // restaurantID -> history
 }
 
 // Notification rappresenta una singola notificazione
 type Notification struct {
-	ID            string                 `json:"id"`
-	RestaurantID  string                 `json:"restaurant_id"`
-	Type          string                 `json:"type"` // order, reservation, promotion, alert, system
-	Title         string                 `json:"title"`
-	Body          string                 `json:"body"`
-	Data          map[string]interface{} `json:"data,omitempty"`
-	Priority      string                 `json:"priority"` // high, normal, low
-	CreatedAt     time.Time              `json:"created_at"`
-	ExpiresAt     time.Time              `json:"expires_at,omitempty"`
-	RetryCount    int                    `json:"-"`
-	Status        string                 `json:"status"` // pending, sent, failed, expired
-	FCMToken      string                 `json:"-"` // Device token per Firebase
-	ImageURL      string                 `json:"image_url,omitempty"`
-	ActionURL     string                 `json:"action_url,omitempty"`
-	Tags          []string               `json:"tags,omitempty"`
+	ID           string                 `json:"id"`
+	RestaurantID string                 `json:"restaurant_id"`
+	Type         string                 `json:"type"` // order, reservation, promotion, alert, system
+	Title        string                 `json:"title"`
+	Body         string                 `json:"body"`
+	Data         map[string]interface{} `json:"data,omitempty"`
+	Priority     string                 `json:"priority"` // high, normal, low
+	CreatedAt    time.Time              `json:"created_at"`
+	ExpiresAt    time.Time              `json:"expires_at,omitempty"`
+	RetryCount   int                    `json:"-"`
+	Status       string                 `json:"status"` // pending, sent, failed, expired
+	FCMToken     string                 `json:"-"`      // Device token per Firebase
+	ImageURL     string                 `json:"image_url,omitempty"`
+	ActionURL    string                 `json:"action_url,omitempty"`
+	Tags         []string               `json:"tags,omitempty"`
 }
 
 // NotificationRecord è una notificazione salvata in history
@@ -70,11 +70,11 @@ type NotificationPreferences struct {
 
 // NotificationTemplate è un template per le notifiche
 type NotificationTemplate struct {
-	Type        string
-	Title       string
+	Type         string
+	Title        string
 	BodyTemplate string // Supporta {{placeholder}}
-	Priority    string
-	ImageURL    string
+	Priority     string
+	ImageURL     string
 }
 
 // FCMResponse è la risposta di Firebase Cloud Messaging
@@ -92,34 +92,34 @@ var (
 	// Notification templates
 	templates = map[string]NotificationTemplate{
 		"order_created": {
-			Type:        "order",
-			Title:       "Nuovo Ordine",
+			Type:         "order",
+			Title:        "Nuovo Ordine",
 			BodyTemplate: "Hai ricevuto un nuovo ordine da {{customer}}",
-			Priority:    "high",
+			Priority:     "high",
 		},
 		"order_ready": {
-			Type:        "order",
-			Title:       "Ordine Pronto",
+			Type:         "order",
+			Title:        "Ordine Pronto",
 			BodyTemplate: "L'ordine #{{order_id}} è pronto per il ritiro",
-			Priority:    "high",
+			Priority:     "high",
 		},
 		"reservation_confirmed": {
-			Type:        "reservation",
-			Title:       "Prenotazione Confermata",
+			Type:         "reservation",
+			Title:        "Prenotazione Confermata",
 			BodyTemplate: "Prenotazione per {{party_size}} persone il {{date}} alle {{time}}",
-			Priority:    "normal",
+			Priority:     "normal",
 		},
 		"promotion_active": {
-			Type:        "promotion",
-			Title:       "Promozione Attiva",
+			Type:         "promotion",
+			Title:        "Promozione Attiva",
 			BodyTemplate: "{{promotion_name}} - {{discount}}% di sconto",
-			Priority:    "normal",
+			Priority:     "normal",
 		},
 		"system_alert": {
-			Type:        "alert",
-			Title:       "Avviso di Sistema",
+			Type:         "alert",
+			Title:        "Avviso di Sistema",
 			BodyTemplate: "{{message}}",
-			Priority:    "high",
+			Priority:     "high",
 		},
 	}
 )
@@ -147,7 +147,7 @@ func (nm *NotificationManager) Init(queueSize int) error {
 	nm.notificationQueue = make(chan *Notification, queueSize)
 
 	logger.Info("Notification manager inizializzato", map[string]interface{}{
-		"queue_size": queueSize,
+		"queue_size":  queueSize,
 		"max_retries": nm.maxRetries,
 	})
 
@@ -323,9 +323,9 @@ func (nm *NotificationManager) UpdatePreferences(restaurantID string, prefs Noti
 	nm.userPreferences[restaurantID] = prefs
 
 	logger.Info("Preferenze notifiche aggiornate", map[string]interface{}{
-		"restaurant_id":      restaurantID,
-		"enable_push":        prefs.EnablePush,
-		"fcm_tokens_count":   len(prefs.FCMTokens),
+		"restaurant_id":    restaurantID,
+		"enable_push":      prefs.EnablePush,
+		"fcm_tokens_count": len(prefs.FCMTokens),
 	})
 
 	return nil
@@ -539,10 +539,10 @@ func (nm *NotificationManager) GetStats() map[string]interface{} {
 	}
 
 	return map[string]interface{}{
-		"total_users":     totalUsers,
-		"total_history":   totalHistory,
-		"queue_size":      cap(nm.notificationQueue),
-		"queue_used":      len(nm.notificationQueue),
-		"is_running":      nm.isRunning,
+		"total_users":   totalUsers,
+		"total_history": totalHistory,
+		"queue_size":    cap(nm.notificationQueue),
+		"queue_used":    len(nm.notificationQueue),
+		"is_running":    nm.isRunning,
 	}
 }

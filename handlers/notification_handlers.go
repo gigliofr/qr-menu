@@ -9,7 +9,7 @@ import (
 
 // SendNotificationRequest è la richiesta di invio notifica
 type SendNotificationRequest struct {
-	Type  string                 `json:"type"`  // order, reservation, promotion, alert
+	Type  string                 `json:"type"` // order, reservation, promotion, alert
 	Title string                 `json:"title"`
 	Body  string                 `json:"body"`
 	Data  map[string]interface{} `json:"data,omitempty"`

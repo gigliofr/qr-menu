@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"qr-menu/logger"
 	"qr-menu/models"
+	"qr-menu/security"
 	"strconv"
 	"time"
 
@@ -18,6 +19,7 @@ import (
 type MenuCreateRequest struct {
 	Name        string                `json:"name" validate:"required,min=1,max=100"`
 	Description string                `json:"description" validate:"max=500"`
+	MealType    string                `json:"meal_type" validate:"required,oneof=breakfast lunch dinner generic"`
 	Categories  []models.MenuCategory `json:"categories" validate:"dive"`
 }
 
@@ -25,6 +27,7 @@ type MenuCreateRequest struct {
 type MenuUpdateRequest struct {
 	Name        string `json:"name" validate:"required,min=1,max=100"`
 	Description string `json:"description" validate:"max=500"`
+	MealType    string `json:"meal_type" validate:"required,oneof=breakfast lunch dinner generic"`
 }
 
 // ItemCreateRequest rappresenta una richiesta di creazione piatto
@@ -54,6 +57,73 @@ var (
 	apiMenus       = make(map[string]*models.Menu)
 	apiRestaurants = make(map[string]*models.Restaurant)
 )
+
+// SeedTestData popola il sistema con dati di test
+// Utenti definiti in TESTING_GUIDE.md
+func SeedTestData() {
+	// Seed admin user: admin / admin123
+	adminPass, _ := security.HashPassword("admin123")
+	adminRestaurant := &models.Restaurant{
+		ID:           uuid.New().String(),
+		Username:     "admin",
+		Email:        "admin@example.com",
+		PasswordHash: adminPass,
+		Role:         "admin",
+		Name:         "System Admin",
+		Description:  "Super Admin Account",
+		Address:      "Admin Panel",
+		Phone:        "+39 06 0000000",
+		IsActive:     true,
+		CreatedAt:    time.Now(),
+		LastLogin:    time.Now(),
+	}
+	apiRestaurants[adminRestaurant.ID] = adminRestaurant
+
+	// Seed owner user: owner1 / pass123
+	owner1Pass, _ := security.HashPassword("pass123")
+	owner1Restaurant := &models.Restaurant{
+		ID:           uuid.New().String(),
+		Username:     "owner1",
+		Email:        "owner1@example.com",
+		PasswordHash: owner1Pass,
+		Role:         "owner",
+		Name:         "Owner Restaurant 1",
+		Description:  "Test restaurant for owner",
+		Address:      "Via Restaurant 123, City",
+		Phone:        "+39 06 1111111",
+		IsActive:     true,
+		CreatedAt:    time.Now(),
+		LastLogin:    time.Now(),
+	}
+	apiRestaurants[owner1Restaurant.ID] = owner1Restaurant
+
+	// Seed staff user: staff1 / pass123
+	staff1Pass, _ := security.HashPassword("pass123")
+	staff1Account := &models.Restaurant{
+		ID:           uuid.New().String(),
+		Username:     "staff1",
+		Email:        "staff1@example.com",
+		PasswordHash: staff1Pass,
+		Role:         "staff",
+		Name:         "Staff Account",
+		Description:  "Staff user account",
+		Address:      "Via Staff 456, City",
+		Phone:        "+39 06 2222222",
+		IsActive:     true,
+		CreatedAt:    time.Now(),
+		LastLogin:    time.Now(),
+	}
+	apiRestaurants[staff1Account.ID] = staff1Account
+
+	logger.Info("✅ Test data seeded from TESTING_GUIDE.md", map[string]interface{}{
+		"users_created": 3,
+		"test_users": []map[string]string{
+			{"username": "admin", "password": "admin123", "role": "admin"},
+			{"username": "owner1", "password": "pass123", "role": "owner"},
+			{"username": "staff1", "password": "pass123", "role": "staff"},
+		},
+	})
+}
 
 // GetMenusHandler restituisce tutti i menu del ristorante autenticato
 func GetMenusHandler(w http.ResponseWriter, r *http.Request) {
@@ -164,6 +234,7 @@ func CreateMenuHandler(w http.ResponseWriter, r *http.Request) {
 		RestaurantID: restaurantID,
 		Name:         req.Name,
 		Description:  req.Description,
+		MealType:     req.MealType, // lunch, dinner, breakfast, generic
 		Categories:   req.Categories,
 		CreatedAt:    time.Now(),
 		UpdatedAt:    time.Now(),
@@ -233,6 +304,7 @@ func UpdateMenuHandler(w http.ResponseWriter, r *http.Request) {
 	oldName := menu.Name
 	menu.Name = req.Name
 	menu.Description = req.Description
+	menu.MealType = req.MealType
 	menu.UpdatedAt = time.Now()
 
 	logger.AuditLog("MENU_UPDATED", "menu",

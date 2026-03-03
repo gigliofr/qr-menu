@@ -148,7 +148,7 @@ func (fe *FieldEncryption) DecryptField(encryptedValue string) (string, error) {
 // EncryptSensitiveFields encrypts common sensitive fields in a map
 func (fe *FieldEncryption) EncryptSensitiveFields(data map[string]interface{}) error {
 	sensitiveFields := []string{"email", "phone", "address", "ssn", "credit_card"}
-	
+
 	for _, field := range sensitiveFields {
 		if value, ok := data[field]; ok {
 			if strValue, ok := value.(string); ok && strValue != "" {
@@ -160,14 +160,14 @@ func (fe *FieldEncryption) EncryptSensitiveFields(data map[string]interface{}) e
 			}
 		}
 	}
-	
+
 	return nil
 }
 
 // DecryptSensitiveFields decrypts common sensitive fields in a map
 func (fe *FieldEncryption) DecryptSensitiveFields(data map[string]interface{}) error {
 	sensitiveFields := []string{"email", "phone", "address", "ssn", "credit_card"}
-	
+
 	for _, field := range sensitiveFields {
 		if value, ok := data[field]; ok {
 			if strValue, ok := value.(string); ok && strValue != "" {
@@ -179,7 +179,7 @@ func (fe *FieldEncryption) DecryptSensitiveFields(data map[string]interface{}) e
 			}
 		}
 	}
-	
+
 	return nil
 }
 
@@ -208,13 +208,13 @@ func (tm *TokenManager) GenerateToken(userID, tokenType string, expiresAt int64)
 	if err != nil {
 		return "", err
 	}
-	
+
 	tm.tokens[token] = TokenInfo{
 		UserID:    userID,
 		ExpiresAt: expiresAt,
 		Type:      tokenType,
 	}
-	
+
 	return token, nil
 }
 
@@ -224,13 +224,13 @@ func (tm *TokenManager) ValidateToken(token string) (TokenInfo, bool) {
 	if !exists {
 		return TokenInfo{}, false
 	}
-	
+
 	// Check expiration
 	if info.ExpiresAt > 0 && info.ExpiresAt < currentTimeMillis() {
 		delete(tm.tokens, token)
 		return TokenInfo{}, false
 	}
-	
+
 	return info, true
 }
 

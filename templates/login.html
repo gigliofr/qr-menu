@@ -147,6 +147,57 @@
             text-align: center;
         }
 
+        .error-actions {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .btn-back {
+            flex: 1;
+            padding: 12px;
+            background: #95a5a6;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-back:hover {
+            background: #7f8c8d;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .btn-retry {
+            flex: 1;
+            padding: 12px;
+            background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-retry:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(243, 156, 18, 0.3);
+        }
+
         .password-hint {
             font-size: 0.9em;
             color: #7f8c8d;
@@ -194,7 +245,15 @@
 
         {{if .Error}}
         <div class="error">
-            {{.Error}}
+            ⚠️ {{.Error}}
+        </div>
+        <div class="error-actions">
+            <button type="button" class="btn-back" onclick="goBack()">
+                ← Torna Indietro
+            </button>
+            <button type="button" class="btn-retry" onclick="clearForm()">
+                🔄 Riprova
+            </button>
         </div>
         {{end}}
 
@@ -225,6 +284,22 @@
     </div>
 
     <script>
+        // Funzione per tornare indietro
+        function goBack() {
+            if (window.history.length > 1) {
+                window.history.back();
+            } else {
+                window.location.href = '/';
+            }
+        }
+
+        // Funzione per riprovare
+        function clearForm() {
+            document.getElementById('username').value = '';
+            document.getElementById('password').value = '';
+            document.getElementById('username').focus();
+        }
+
         // Focus automatico sul primo campo
         document.addEventListener('DOMContentLoaded', function() {
             document.getElementById('username').focus();

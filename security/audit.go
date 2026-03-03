@@ -26,8 +26,8 @@ type AuditEvent struct {
 
 // AuditLogger manages audit log collection
 type AuditLogger struct {
-	mu     sync.RWMutex
-	events []AuditEvent
+	mu      sync.RWMutex
+	events  []AuditEvent
 	maxSize int
 }
 

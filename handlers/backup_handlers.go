@@ -197,12 +197,12 @@ func GetBackupStatusHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	response := map[string]interface{}{
-		"status":           "ok",
-		"last_backup":      lastBackup,
-		"backup_count":     len(backups),
-		"auto_backup":      true,
-		"compression":      true,
-		"backup_schedule":  "daily",
+		"status":          "ok",
+		"last_backup":     lastBackup,
+		"backup_count":    len(backups),
+		"auto_backup":     true,
+		"compression":     true,
+		"backup_schedule": "daily",
 	}
 
 	if len(backups) > 0 {
@@ -290,12 +290,12 @@ func GetBackupStatsHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	stats := map[string]interface{}{
-		"total_backups":    len(backups),
-		"oldest_backup":    nil,
-		"newest_backup":    nil,
-		"total_size":       0,
-		"average_size":     0,
-		"frequency":        "daily",
+		"total_backups": len(backups),
+		"oldest_backup": nil,
+		"newest_backup": nil,
+		"total_size":    0,
+		"average_size":  0,
+		"frequency":     "daily",
 	}
 
 	if len(backups) > 0 {

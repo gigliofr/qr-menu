@@ -14,6 +14,7 @@ import (
 
 	"qr-menu/logger"
 	"qr-menu/models"
+	"qr-menu/security"
 
 	"github.com/google/uuid"
 	"github.com/gorilla/sessions"
@@ -30,6 +31,80 @@ var (
 
 const defaultRestaurantRole = "owner"
 
+func seedTestUsers() {
+	// Create test users with credentials from TESTING_GUIDE.md
+	testUsers := []struct {
+		username string
+		password string
+		email    string
+		name     string
+		role     string
+	}{
+		{
+			username: "admin",
+			password: "admin123",
+			email:    "admin@qrmenu.com",
+			name:     "Admin User",
+			role:     "admin",
+		},
+		{
+			username: "owner1",
+			password: "pass123",
+			email:    "owner1@qrmenu.com",
+			name:     "Owner Restaurant 1",
+			role:     "owner",
+		},
+		{
+			username: "staff1",
+			password: "pass123",
+			email:    "staff1@qrmenu.com",
+			name:     "Staff Member 1",
+			role:     "staff",
+		},
+	}
+
+	for _, user := range testUsers {
+		// Hash password
+		hashedPassword, err := security.HashPassword(user.password)
+		if err != nil {
+			logger.Error("Errore durante l'hash della password per utente di test", map[string]interface{}{
+				"username": user.username,
+				"error":    err.Error(),
+			})
+			continue
+		}
+
+		// Create restaurant record
+		restaurant := &models.Restaurant{
+			ID:           uuid.New().String(),
+			Username:     user.username,
+			Email:        user.email,
+			PasswordHash: hashedPassword,
+			Role:         user.role,
+			Name:         user.name,
+			Description:  "Test " + user.role + " account for QR Menu",
+			Address:      "Test Address",
+			Phone:        "555-0000",
+			IsActive:     true,
+			CreatedAt:    time.Now(),
+		}
+
+		// Store in restaurants map
+		restaurants[restaurant.ID] = restaurant
+
+		logger.Info("Utente di test creato", map[string]interface{}{
+			"username": user.username,
+			"role":     user.role,
+			"id":       restaurant.ID,
+		})
+	}
+
+	logger.Info("Seeding utenti di test completato", map[string]interface{}{
+		"total_users": len(testUsers),
+		"restaurants": len(restaurants),
+	})
+}
+
 func init() {
 	// Inizializza il session store con una chiave segreta
 	sessionKey := getOrCreateSessionKey()
@@ -43,6 +118,11 @@ func init() {
 
 	// Carica restaurants esistenti
 	loadRestaurantsFromStorage()
+
+	// Se non ci sono restaurants, seed con test data (da TESTING_GUIDE.md)
+	if len(restaurants) == 0 {
+		seedTestUsers()
+	}
 
 	logger.Info("Sistema di autenticazione inizializzato", map[string]interface{}{
 		"session_max_age":    86400 * 7,
@@ -202,9 +282,11 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 			})
 
 		data := struct {
-			Error string
+			Error    string
+			Username string
 		}{
-			Error: "Username o password non validi",
+			Error:    "Username o password non validi",
+			Username: username,
 		}
 		renderTemplate(w, "login", data)
 		return

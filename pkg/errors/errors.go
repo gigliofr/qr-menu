@@ -16,31 +16,31 @@ const (
 
 // Common error codes
 const (
-	CodeValidation          = "VALIDATION_ERROR"
-	CodeNotFound            = "NOT_FOUND"
-	CodeUnauthorized        = "UNAUTHORIZED"
-	CodeForbidden           = "FORBIDDEN"
-	CodeConflict            = "CONFLICT"
-	CodeInternalServer      = "INTERNAL_SERVER_ERROR"
-	CodeBadRequest          = "BAD_REQUEST"
-	CodeDatabaseConnection  = "DB_CONNECTION_FAILED"
-	CodeInitFailed          = "INIT_FAILED"
-	CodeParseFailed         = "PARSE_FAILED"
-	CodeIOError             = "IO_ERROR"
-	CodeNotImplemented      = "NOT_IMPLEMENTED"
-	CodeTimeout             = "TIMEOUT"
-	CodeRateLimited         = "RATE_LIMITED"
-	CodeServiceUnavailable  = "SERVICE_UNAVAILABLE"
+	CodeValidation         = "VALIDATION_ERROR"
+	CodeNotFound           = "NOT_FOUND"
+	CodeUnauthorized       = "UNAUTHORIZED"
+	CodeForbidden          = "FORBIDDEN"
+	CodeConflict           = "CONFLICT"
+	CodeInternalServer     = "INTERNAL_SERVER_ERROR"
+	CodeBadRequest         = "BAD_REQUEST"
+	CodeDatabaseConnection = "DB_CONNECTION_FAILED"
+	CodeInitFailed         = "INIT_FAILED"
+	CodeParseFailed        = "PARSE_FAILED"
+	CodeIOError            = "IO_ERROR"
+	CodeNotImplemented     = "NOT_IMPLEMENTED"
+	CodeTimeout            = "TIMEOUT"
+	CodeRateLimited        = "RATE_LIMITED"
+	CodeServiceUnavailable = "SERVICE_UNAVAILABLE"
 )
 
 // AppError represents a standardized application error
 type AppError struct {
-	Code      string `json:"code"`
-	Message   string `json:"message"`
-	Severity  string `json:"severity"`
-	Details   string `json:"details,omitempty"`
-	Err       error  `json:"-"` // Underlying error, not serialized
-	HTTPCode  int    `json:"-"` // HTTP status code
+	Code     string `json:"code"`
+	Message  string `json:"message"`
+	Severity string `json:"severity"`
+	Details  string `json:"details,omitempty"`
+	Err      error  `json:"-"` // Underlying error, not serialized
+	HTTPCode int    `json:"-"` // HTTP status code
 }
 
 // New creates a new AppError with given code, message, and severity

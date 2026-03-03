@@ -15,36 +15,36 @@ import (
 // TestErrorPackage tests the error wrapper functionality
 func TestErrorPackage(t *testing.T) {
 	tests := []struct {
-		name        string
-		createErr   func() *errors.AppError
-		expectedCode string
+		name             string
+		createErr        func() *errors.AppError
+		expectedCode     string
 		expectedSeverity string
 	}{
 		{
-			name:         "Validation Error",
-			createErr:    func() *errors.AppError { return errors.ValidationError("Invalid email") },
-			expectedCode: errors.CodeValidation,
+			name:             "Validation Error",
+			createErr:        func() *errors.AppError { return errors.ValidationError("Invalid email") },
+			expectedCode:     errors.CodeValidation,
 			expectedSeverity: errors.SeverityWarning,
 		},
 		{
-			name:         "Not Found Error",
-			createErr:    func() *errors.AppError { return errors.NotFound("Restaurant") },
-			expectedCode: errors.CodeNotFound,
+			name:             "Not Found Error",
+			createErr:        func() *errors.AppError { return errors.NotFound("Restaurant") },
+			expectedCode:     errors.CodeNotFound,
 			expectedSeverity: errors.SeverityWarning,
 		},
 		{
-			name:         "Database Error",
-			createErr:    func() *errors.AppError { return errors.DatabaseError("Connection failed") },
-			expectedCode: errors.CodeDatabaseConnection,
+			name:             "Database Error",
+			createErr:        func() *errors.AppError { return errors.DatabaseError("Connection failed") },
+			expectedCode:     errors.CodeDatabaseConnection,
 			expectedSeverity: errors.SeverityError,
 		},
 		{
-			name:         "Custom Error with Details",
+			name: "Custom Error with Details",
 			createErr: func() *errors.AppError {
 				return errors.New(errors.CodeIOError, "File read failed", errors.SeverityError).
 					WithDetails("File not found: /path/to/file.txt")
 			},
-			expectedCode: errors.CodeIOError,
+			expectedCode:     errors.CodeIOError,
 			expectedSeverity: errors.SeverityError,
 		},
 	}
@@ -94,7 +94,7 @@ func TestConfigPackage(t *testing.T) {
 		t.Error("Environment should be dev, staging, or prod")
 	}
 
-	t.Logf("Config loaded: Server %s:%d, DB Engine: %s", 
+	t.Logf("Config loaded: Server %s:%d, DB Engine: %s",
 		cfg.Server.Host, cfg.Server.Port, cfg.Database.Engine)
 }
 

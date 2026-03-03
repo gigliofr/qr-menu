@@ -12,9 +12,9 @@ import (
 
 // ResponseCachingMiddleware creates a middleware that caches HTTP responses
 type ResponseCachingMiddleware struct {
-	cache           *cache.ResponseCache
-	cacheTTL        time.Duration
-	cacheableStatus map[int]bool
+	cache            *cache.ResponseCache
+	cacheTTL         time.Duration
+	cacheableStatus  map[int]bool
 	cacheableMethods map[string]bool
 }
 
@@ -24,10 +24,10 @@ func NewResponseCachingMiddleware(c *cache.ResponseCache, ttl time.Duration) *Re
 		cache:    c,
 		cacheTTL: ttl,
 		cacheableStatus: map[int]bool{
-			http.StatusOK:                  true,
-			http.StatusCreated:             true,
-			http.StatusNoContent:           true,
-			http.StatusPartialContent:      true,
+			http.StatusOK:             true,
+			http.StatusCreated:        true,
+			http.StatusNoContent:      true,
+			http.StatusPartialContent: true,
 		},
 		cacheableMethods: map[string]bool{
 			"GET":  true,
@@ -124,9 +124,9 @@ func (rc *responseCapture) Write(data []byte) (int, error) {
 
 // CacheInvalidationMiddleware helps with cache invalidation on mutations
 type CacheInvalidationMiddleware struct {
-	cache           *cache.ResponseCache
-	queryCache      *cache.QueryResultCache
-	pathPatterns    map[string][]string // path pattern -> tables to invalidate
+	cache        *cache.ResponseCache
+	queryCache   *cache.QueryResultCache
+	pathPatterns map[string][]string // path pattern -> tables to invalidate
 }
 
 // NewCacheInvalidationMiddleware creates invalidation middleware

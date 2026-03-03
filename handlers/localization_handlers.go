@@ -31,7 +31,7 @@ func GetTranslationsHandler(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(LocaleResponse{
 		Status: "success",
 		Data: map[string]interface{}{
-			"locale":        locale,
+			"locale":       locale,
 			"translations": translations,
 		},
 	})

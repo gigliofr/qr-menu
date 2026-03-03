@@ -4,14 +4,14 @@ import "time"
 
 // BillingPlan represents a subscription plan.
 type BillingPlan struct {
-	ID          string   `json:"id"`
-	Name        string   `json:"name"`
-	PriceCents  int64    `json:"price_cents"`
-	Currency    string   `json:"currency"`
-	Interval    string   `json:"interval"` // monthly, yearly
-	Features    []string `json:"features"`
-	IsActive    bool     `json:"is_active"`
-	CreatedAt   time.Time `json:"created_at"`
+	ID         string    `json:"id"`
+	Name       string    `json:"name"`
+	PriceCents int64     `json:"price_cents"`
+	Currency   string    `json:"currency"`
+	Interval   string    `json:"interval"` // monthly, yearly
+	Features   []string  `json:"features"`
+	IsActive   bool      `json:"is_active"`
+	CreatedAt  time.Time `json:"created_at"`
 }
 
 // BillingSubscription represents a restaurant subscription.
@@ -19,7 +19,7 @@ type BillingSubscription struct {
 	ID                     string    `json:"id"`
 	RestaurantID           string    `json:"restaurant_id"`
 	PlanID                 string    `json:"plan_id"`
-	Status                 string    `json:"status"` // active, canceled, past_due
+	Status                 string    `json:"status"`   // active, canceled, past_due
 	Provider               string    `json:"provider"` // stripe, mock
 	ProviderSubscriptionID string    `json:"provider_subscription_id,omitempty"`
 	ProviderCustomerID     string    `json:"provider_customer_id,omitempty"`

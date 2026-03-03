@@ -4,20 +4,21 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/gorilla/mux"
 	"qr-menu/pkg/container"
 	"qr-menu/pkg/errors"
 	"qr-menu/pkg/handlers"
 	httputil "qr-menu/pkg/http"
 	"qr-menu/pkg/middleware"
+
+	"github.com/gorilla/mux"
 )
 
 // Router groups routes by functionality
 type Router struct {
-	mux                  *mux.Router
-	container            *container.ServiceContainer
-	cacheInvalidation    *middleware.CacheInvalidationMiddleware
-	responseCaching      *middleware.ResponseCachingMiddleware
+	mux               *mux.Router
+	container         *container.ServiceContainer
+	cacheInvalidation *middleware.CacheInvalidationMiddleware
+	responseCaching   *middleware.ResponseCachingMiddleware
 }
 
 // NewRouter creates a new router with the service container

@@ -12,7 +12,7 @@ import (
 // TestNewServiceContainer tests container creation
 func TestNewServiceContainer(t *testing.T) {
 	cfg := config.Load()
-	
+
 	cont, err := container.NewServiceContainer(cfg)
 	if err != nil {
 		t.Fatalf("Failed to create service container: %v", err)
@@ -85,7 +85,7 @@ func TestServiceContainerHealth(t *testing.T) {
 	}
 
 	health := cont.Health()
-	
+
 	if health == nil {
 		t.Fatal("Health should not be nil")
 	}
@@ -183,5 +183,3 @@ func TestServiceContainerConfigIntegration(t *testing.T) {
 
 	t.Log("✅ Config integration test passed")
 }
-
-

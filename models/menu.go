@@ -29,6 +29,7 @@ type Menu struct {
 	RestaurantID string         `json:"restaurant_id"` // Ora è l'ID del ristorante proprietario
 	Name         string         `json:"name"`
 	Description  string         `json:"description"`
+	MealType     string         `json:"meal_type"` // lunch, dinner, breakfast, generic
 	Categories   []MenuCategory `json:"categories"`
 	CreatedAt    time.Time      `json:"created_at"`
 	UpdatedAt    time.Time      `json:"updated_at"`

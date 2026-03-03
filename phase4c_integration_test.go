@@ -276,9 +276,9 @@ func TestCacheStatisticsAccuracy(t *testing.T) {
 	}
 
 	// Perform hits and misses
-	respCache.GetCachedResponse(keys[0]) // hit
-	respCache.GetCachedResponse(keys[0]) // hit
-	respCache.GetCachedResponse(keys[1]) // hit
+	respCache.GetCachedResponse(keys[0])   // hit
+	respCache.GetCachedResponse(keys[0])   // hit
+	respCache.GetCachedResponse(keys[1])   // hit
 	respCache.GetCachedResponse("missing") // miss
 
 	stats := respCache.GetStats()
@@ -345,7 +345,7 @@ func TestCacheExpirationWithMiddleware(t *testing.T) {
 // TestMultipleStatusCodesCache tests that different status codes are handled correctly
 func TestMultipleStatusCodesCache(t *testing.T) {
 	testCases := []struct {
-		status     int
+		status      int
 		shouldCache bool
 	}{
 		{http.StatusOK, true},

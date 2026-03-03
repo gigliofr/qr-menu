@@ -23,12 +23,12 @@ type Migration struct {
 
 // MigrationManager gestisce le migrazioni del database
 type MigrationManager struct {
-	mu                 sync.RWMutex
-	migrationsPath     string
-	appliedMigrations  []Migration
-	pendingMigrations  []Migration
-	databaseType       string // postgres, mysql, sqlite
-	schemaVersion      int
+	mu                sync.RWMutex
+	migrationsPath    string
+	appliedMigrations []Migration
+	pendingMigrations []Migration
+	databaseType      string // postgres, mysql, sqlite
+	schemaVersion     int
 }
 
 // MigrationConfig contiene la configurazione per le migrazioni
@@ -369,10 +369,10 @@ func (mm *MigrationManager) GetMigrations() map[string]interface{} {
 	defer mm.mu.RUnlock()
 
 	return map[string]interface{}{
-		"applied":  mm.appliedMigrations,
-		"pending":  mm.pendingMigrations,
-		"total":    len(mm.appliedMigrations) + len(mm.pendingMigrations),
-		"version":  mm.schemaVersion,
+		"applied": mm.appliedMigrations,
+		"pending": mm.pendingMigrations,
+		"total":   len(mm.appliedMigrations) + len(mm.pendingMigrations),
+		"version": mm.schemaVersion,
 	}
 }
 
@@ -382,10 +382,10 @@ func (mm *MigrationManager) GetMigrationStatus() map[string]interface{} {
 	defer mm.mu.RUnlock()
 
 	return map[string]interface{}{
-		"applied_count":  len(mm.appliedMigrations),
-		"pending_count":  len(mm.pendingMigrations),
+		"applied_count":   len(mm.appliedMigrations),
+		"pending_count":   len(mm.pendingMigrations),
 		"current_version": mm.schemaVersion,
-		"last_applied":   func() *time.Time {
+		"last_applied": func() *time.Time {
 			if len(mm.appliedMigrations) > 0 {
 				return &mm.appliedMigrations[len(mm.appliedMigrations)-1].AppliedAt
 			}

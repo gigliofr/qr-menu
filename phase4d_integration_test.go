@@ -36,13 +36,13 @@ func TestPhase4dApplicationIntegration(t *testing.T) {
 			InvalidateOnMutation: true,
 		},
 		Database: config.DatabaseConfig{
-			DSN:              "",
-			MaxOpenConns:     25,
-			MaxIdleConns:     5,
-			ConnMaxLifetime:  5 * time.Minute,
-			Engine:           "postgres",
-			MigrationPath:    "./migrations",
-			AutoMigrate:      false,
+			DSN:             "",
+			MaxOpenConns:    25,
+			MaxIdleConns:    5,
+			ConnMaxLifetime: 5 * time.Minute,
+			Engine:          "postgres",
+			MigrationPath:   "./migrations",
+			AutoMigrate:     false,
 		},
 		Logger: config.LoggerConfig{
 			Level:      "info",
@@ -59,7 +59,7 @@ func TestPhase4dApplicationIntegration(t *testing.T) {
 			DefaultLanguage: "it",
 		},
 		Security: config.SecurityConfig{
-			CORSEnabled: true,
+			CORSEnabled:        true,
 			RateLimitPerSecond: 100,
 		},
 	}

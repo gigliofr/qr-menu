@@ -26,7 +26,7 @@ const (
 )
 
 var (
-	billingPlans = map[string]*models.BillingPlan{}
+	billingPlans  = map[string]*models.BillingPlan{}
 	subscriptions = map[string]*models.BillingSubscription{}
 )
 
@@ -223,7 +223,7 @@ func CreateBillingPortalHandler(w http.ResponseWriter, r *http.Request) {
 
 	stripe.Key = stripeKey
 	params := &stripe.BillingPortalSessionParams{
-		Customer: stripe.String(sub.ProviderCustomerID),
+		Customer:  stripe.String(sub.ProviderCustomerID),
 		ReturnURL: stripe.String(defaultPortalURL()),
 	}
 

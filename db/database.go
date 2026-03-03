@@ -11,12 +11,12 @@ import (
 
 // DatabaseManager gestisce la connessione al database
 type DatabaseManager struct {
-	mu         sync.RWMutex
-	db         *sql.DB
-	dbType     string
-	dsn        string
-	maxOpen    int
-	maxIdle    int
+	mu          sync.RWMutex
+	db          *sql.DB
+	dbType      string
+	dsn         string
+	maxOpen     int
+	maxIdle     int
 	maxLifeTime time.Duration
 	isConnected bool
 }
@@ -102,9 +102,9 @@ func (dm *DatabaseManager) Init(config DatabaseConfig) error {
 	dm.isConnected = true
 
 	logger.Info("Database manager inizializzato", map[string]interface{}{
-		"type":        dm.dbType,
-		"max_open":    dm.maxOpen,
-		"max_idle":    dm.maxIdle,
+		"type":         dm.dbType,
+		"max_open":     dm.maxOpen,
+		"max_idle":     dm.maxIdle,
 		"max_lifetime": dm.maxLifeTime.String(),
 	})
 
@@ -159,13 +159,13 @@ func (dm *DatabaseManager) GetHealth() map[string]interface{} {
 	stats := dm.db.Stats()
 
 	return map[string]interface{}{
-		"connected":      dm.isConnected,
-		"open_connections": stats.OpenConnections,
-		"in_use":         stats.InUse,
-		"idle":           stats.Idle,
-		"wait_count":     stats.WaitCount,
-		"wait_duration":  stats.WaitDuration.String(),
-		"max_idle_closed": stats.MaxIdleClosed,
+		"connected":           dm.isConnected,
+		"open_connections":    stats.OpenConnections,
+		"in_use":              stats.InUse,
+		"idle":                stats.Idle,
+		"wait_count":          stats.WaitCount,
+		"wait_duration":       stats.WaitDuration.String(),
+		"max_idle_closed":     stats.MaxIdleClosed,
 		"max_lifetime_closed": stats.MaxLifetimeClosed,
 	}
 }

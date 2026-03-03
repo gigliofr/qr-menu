@@ -17,11 +17,11 @@ type RateLimiter struct {
 }
 
 type bucket struct {
-	tokens    float64
-	capacity  float64
+	tokens     float64
+	capacity   float64
 	refillRate float64 // tokens per second
 	lastRefill time.Time
-	mu        sync.Mutex
+	mu         sync.Mutex
 }
 
 // RateLimitConfig configures rate limiting per endpoint
@@ -122,7 +122,7 @@ func (b *bucket) allow() bool {
 
 	now := time.Now()
 	elapsed := now.Sub(b.lastRefill).Seconds()
-	
+
 	// Refill tokens
 	b.tokens = min(b.capacity, b.tokens+elapsed*b.refillRate)
 	b.lastRefill = now

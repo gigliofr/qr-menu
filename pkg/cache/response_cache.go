@@ -10,10 +10,10 @@ import (
 
 // ResponseCache caches HTTP responses (GET requests)
 type ResponseCache struct {
-	cache  Cache
-	mu     sync.RWMutex
-	keys   map[string]time.Time // Track key expiration times
-	stats  CacheStats
+	cache Cache
+	mu    sync.RWMutex
+	keys  map[string]time.Time // Track key expiration times
+	stats CacheStats
 }
 
 // CachedResponse represents a cached HTTP response
@@ -119,12 +119,12 @@ func (rc *ResponseCache) GetStats() map[string]interface{} {
 	}
 
 	return map[string]interface{}{
-		"hits":       rc.stats.Hits,
-		"misses":     rc.stats.Misses,
-		"evictions":  rc.stats.Evictions,
-		"total":      rc.stats.Total,
-		"hit_rate":   fmt.Sprintf("%.2f%%", hitRate),
-		"size":       rc.cache.Size(),
+		"hits":      rc.stats.Hits,
+		"misses":    rc.stats.Misses,
+		"evictions": rc.stats.Evictions,
+		"total":     rc.stats.Total,
+		"hit_rate":  fmt.Sprintf("%.2f%%", hitRate),
+		"size":      rc.cache.Size(),
 	}
 }
 
@@ -142,11 +142,11 @@ func GenerateResponseCacheKey(method, path, query string) string {
 
 // QueryResultCache caches database query results
 type QueryResultCache struct {
-	cache  Cache
-	mu     sync.RWMutex
-	keys   map[string]time.Time
-	stats  CacheStats
-	deps   map[string][]string // Dependencies: table -> cached queries
+	cache Cache
+	mu    sync.RWMutex
+	keys  map[string]time.Time
+	stats CacheStats
+	deps  map[string][]string // Dependencies: table -> cached queries
 }
 
 // NewQueryResultCache creates a query result cache
@@ -232,13 +232,13 @@ func (qrc *QueryResultCache) GetStats() map[string]interface{} {
 	}
 
 	return map[string]interface{}{
-		"hits":       qrc.stats.Hits,
-		"misses":     qrc.stats.Misses,
-		"evictions":  qrc.stats.Evictions,
-		"total":      qrc.stats.Total,
-		"hit_rate":   fmt.Sprintf("%.2f%%", hitRate),
-		"size":       qrc.cache.Size(),
-		"tables":     len(qrc.deps),
+		"hits":      qrc.stats.Hits,
+		"misses":    qrc.stats.Misses,
+		"evictions": qrc.stats.Evictions,
+		"total":     qrc.stats.Total,
+		"hit_rate":  fmt.Sprintf("%.2f%%", hitRate),
+		"size":      qrc.cache.Size(),
+		"tables":    len(qrc.deps),
 	}
 }
 

@@ -436,16 +436,16 @@ func TestMiddlewareChainOrder(t *testing.T) {
 // TestGetClientIP tests IP extraction
 func TestGetClientIP(t *testing.T) {
 	tests := []struct {
-		name          string
-		forwardedFor  string
-		xRealIP       string
-		remoteAddr    string
-		expectedIP    string
+		name         string
+		forwardedFor string
+		xRealIP      string
+		remoteAddr   string
+		expectedIP   string
 	}{
 		{
-			name:       "X-Forwarded-For",
+			name:         "X-Forwarded-For",
 			forwardedFor: "192.168.1.1, 10.0.0.1",
-			expectedIP: "192.168.1.1",
+			expectedIP:   "192.168.1.1",
 		},
 		{
 			name:       "X-Real-IP",

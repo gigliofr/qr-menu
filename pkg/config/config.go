@@ -8,15 +8,15 @@ import (
 
 // Config holds all application configuration
 type Config struct {
-	Server         ServerConfig
-	Database       DatabaseConfig
-	Backup         BackupConfig
-	Notifications  NotificationConfig
-	Localization   LocalizationConfig
-	Logger         LoggerConfig
-	Analytics      AnalyticsConfig
-	Security       SecurityConfig
-	Cache          CacheConfig
+	Server        ServerConfig
+	Database      DatabaseConfig
+	Backup        BackupConfig
+	Notifications NotificationConfig
+	Localization  LocalizationConfig
+	Logger        LoggerConfig
+	Analytics     AnalyticsConfig
+	Security      SecurityConfig
+	Cache         CacheConfig
 }
 
 // ServerConfig holds server-specific configuration
@@ -32,26 +32,26 @@ type ServerConfig struct {
 
 // DatabaseConfig holds database configuration
 type DatabaseConfig struct {
-	DSN              string
-	MaxOpenConns     int
-	MaxIdleConns     int
-	ConnMaxLifetime  time.Duration
-	ConnMaxIdleTime  time.Duration
-	Engine           string // postgres, mysql, sqlite
-	MigrationPath    string
-	AutoMigrate      bool
+	DSN             string
+	MaxOpenConns    int
+	MaxIdleConns    int
+	ConnMaxLifetime time.Duration
+	ConnMaxIdleTime time.Duration
+	Engine          string // postgres, mysql, sqlite
+	MigrationPath   string
+	AutoMigrate     bool
 }
 
 // BackupConfig holds backup service configuration
 type BackupConfig struct {
-	QueueSize          int
-	MaxBackups         int
-	ScheduleTime       string        // HH:MM format, default "02:00"
-	Enabled            bool
-	CompressionLevel   int           // 1-9
-	RetentionDays      int
-	RotationInterval   time.Duration
-	StoragePath        string
+	QueueSize        int
+	MaxBackups       int
+	ScheduleTime     string // HH:MM format, default "02:00"
+	Enabled          bool
+	CompressionLevel int // 1-9
+	RetentionDays    int
+	RotationInterval time.Duration
+	StoragePath      string
 }
 
 // NotificationConfig holds notification service configuration
@@ -68,24 +68,24 @@ type NotificationConfig struct {
 
 // LocalizationConfig holds localization configuration
 type LocalizationConfig struct {
-	DefaultLanguage string
+	DefaultLanguage    string
 	SupportedLanguages []string
-	DateFormat      string
-	TimeFormat      string
-	TimezoneOffset  int // hours
-	CurrencySymbols map[string]string
+	DateFormat         string
+	TimeFormat         string
+	TimezoneOffset     int // hours
+	CurrencySymbols    map[string]string
 }
 
 // LoggerConfig holds logger configuration
 type LoggerConfig struct {
-	Level       string        // debug, info, warn, error, fatal
-	Format      string        // json, text
-	OutputFile  string        // path to log file
-	MaxSize     int           // MB
+	Level       string // debug, info, warn, error, fatal
+	Format      string // json, text
+	OutputFile  string // path to log file
+	MaxSize     int    // MB
 	MaxBackups  int
-	MaxAge      int           // days
+	MaxAge      int // days
 	Compress    bool
-	Development bool          // true for dev, false for prod
+	Development bool // true for dev, false for prod
 }
 
 // AnalyticsConfig holds analytics configuration
@@ -99,17 +99,17 @@ type AnalyticsConfig struct {
 
 // SecurityConfig holds security configuration
 type SecurityConfig struct {
-	SessionTimeout   time.Duration
-	PasswordMinLen   int
+	SessionTimeout         time.Duration
+	PasswordMinLen         int
 	PasswordRequireSpecial bool
 	PasswordRequireNumbers bool
-	RateLimitPerSecond int
-	RateLimitBurst     int
-	CORSEnabled      bool
-	CORSAllowedOrigins []string
-	EnableHTTPS      bool
-	CertFile         string
-	KeyFile          string
+	RateLimitPerSecond     int
+	RateLimitBurst         int
+	CORSEnabled            bool
+	CORSAllowedOrigins     []string
+	EnableHTTPS            bool
+	CertFile               string
+	KeyFile                string
 }
 
 // CacheConfig holds caching configuration
@@ -121,7 +121,6 @@ type CacheConfig struct {
 	MaxQueryCacheSize    int           // Maximum number of cached query results
 	InvalidateOnMutation bool          // Whether to invalidate cache on mutations
 }
-
 
 // Load loads configuration from environment variables and returns a Config struct
 func Load() *Config {
@@ -166,11 +165,11 @@ func Load() *Config {
 			Enabled:           getEnvBool("NOTIFICATIONS_ENABLED", true),
 		},
 		Localization: LocalizationConfig{
-			DefaultLanguage: getEnv("LOCALIZATION_DEFAULT_LANG", "it"),
+			DefaultLanguage:    getEnv("LOCALIZATION_DEFAULT_LANG", "it"),
 			SupportedLanguages: []string{"it", "en", "es", "fr", "de", "pt", "ja", "zh", "ar"},
-			DateFormat:      getEnv("LOCALIZATION_DATE_FORMAT", "2006-01-02"),
-			TimeFormat:      getEnv("LOCALIZATION_TIME_FORMAT", "15:04:05"),
-			TimezoneOffset:  getEnvInt("LOCALIZATION_TIMEZONE_OFFSET", 1),
+			DateFormat:         getEnv("LOCALIZATION_DATE_FORMAT", "2006-01-02"),
+			TimeFormat:         getEnv("LOCALIZATION_TIME_FORMAT", "15:04:05"),
+			TimezoneOffset:     getEnvInt("LOCALIZATION_TIMEZONE_OFFSET", 1),
 			CurrencySymbols: map[string]string{
 				"EUR": "€",
 				"USD": "$",
@@ -196,17 +195,17 @@ func Load() *Config {
 			RetentionDays:   getEnvInt("ANALYTICS_RETENTION_DAYS", 90),
 		},
 		Security: SecurityConfig{
-			SessionTimeout:     getEnvDuration("SECURITY_SESSION_TIMEOUT", 24*time.Hour),
-			PasswordMinLen:     getEnvInt("SECURITY_PASSWORD_MIN_LEN", 8),
+			SessionTimeout:         getEnvDuration("SECURITY_SESSION_TIMEOUT", 24*time.Hour),
+			PasswordMinLen:         getEnvInt("SECURITY_PASSWORD_MIN_LEN", 8),
 			PasswordRequireSpecial: getEnvBool("SECURITY_PASSWORD_REQUIRE_SPECIAL", true),
 			PasswordRequireNumbers: getEnvBool("SECURITY_PASSWORD_REQUIRE_NUMBERS", true),
-			RateLimitPerSecond: getEnvInt("SECURITY_RATE_LIMIT_PER_SEC", 10),
-			RateLimitBurst:     getEnvInt("SECURITY_RATE_LIMIT_BURST", 100),
-			CORSEnabled:        getEnvBool("SECURITY_CORS_ENABLED", true),
-			CORSAllowedOrigins: []string{"http://localhost:3000", "http://localhost:8080"},
-			EnableHTTPS:        getEnvBool("SECURITY_ENABLE_HTTPS", false),
-			CertFile:           getEnv("SECURITY_CERT_FILE", ""),
-			KeyFile:            getEnv("SECURITY_KEY_FILE", ""),
+			RateLimitPerSecond:     getEnvInt("SECURITY_RATE_LIMIT_PER_SEC", 10),
+			RateLimitBurst:         getEnvInt("SECURITY_RATE_LIMIT_BURST", 100),
+			CORSEnabled:            getEnvBool("SECURITY_CORS_ENABLED", true),
+			CORSAllowedOrigins:     []string{"http://localhost:3000", "http://localhost:8080"},
+			EnableHTTPS:            getEnvBool("SECURITY_ENABLE_HTTPS", false),
+			CertFile:               getEnv("SECURITY_CERT_FILE", ""),
+			KeyFile:                getEnv("SECURITY_KEY_FILE", ""),
 		},
 		Cache: CacheConfig{
 			Enabled:              getEnvBool("CACHE_ENABLED", true),

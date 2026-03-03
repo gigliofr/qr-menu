@@ -13,22 +13,22 @@ type SecurityHeadersMiddleware struct {
 type SecurityHeadersConfig struct {
 	// Content Security Policy
 	CSP string
-	
+
 	// Strict-Transport-Security (HSTS)
 	HSTS string
-	
+
 	// X-Frame-Options
 	FrameOptions string
-	
+
 	// X-Content-Type-Options
 	ContentTypeOptions string
-	
+
 	// X-XSS-Protection
 	XSSProtection string
-	
+
 	// Referrer-Policy
 	ReferrerPolicy string
-	
+
 	// Permissions-Policy
 	PermissionsPolicy string
 }
@@ -71,41 +71,41 @@ func (shm *SecurityHeadersMiddleware) Middleware(next http.Handler) http.Handler
 		if shm.config.CSP != "" {
 			w.Header().Set("Content-Security-Policy", shm.config.CSP)
 		}
-		
+
 		// HSTS - only on HTTPS
 		if shm.config.HSTS != "" && r.TLS != nil {
 			w.Header().Set("Strict-Transport-Security", shm.config.HSTS)
 		}
-		
+
 		// Frame Options
 		if shm.config.FrameOptions != "" {
 			w.Header().Set("X-Frame-Options", shm.config.FrameOptions)
 		}
-		
+
 		// Content Type Options
 		if shm.config.ContentTypeOptions != "" {
 			w.Header().Set("X-Content-Type-Options", shm.config.ContentTypeOptions)
 		}
-		
+
 		// XSS Protection
 		if shm.config.XSSProtection != "" {
 			w.Header().Set("X-XSS-Protection", shm.config.XSSProtection)
 		}
-		
+
 		// Referrer Policy
 		if shm.config.ReferrerPolicy != "" {
 			w.Header().Set("Referrer-Policy", shm.config.ReferrerPolicy)
 		}
-		
+
 		// Permissions Policy
 		if shm.config.PermissionsPolicy != "" {
 			w.Header().Set("Permissions-Policy", shm.config.PermissionsPolicy)
 		}
-		
+
 		// Additional security headers
 		w.Header().Set("X-Permitted-Cross-Domain-Policies", "none")
 		w.Header().Set("X-Download-Options", "noopen")
-		
+
 		next.ServeHTTP(w, r)
 	})
 }
@@ -158,7 +158,7 @@ func NewCORSMiddleware(config CORSConfig) *CORSMiddleware {
 func (cm *CORSMiddleware) Middleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		origin := r.Header.Get("Origin")
-		
+
 		// Check if origin is allowed
 		allowed := false
 		for _, allowedOrigin := range cm.config.AllowedOrigins {
@@ -167,33 +167,33 @@ func (cm *CORSMiddleware) Middleware(next http.Handler) http.Handler {
 				break
 			}
 		}
-		
+
 		if allowed {
 			w.Header().Set("Access-Control-Allow-Origin", origin)
 		}
-		
+
 		if cm.config.AllowCredentials {
 			w.Header().Set("Access-Control-Allow-Credentials", "true")
 		}
-		
+
 		// Handle preflight
 		if r.Method == "OPTIONS" {
 			w.Header().Set("Access-Control-Allow-Methods", joinStrings(cm.config.AllowedMethods, ", "))
 			w.Header().Set("Access-Control-Allow-Headers", joinStrings(cm.config.AllowedHeaders, ", "))
-			
+
 			if cm.config.MaxAge > 0 {
 				w.Header().Set("Access-Control-Max-Age", formatInt(cm.config.MaxAge))
 			}
-			
+
 			w.WriteHeader(http.StatusNoContent)
 			return
 		}
-		
+
 		// Set exposed headers
 		if len(cm.config.ExposedHeaders) > 0 {
 			w.Header().Set("Access-Control-Expose-Headers", joinStrings(cm.config.ExposedHeaders, ", "))
 		}
-		
+
 		next.ServeHTTP(w, r)
 	})
 }

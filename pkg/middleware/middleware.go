@@ -237,9 +237,9 @@ func (rw *responseWriter) WriteHeader(code int) {
 
 // rateLimiter implements simple token bucket algorithm
 type rateLimiter struct {
-	tokens    int
-	maxTokens int
-	lastRefil time.Time
+	tokens     int
+	maxTokens  int
+	lastRefil  time.Time
 	refillRate int // tokens per second
 }
 

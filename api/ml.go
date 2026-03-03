@@ -26,7 +26,7 @@ func init() {
 		SimilarityMetric:   "cosine",
 		MaxRecommendations: 10,
 	})
-	
+
 	predictiveAnalytics = ml.NewPredictiveAnalytics()
 	abTestManager = ml.NewABTestManager()
 }
@@ -36,7 +36,7 @@ func init() {
 // GetRecommendationsHandler returns personalized recommendations for a user
 func GetRecommendationsHandler(w http.ResponseWriter, r *http.Request) {
 	restaurantID := GetRestaurantIDFromRequest(r)
-	
+
 	limitStr := r.URL.Query().Get("limit")
 	limit := 10
 	if limitStr != "" {
@@ -44,11 +44,11 @@ func GetRecommendationsHandler(w http.ResponseWriter, r *http.Request) {
 			limit = l
 		}
 	}
-	
+
 	excludeItems := r.URL.Query()["exclude"]
-	
+
 	recommendations := recommendationEngine.GetRecommendations(restaurantID, excludeItems, limit)
-	
+
 	SuccessResponse(w, recommendations, nil)
 }
 
@@ -56,7 +56,7 @@ func GetRecommendationsHandler(w http.ResponseWriter, r *http.Request) {
 func GetSimilarItemsHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	itemID := vars["id"]
-	
+
 	limitStr := r.URL.Query().Get("limit")
 	limit := 5
 	if limitStr != "" {
@@ -64,9 +64,9 @@ func GetSimilarItemsHandler(w http.ResponseWriter, r *http.Request) {
 			limit = l
 		}
 	}
-	
+
 	similar := recommendationEngine.GetSimilarItems(itemID, limit)
-	
+
 	SuccessResponse(w, similar, nil)
 }
 
@@ -79,7 +79,7 @@ func GetTrendingItemsHandler(w http.ResponseWriter, r *http.Request) {
 			window = time.Duration(hours) * time.Hour
 		}
 	}
-	
+
 	limitStr := r.URL.Query().Get("limit")
 	limit := 10
 	if limitStr != "" {
@@ -87,9 +87,9 @@ func GetTrendingItemsHandler(w http.ResponseWriter, r *http.Request) {
 			limit = l
 		}
 	}
-	
+
 	trending := recommendationEngine.GetTrendingItems(window, limit)
-	
+
 	SuccessResponse(w, trending, nil)
 }
 
@@ -101,18 +101,18 @@ func TrackInteractionHandler(w http.ResponseWriter, r *http.Request) {
 		InteractionType string  `json:"interaction_type"`
 		Weight          float64 `json:"weight"`
 	}
-	
+
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		ErrorResponse(w, http.StatusBadRequest, "INVALID_REQUEST", "Invalid request", err.Error())
 		return
 	}
-	
+
 	if req.Weight == 0 {
 		req.Weight = 1.0
 	}
-	
+
 	recommendationEngine.RecordInteraction(req.UserID, req.ItemID, req.InteractionType, req.Weight)
-	
+
 	SuccessResponse(w, map[string]interface{}{
 		"status": "recorded",
 	}, nil)
@@ -125,7 +125,7 @@ func TrainRecommendationsHandler(w http.ResponseWriter, r *http.Request) {
 		ErrorResponse(w, http.StatusInternalServerError, "TRAINING_ERROR", "Failed to train model", err.Error())
 		return
 	}
-	
+
 	stats := recommendationEngine.GetStats()
 	SuccessResponse(w, map[string]interface{}{
 		"status": "trained",
@@ -141,7 +141,7 @@ func ForecastDemandHandler(w http.ResponseWriter, r *http.Request) {
 	if metric == "" {
 		metric = "orders"
 	}
-	
+
 	periodsStr := r.URL.Query().Get("periods")
 	periods := 7 // Default 7 periods
 	if periodsStr != "" {
@@ -149,13 +149,13 @@ func ForecastDemandHandler(w http.ResponseWriter, r *http.Request) {
 			periods = p
 		}
 	}
-	
+
 	forecasts, err := predictiveAnalytics.ForecastDemand(metric, periods)
 	if err != nil {
 		ErrorResponse(w, http.StatusInternalServerError, "FORECAST_ERROR", "Failed to forecast demand", err.Error())
 		return
 	}
-	
+
 	SuccessResponse(w, forecasts, nil)
 }
 
@@ -165,9 +165,9 @@ func DetectSeasonalityHandler(w http.ResponseWriter, r *http.Request) {
 	if metric == "" {
 		metric = "orders"
 	}
-	
+
 	pattern := predictiveAnalytics.DetectSeasonality(metric)
-	
+
 	SuccessResponse(w, pattern, nil)
 }
 
@@ -177,9 +177,9 @@ func AnalyzeTrendHandler(w http.ResponseWriter, r *http.Request) {
 	if metric == "" {
 		metric = "revenue"
 	}
-	
+
 	trend := predictiveAnalytics.AnalyzeTrend(metric)
-	
+
 	SuccessResponse(w, trend, nil)
 }
 
@@ -189,7 +189,7 @@ func PredictPeakTimesHandler(w http.ResponseWriter, r *http.Request) {
 	if metric == "" {
 		metric = "orders"
 	}
-	
+
 	lookAheadStr := r.URL.Query().Get("lookahead_hours")
 	lookAhead := 168 * time.Hour // Default 1 week
 	if lookAheadStr != "" {
@@ -197,9 +197,9 @@ func PredictPeakTimesHandler(w http.ResponseWriter, r *http.Request) {
 			lookAhead = time.Duration(hours) * time.Hour
 		}
 	}
-	
+
 	peakTimes := predictiveAnalytics.PredictPeakTimes(metric, lookAhead)
-	
+
 	SuccessResponse(w, map[string]interface{}{
 		"peak_times": peakTimes,
 		"metric":     metric,
@@ -211,7 +211,7 @@ func PredictPeakTimesHandler(w http.ResponseWriter, r *http.Request) {
 func OptimizeInventoryHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	itemID := vars["item_id"]
-	
+
 	leadTimeStr := r.URL.Query().Get("lead_time_days")
 	leadTime := 7 * 24 * time.Hour // Default 7 days
 	if leadTimeStr != "" {
@@ -219,9 +219,9 @@ func OptimizeInventoryHandler(w http.ResponseWriter, r *http.Request) {
 			leadTime = time.Duration(days) * 24 * time.Hour
 		}
 	}
-	
+
 	optimization := predictiveAnalytics.OptimizeInventory(itemID, leadTime)
-	
+
 	SuccessResponse(w, optimization, nil)
 }
 
@@ -233,24 +233,24 @@ func AddDataPointHandler(w http.ResponseWriter, r *http.Request) {
 		Timestamp time.Time              `json:"timestamp"`
 		Metadata  map[string]interface{} `json:"metadata"`
 	}
-	
+
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		ErrorResponse(w, http.StatusBadRequest, "INVALID_REQUEST", "Invalid request", err.Error())
 		return
 	}
-	
+
 	if req.Timestamp.IsZero() {
 		req.Timestamp = time.Now()
 	}
-	
+
 	point := ml.TimeSeriesPoint{
 		Timestamp: req.Timestamp,
 		Value:     req.Value,
 		Metadata:  req.Metadata,
 	}
-	
+
 	predictiveAnalytics.AddDataPoint(req.Metric, point)
-	
+
 	SuccessResponse(w, map[string]interface{}{
 		"status": "recorded",
 	}, nil)
@@ -261,18 +261,18 @@ func AddDataPointHandler(w http.ResponseWriter, r *http.Request) {
 // CreateExperimentHandler creates a new A/B test
 func CreateExperimentHandler(w http.ResponseWriter, r *http.Request) {
 	var req ml.Experiment
-	
+
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		ErrorResponse(w, http.StatusBadRequest, "INVALID_REQUEST", "Invalid request", err.Error())
 		return
 	}
-	
+
 	experiment, err := abTestManager.CreateExperiment(req)
 	if err != nil {
 		ErrorResponse(w, http.StatusBadRequest, "EXPERIMENT_ERROR", "Failed to create experiment", err.Error())
 		return
 	}
-	
+
 	SuccessResponse(w, experiment, nil)
 }
 
@@ -280,13 +280,13 @@ func CreateExperimentHandler(w http.ResponseWriter, r *http.Request) {
 func StartExperimentHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	experimentID := vars["id"]
-	
+
 	err := abTestManager.StartExperiment(experimentID)
 	if err != nil {
 		ErrorResponse(w, http.StatusBadRequest, "START_ERROR", "Failed to start experiment", err.Error())
 		return
 	}
-	
+
 	experiment := abTestManager.GetExperiment(experimentID)
 	SuccessResponse(w, experiment, nil)
 }
@@ -295,13 +295,13 @@ func StartExperimentHandler(w http.ResponseWriter, r *http.Request) {
 func StopExperimentHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	experimentID := vars["id"]
-	
+
 	err := abTestManager.StopExperiment(experimentID)
 	if err != nil {
 		ErrorResponse(w, http.StatusBadRequest, "STOP_ERROR", "Failed to stop experiment", err.Error())
 		return
 	}
-	
+
 	experiment := abTestManager.GetExperiment(experimentID)
 	SuccessResponse(w, experiment, nil)
 }
@@ -310,13 +310,13 @@ func StopExperimentHandler(w http.ResponseWriter, r *http.Request) {
 func GetExperimentResultsHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	experimentID := vars["id"]
-	
+
 	results := abTestManager.GetExperimentResults(experimentID)
 	if results == nil {
 		ErrorResponse(w, http.StatusNotFound, "NOT_FOUND", "Experiment not found", "")
 		return
 	}
-	
+
 	SuccessResponse(w, results, nil)
 }
 
@@ -324,24 +324,24 @@ func GetExperimentResultsHandler(w http.ResponseWriter, r *http.Request) {
 func AssignVariantHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	experimentID := vars["id"]
-	
+
 	var req struct {
 		UserID string `json:"user_id"`
 	}
-	
+
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		ErrorResponse(w, http.StatusBadRequest, "INVALID_REQUEST", "Invalid request", err.Error())
 		return
 	}
-	
+
 	variantID, err := abTestManager.AssignVariant(experimentID, req.UserID)
 	if err != nil {
 		ErrorResponse(w, http.StatusBadRequest, "ASSIGNMENT_ERROR", "Failed to assign variant", err.Error())
 		return
 	}
-	
+
 	_, variant := abTestManager.GetVariant(experimentID, req.UserID)
-	
+
 	SuccessResponse(w, map[string]interface{}{
 		"variant_id": variantID,
 		"variant":    variant,
@@ -351,22 +351,22 @@ func AssignVariantHandler(w http.ResponseWriter, r *http.Request) {
 // TrackConversionHandler tracks a conversion event
 func TrackConversionHandler(w http.ResponseWriter, r *http.Request) {
 	var req ml.ConversionEvent
-	
+
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		ErrorResponse(w, http.StatusBadRequest, "INVALID_REQUEST", "Invalid request", err.Error())
 		return
 	}
-	
+
 	if req.Timestamp.IsZero() {
 		req.Timestamp = time.Now()
 	}
-	
+
 	err := abTestManager.TrackConversion(req)
 	if err != nil {
 		ErrorResponse(w, http.StatusBadRequest, "CONVERSION_ERROR", "Failed to track conversion", err.Error())
 		return
 	}
-	
+
 	SuccessResponse(w, map[string]interface{}{
 		"status": "recorded",
 	}, nil)
@@ -375,7 +375,7 @@ func TrackConversionHandler(w http.ResponseWriter, r *http.Request) {
 // ListExperimentsHandler lists all experiments
 func ListExperimentsHandler(w http.ResponseWriter, r *http.Request) {
 	experiments := abTestManager.GetAllExperiments()
-	
+
 	SuccessResponse(w, experiments, nil)
 }
 
@@ -386,6 +386,6 @@ func GetMLStatsHandler(w http.ResponseWriter, r *http.Request) {
 		"predictive":      predictiveAnalytics.GetMetrics(),
 		"ab_testing":      abTestManager.GetStats(),
 	}
-	
+
 	SuccessResponse(w, stats, nil)
 }

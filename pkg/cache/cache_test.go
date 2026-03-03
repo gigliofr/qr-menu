@@ -128,8 +128,8 @@ func TestInMemoryCacheStats(t *testing.T) {
 	cache := NewInMemoryCache()
 
 	cache.Set("key1", "value1", 1*time.Hour)
-	cache.Get("key1") // Hit
-	cache.Get("key1") // Hit
+	cache.Get("key1")        // Hit
+	cache.Get("key1")        // Hit
 	cache.Get("nonexistent") // Miss
 
 	stats := cache.GetStats()

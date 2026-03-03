@@ -13,20 +13,20 @@ func main() {
 	// Configurazione
 	cfg := app.DefaultConfig()
 	cfg.DatabaseURL = os.Getenv("DATABASE_URL")
-	
+
 	// Inizializza tutti i servizi
 	services, err := app.InitializeServices(cfg)
 	if err != nil {
 		log.Fatalf("Failed to initialize services: %v", err)
 	}
 	defer services.Shutdown()
-	
+
 	// Crea le directory necessarie
 	createDirectories()
-	
+
 	// Setup router con tutte le route
 	router := app.SetupRouter(services)
-	
+
 	// Determina porta
 	port := os.Getenv("PORT")
 	if port == "" {

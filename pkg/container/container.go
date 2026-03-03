@@ -19,18 +19,18 @@ import (
 
 // ServiceContainer holds all service instances and manages their lifecycle
 type ServiceContainer struct {
-	config          *config.Config
-	analytics       *analytics.Analytics
-	backup          *backup.BackupManager
-	notifications   *notifications.NotificationManager
-	localization    *localization.LocalizationManager
-	pwa             *pwa.PWAManager
-	database        *db.DatabaseManager
-	migration       *db.MigrationManager
-	responseCache   *cache.ResponseCache
-	queryCache      *cache.QueryResultCache
-	isInitialized   bool
-	mu              sync.RWMutex
+	config           *config.Config
+	analytics        *analytics.Analytics
+	backup           *backup.BackupManager
+	notifications    *notifications.NotificationManager
+	localization     *localization.LocalizationManager
+	pwa              *pwa.PWAManager
+	database         *db.DatabaseManager
+	migration        *db.MigrationManager
+	responseCache    *cache.ResponseCache
+	queryCache       *cache.QueryResultCache
+	isInitialized    bool
+	mu               sync.RWMutex
 	shutdownHandlers []func(ctx context.Context) error
 }
 
