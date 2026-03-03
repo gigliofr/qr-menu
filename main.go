@@ -11,32 +11,39 @@ import (
 )
 
 func main() {
-	// Connetti a MongoDB Atlas (opzionale - fallback a file storage)
-	mongoConfigured := os.Getenv("MONGODB_URI") != "" && 
-		(os.Getenv("MONGODB_CERT_CONTENT") != "" || os.Getenv("MONGODB_CERT_PATH") != "")
+	// MongoDB è OBBLIGATORIO - l'app non parte senza
+	log.Println("🔌 Connessione a MongoDB Atlas...")
 	
-	if mongoConfigured {
-		if err := db.Connect(); err != nil {
-			log.Printf("⚠️  Errore connessione MongoDB: %v", err)
-			log.Println("⚠️  Continuando con storage file...")
-		} else {
-			log.Println("✓ MongoDB connesso con successo")
-			defer func() {
-				if db.MongoInstance != nil {
-					db.MongoInstance.Disconnect()
-				}
-			}()
-
-			// Prova migrazione da file storage a MongoDB (idempotente)
-			if shouldMigrate := os.Getenv("MIGRATE_FROM_FILES"); shouldMigrate == "true" || shouldMigrate == "1" {
-				if err := db.MongoInstance.MigrateFromFileStorage(); err != nil {
-					log.Printf("⚠️  Errore durante la migrazione: %v (continuando comunque)", err)
-				}
-			}
+	// Verifica configurazione
+	if os.Getenv("MONGODB_URI") == "" {
+		log.Fatal("❌ MONGODB_URI non configurato - impossibile avviare l'applicazione")
+	}
+	
+	if os.Getenv("MONGODB_CERT_CONTENT") == "" && os.Getenv("MONGODB_CERT_PATH") == "" {
+		log.Fatal("❌ Certificato MongoDB non configurato - imposta MONGODB_CERT_CONTENT o MONGODB_CERT_PATH")
+	}
+	
+	// Connetti a MongoDB Atlas (obbligatorio)
+	if err := db.Connect(); err != nil {
+		log.Fatalf("❌ Errore connessione MongoDB: %v\nL'applicazione richiede MongoDB per funzionare.", err)
+	}
+	
+	log.Println("✅ MongoDB connesso con successo")
+	
+	defer func() {
+		if db.MongoInstance != nil {
+			db.MongoInstance.Disconnect()
 		}
-	} else {
-		log.Println("ℹ️  MongoDB non configurato - usando storage file")
-		log.Println("ℹ️  Per usare MongoDB imposta: MONGODB_URI, MONGODB_CERT_CONTENT/MONGODB_CERT_PATH")
+	}()
+
+	// Prova migrazione da file storage a MongoDB (idempotente)
+	if shouldMigrate := os.Getenv("MIGRATE_FROM_FILES"); shouldMigrate == "true" || shouldMigrate == "1" {
+		log.Println("🔄 Avvio migrazione da file storage a MongoDB...")
+		if err := db.MongoInstance.MigrateFromFileStorage(); err != nil {
+			log.Printf("⚠️  Errore durante la migrazione: %v (continuando comunque)", err)
+		} else {
+			log.Println("✅ Migrazione completata")
+		}
 	}
 
 	// Configurazione
