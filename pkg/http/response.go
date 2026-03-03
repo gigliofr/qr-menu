@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/gigliofr/qr-menu/pkg/errors"
+	"qr-menu/pkg/errors"
 )
 
 // Response represents a standard API response

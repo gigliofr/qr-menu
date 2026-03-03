@@ -5,10 +5,10 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/gigliofr/qr-menu/pkg/config"
-	"github.com/gigliofr/qr-menu/pkg/container"
-	"github.com/gigliofr/qr-menu/pkg/handlers"
-	"github.com/gigliofr/qr-menu/pkg/routing"
+	"qr-menu/pkg/config"
+	"qr-menu/pkg/container"
+	"qr-menu/pkg/handlers"
+	"qr-menu/pkg/routing"
 )
 
 // TestRouterSetup tests that the router can be created and routes configured

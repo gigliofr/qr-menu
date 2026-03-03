@@ -1,8 +1,6 @@
-module github.com/gigliofr/qr-menu
+module qr-menu
 
 go 1.24.0
-
-replace github.com/gigliofr/qr-menu => ./
 
 require (
 	github.com/golang-jwt/jwt/v5 v5.3.1

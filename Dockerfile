@@ -4,7 +4,7 @@ FROM golang:1.24 AS builder
 WORKDIR /app
 
 COPY . .
-RUN GOPROXY=https://proxy.golang.org,direct go mod download && go mod verify
+RUN go mod tidy && go mod verify
 RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o qr-menu ./
 
 # Runtime stage

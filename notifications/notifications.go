@@ -5,7 +5,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/gigliofr/qr-menu/logger"
+	"qr-menu/logger"
 )
 
 // NotificationManager gestisce le notifiche push del sistema
