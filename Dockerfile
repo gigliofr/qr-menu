@@ -5,7 +5,8 @@ WORKDIR /app
 
 COPY . .
 RUN go mod tidy
-RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -mod=mod -o qr-menu ./
+RUN go mod graph > /dev/null
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o qr-menu ./
 
 # Runtime stage
 FROM gcr.io/distroless/static:nonroot
