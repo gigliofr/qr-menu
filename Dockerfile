@@ -1,23 +1,27 @@
-# Build stage
-FROM golang:1.24 AS builder
+# Use the official Go image 
+FROM golang:1.24-alpine AS builder
 
+# Set the working directory
 WORKDIR /app
+
+# Copy go.mod and go.sum (if exists)
+COPY go.mod* ./
 
 # Copy source code
 COPY . .
 
-# Tidy and download dependencies
-RUN go mod tidy && go mod download
-
 # Build the application
-RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o qr-menu
+RUN go build -o qr-menu .
 
-# Runtime stage
-FROM gcr.io/distroless/base-debian12
+# Runtime stage - use alpine runtime
+FROM alpine:latest
 
 WORKDIR /app
+
+# Copy binary from builder
 COPY --from=builder /app/qr-menu /app/qr-menu
 
 EXPOSE 8080
 
-ENTRYPOINT ["/app/qr-menu"]
+# Run the application
+CMD ["./qr-menu"]
