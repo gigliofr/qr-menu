@@ -9,7 +9,7 @@ import (
 	"sync"
 	"time"
 
-	"qr-menu/logger"
+	"github.com/gigliofr/qr-menu/logger"
 )
 
 // LocalizationManager gestisce la localizzazione multi-lingua

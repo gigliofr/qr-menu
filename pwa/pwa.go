@@ -6,7 +6,7 @@ import (
 	"path/filepath"
 	"sync"
 
-	"qr-menu/logger"
+	"github.com/gigliofr/qr-menu/logger"
 )
 
 // PWAManager gestisce le funzionalità Progressive Web App

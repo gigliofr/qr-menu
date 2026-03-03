@@ -3,7 +3,7 @@ package handlers
 import (
 	"context"
 	"log"
-	"qr-menu/db"
+	"github.com/gigliofr/qr-menu/db"
 	"time"
 )
 

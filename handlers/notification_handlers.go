@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"qr-menu/notifications"
+	"github.com/gigliofr/qr-menu/notifications"
 )
 
 // SendNotificationRequest è la richiesta di invio notifica
