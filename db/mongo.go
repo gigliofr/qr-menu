@@ -63,7 +63,7 @@ func Connect() error {
 	// Connection string MongoDB Atlas
 	mongoURI := os.Getenv("MONGODB_URI")
 	if mongoURI == "" {
-		mongoURI = "mongodb+srv://qr-menu-dev@cluster0.mongodb.net/?authSource=$external&authMechanism=MONGODB-X509&tlsCAFile=" + certPath
+		mongoURI = "mongodb+srv://qr-menu-dev@cluster0.b9jfwmr.mongodb.net/?authSource=$external&authMechanism=MONGODB-X509&tlsCAFile=" + certPath
 	}
 
 	// Opzioni di connessione
