@@ -3,7 +3,6 @@ package db
 import (
 	"context"
 	"crypto/tls"
-	"crypto/x509"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -45,20 +44,18 @@ func Connect() error {
 		return fmt.Errorf("errore lettura certificato: %v", err)
 	}
 
-	// Carica certificato nel pool
+	// Carica certificato per autenticazione X.509
 	tlsConfig := &tls.Config{}
-	certs := x509.NewCertPool()
-	if !certs.AppendCertsFromPEM(certData) {
-		return fmt.Errorf("errore nel parsing del certificato")
-	}
-	tlsConfig.RootCAs = certs
-	tlsConfig.Certificates = make([]tls.Certificate, 0)
-
+	
 	// Parse certificato per client certificate authentication
 	cert, err := tls.X509KeyPair(certData, certData)
-	if err == nil {
-		tlsConfig.Certificates = append(tlsConfig.Certificates, cert)
+	if err != nil {
+		return fmt.Errorf("errore nel parsing del certificato: %v", err)
 	}
+	
+	tlsConfig.Certificates = []tls.Certificate{cert}
+	// Disabilita la verifica del server per MongoDB Atlas (usa il certificato self-signed)
+	tlsConfig.InsecureSkipVerify = false
 
 	// Connection string MongoDB Atlas
 	mongoURI := os.Getenv("MONGODB_URI")
