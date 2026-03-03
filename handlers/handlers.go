@@ -49,8 +49,7 @@ func init() {
 	createDirectories()
 	// Carica i template HTML
 	loadTemplates()
-	// Carica i menu esistenti dallo storage
-	loadMenusFromStorage()
+	// Nota: loadMenusFromStorage() rimosso - i menu sono ora caricati direttamente da MongoDB
 	// Pulisci i token CSRF scaduti periodicamente
 	go cleanupCSRFTokens()
 }
