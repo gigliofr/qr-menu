@@ -11,24 +11,18 @@ import (
 )
 
 func main() {
-	// MongoDB è OBBLIGATORIO - l'app non parte senza
-	log.Println("🔌 Connessione a MongoDB Atlas...")
+	// Connetti a MongoDB Atlas (OBBLIGATORIO)
+	log.Println("🔄 Connessione a MongoDB Atlas...")
 	
-	// Verifica configurazione
-	if os.Getenv("MONGODB_URI") == "" {
-		log.Fatal("❌ MONGODB_URI non configurato - impossibile avviare l'applicazione")
-	}
-	
-	if os.Getenv("MONGODB_CERT_CONTENT") == "" && os.Getenv("MONGODB_CERT_PATH") == "" {
-		log.Fatal("❌ Certificato MongoDB non configurato - imposta MONGODB_CERT_CONTENT o MONGODB_CERT_PATH")
-	}
-	
-	// Connetti a MongoDB Atlas (obbligatorio)
 	if err := db.Connect(); err != nil {
-		log.Fatalf("❌ Errore connessione MongoDB: %v\nL'applicazione richiede MongoDB per funzionare.", err)
+		log.Fatalf("❌ Errore connessione MongoDB: %v\n\n"+
+			"Configura le variabili d'ambiente:\n"+
+			"  - MONGODB_URI: connection string MongoDB Atlas\n"+
+			"  - MONGODB_CERT_CONTENT: contenuto del certificato PEM (per Railway/Cloud)\n"+
+			"  - MONGODB_CERT_PATH: path al file certificato (per sviluppo locale)\n"+
+			"  - MONGODB_DB_NAME: nome del database (default: qr-menu)", err)
 	}
-	
-	log.Println("✅ MongoDB connesso con successo")
+	log.Println("✓ MongoDB connesso con successo")
 	
 	defer func() {
 		if db.MongoInstance != nil {
@@ -38,11 +32,8 @@ func main() {
 
 	// Prova migrazione da file storage a MongoDB (idempotente)
 	if shouldMigrate := os.Getenv("MIGRATE_FROM_FILES"); shouldMigrate == "true" || shouldMigrate == "1" {
-		log.Println("🔄 Avvio migrazione da file storage a MongoDB...")
 		if err := db.MongoInstance.MigrateFromFileStorage(); err != nil {
 			log.Printf("⚠️  Errore durante la migrazione: %v (continuando comunque)", err)
-		} else {
-			log.Println("✅ Migrazione completata")
 		}
 	}
 
