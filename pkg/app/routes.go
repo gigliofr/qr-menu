@@ -33,7 +33,6 @@ func SetupRouter(services *Services) *mux.Router {
 	r.Use(middleware.LoggingMiddleware)
 	r.Use(middleware.SecurityMiddleware)
 	r.Use(middleware.AuthMiddleware)
-	r.Use(handlers.PWAHeadersMiddleware)
 
 	// Route pubbliche
 	setupPublicRoutes(r)
@@ -69,18 +68,8 @@ func setupPublicRoutes(r *mux.Router) {
 	r.HandleFunc("/r/{username}", handlers.GetActiveMenuHandler).Methods("GET")
 	r.HandleFunc("/menu/{id}/share", handlers.ShareMenuHandler).Methods("GET")
 
-	// PWA
-	r.HandleFunc("/manifest.json", handlers.ManifestHandler).Methods("GET")
-	r.HandleFunc("/service-worker.js", handlers.ServiceWorkerHandler).Methods("GET")
-	r.HandleFunc("/offline.html", handlers.OfflineHandler).Methods("GET")
-	r.HandleFunc("/ping", handlers.HealthCheckHandler).Methods("GET", "HEAD")
-
 	// Analytics tracking
 	r.HandleFunc("/api/track/share", handlers.TrackShareHandler).Methods("POST")
-
-	// Localization (pubbliche)
-	r.HandleFunc("/api/localization/translations", handlers.GetTranslationsHandler).Methods("GET")
-	r.HandleFunc("/api/localization/locales", handlers.GetSupportedLocalesHandler).Methods("GET")
 }
 
 func setupProtectedRoutes(r *mux.Router) {
@@ -122,49 +111,5 @@ func setupProtectedRoutes(r *mux.Router) {
 }
 
 func setupAdminRoutes(r *mux.Router) {
-	// Backup system
-	backupRoutes := []RouteDefinition{
-		{"/api/backup/create", handlers.CreateBackupHandler, []string{"POST"}},
-		{"/api/backup/list", handlers.ListBackupsHandler, []string{"GET"}},
-		{"/api/backup/delete", handlers.DeleteBackupHandler, []string{"DELETE"}},
-		{"/api/backup/restore", handlers.RestoreBackupHandler, []string{"POST"}},
-		{"/api/backup/status", handlers.GetBackupStatusHandler, []string{"GET"}},
-		{"/api/backup/schedule", handlers.ScheduleBackupHandler, []string{"POST"}},
-		{"/api/backup/stats", handlers.GetBackupStatsHandler, []string{"GET"}},
-		{"/api/backup/download", handlers.DownloadBackupHandler, []string{"GET"}},
-	}
-	registerProtectedRoutes(r, backupRoutes)
-
-	// Notification system
-	notifRoutes := []RouteDefinition{
-		{"/api/notifications/send", handlers.SendNotificationHandler, []string{"POST"}},
-		{"/api/notifications/preferences", handlers.GetPreferencesHandler, []string{"GET"}},
-		{"/api/notifications/preferences", handlers.UpdatePreferencesHandler, []string{"PUT"}},
-		{"/api/notifications/fcm-token", handlers.RegisterFCMTokenHandler, []string{"POST"}},
-		{"/api/notifications/fcm-token", handlers.RemoveFCMTokenHandler, []string{"DELETE"}},
-		{"/api/notifications/history", handlers.GetNotificationHistoryHandler, []string{"GET"}},
-		{"/api/notifications/mark-read", handlers.MarkAsReadHandler, []string{"POST"}},
-		{"/api/notifications/stats", handlers.GetNotificationStatsHandler, []string{"GET"}},
-	}
-	registerProtectedRoutes(r, notifRoutes)
-
-	// Localization (protette)
-	localeRoutes := []RouteDefinition{
-		{"/api/localization/set-locale", handlers.SetUserLocaleHandler, []string{"POST"}},
-		{"/api/localization/user-locale", handlers.GetUserLocaleHandler, []string{"GET"}},
-		{"/api/localization/translation", handlers.GetTranslationHandler, []string{"GET"}},
-		{"/api/localization/format-currency", handlers.FormatCurrencyHandler, []string{"GET"}},
-	}
-	registerProtectedRoutes(r, localeRoutes)
-
-	// Database migrations
-	migrationRoutes := []RouteDefinition{
-		{"/api/admin/migrations/status", handlers.GetMigrationStatusHandler, []string{"GET"}},
-		{"/api/admin/migrations/list", handlers.ListMigrationsHandler, []string{"GET"}},
-		{"/api/admin/migrations/applied", handlers.GetAppliedMigrationsHandler, []string{"GET"}},
-		{"/api/admin/migrations/pending", handlers.GetPendingMigrationsHandler, []string{"GET"}},
-		{"/api/admin/migrations/create-files", handlers.CreateMigrationFilesHandler, []string{"POST"}},
-		{"/api/admin/database/health", handlers.GetDatabaseHealthHandler, []string{"GET"}},
-	}
-	registerProtectedRoutes(r, migrationRoutes)
+	// Admin routes reserved for future features
 }
