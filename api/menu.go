@@ -57,6 +57,13 @@ type CategoryCreateRequest struct {
 func GetMenusHandler(w http.ResponseWriter, r *http.Request) {
 	start := time.Now()
 	restaurantID := GetRestaurantIDFromRequest(r)
+	
+	// DEBUG: Log per vedere il restaurant_id ricevuto
+	logger.Info("GetMenusHandler chiamato", map[string]interface{}{
+		"restaurant_id": restaurantID,
+		"method":        r.Method,
+		"path":          r.URL.Path,
+	})
 
 	// Query parameters per paginazione
 	page, _ := strconv.Atoi(r.URL.Query().Get("page"))
@@ -82,6 +89,12 @@ func GetMenusHandler(w http.ResponseWriter, r *http.Request) {
 			"Errore nel recupero menu", "")
 		return
 	}
+	
+	// DEBUG: Log risultati
+	logger.Info("Query completata", map[string]interface{}{
+		"restaurant_id": restaurantID,
+		"menus_found":   len(menus),
+	})
 
 	// Paginazione
 	total := len(menus)

@@ -251,16 +251,24 @@ func (m *MongoClient) GetMenuByID(ctx context.Context, id string) (*models.Menu,
 // GetMenusByRestaurantID recupera tutti i menu di un ristorante
 func (m *MongoClient) GetMenusByRestaurantID(ctx context.Context, restaurantID string) ([]*models.Menu, error) {
 	coll := m.db.Collection("menus")
+	
+	// DEBUG: Log per capire cosa sta cercando
+	log.Printf("🔍 GetMenusByRestaurantID - Cercando menu per restaurant_id: %s", restaurantID)
+	
 	cursor, err := coll.Find(ctx, bson.M{"restaurant_id": restaurantID})
 	if err != nil {
+		log.Printf("❌ Errore Find: %v", err)
 		return nil, fmt.Errorf("errore find menus: %v", err)
 	}
 	defer cursor.Close(ctx)
 
 	var menus []*models.Menu
 	if err = cursor.All(ctx, &menus); err != nil {
+		log.Printf("❌ Errore Decode: %v", err)
 		return nil, fmt.Errorf("errore decode menus: %v", err)
 	}
+	
+	log.Printf("✅ Trovati %d menu per restaurant_id: %s", len(menus), restaurantID)
 	return menus, nil
 }
 
