@@ -10,7 +10,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/gigliofr/qr-menu/logger"
+	"qr-menu/logger"
 )
 
 // BackupManager gestisce i backup automatici del sistema

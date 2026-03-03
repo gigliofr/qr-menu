@@ -2,14 +2,14 @@ package app
 
 import (
 	"fmt"
-	"github.com/gigliofr/qr-menu/analytics"
-	"github.com/gigliofr/qr-menu/backup"
-	"github.com/gigliofr/qr-menu/db"
-	"github.com/gigliofr/qr-menu/localization"
-	"github.com/gigliofr/qr-menu/logger"
-	"github.com/gigliofr/qr-menu/notifications"
-	"github.com/gigliofr/qr-menu/pwa"
-	"github.com/gigliofr/qr-menu/security"
+	"qr-menu/analytics"
+	"qr-menu/backup"
+	"qr-menu/db"
+	"qr-menu/localization"
+	"qr-menu/logger"
+	"qr-menu/notifications"
+	"qr-menu/pwa"
+	"qr-menu/security"
 )
 
 // Services contiene tutti i servizi inizializzati

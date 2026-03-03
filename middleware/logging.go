@@ -2,7 +2,7 @@ package middleware
 
 import (
 	"net/http"
-	"github.com/gigliofr/qr-menu/logger"
+	"qr-menu/logger"
 	"strings"
 	"time"
 )

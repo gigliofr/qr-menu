@@ -16,8 +16,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/gigliofr/qr-menu/logger"
-	"github.com/gigliofr/qr-menu/models"
+	"qr-menu/logger"
+	"qr-menu/models"
 
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"

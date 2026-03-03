@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/gigliofr/qr-menu/localization"
+	"qr-menu/localization"
 )
 
 // LocaleResponse è la risposta delle richieste locale
