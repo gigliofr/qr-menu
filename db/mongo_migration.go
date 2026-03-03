@@ -9,7 +9,7 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/gigliofr/qr-menu/models"
+	"qr-menu/models"
 )
 
 // MigrateFromFileStorage migra i dati da storage JSON a MongoDB

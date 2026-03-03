@@ -5,16 +5,16 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/gigliofr/qr-menu/analytics"
-	"github.com/gigliofr/qr-menu/backup"
-	"github.com/gigliofr/qr-menu/db"
-	"github.com/gigliofr/qr-menu/localization"
-	"github.com/gigliofr/qr-menu/logger"
-	"github.com/gigliofr/qr-menu/notifications"
-	"github.com/gigliofr/qr-menu/pkg/cache"
-	"github.com/gigliofr/qr-menu/pkg/config"
-	"github.com/gigliofr/qr-menu/pkg/errors"
-	"github.com/gigliofr/qr-menu/pwa"
+	"qr-menu/analytics"
+	"qr-menu/backup"
+	"qr-menu/db"
+	"qr-menu/localization"
+	"qr-menu/logger"
+	"qr-menu/notifications"
+	"qr-menu/pkg/cache"
+	"qr-menu/pkg/config"
+	"qr-menu/pkg/errors"
+	"qr-menu/pwa"
 )
 
 // ServiceContainer holds all service instances and manages their lifecycle

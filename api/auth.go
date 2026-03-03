@@ -8,8 +8,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/gigliofr/qr-menu/logger"
-	"github.com/gigliofr/qr-menu/models"
+	"qr-menu/logger"
+	"qr-menu/models"
 
 	"github.com/golang-jwt/jwt/v5"
 )

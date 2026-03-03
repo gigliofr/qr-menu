@@ -8,8 +8,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/gigliofr/qr-menu/db"
-	"github.com/gigliofr/qr-menu/models"
+	"qr-menu/db"
+	"qr-menu/models"
 
 	"github.com/google/uuid"
 )

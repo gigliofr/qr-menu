@@ -2,10 +2,10 @@ package app
 
 import (
 	"net/http"
-	"github.com/gigliofr/qr-menu/api"
-	"github.com/gigliofr/qr-menu/handlers"
-	"github.com/gigliofr/qr-menu/middleware"
-	"github.com/gigliofr/qr-menu/security"
+	"qr-menu/api"
+	"qr-menu/handlers"
+	"qr-menu/middleware"
+	"qr-menu/security"
 
 	"github.com/gorilla/mux"
 )

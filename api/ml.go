@@ -6,7 +6,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/gigliofr/qr-menu/ml"
+	"qr-menu/ml"
 
 	"github.com/gorilla/mux"
 )
