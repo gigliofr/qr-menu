@@ -430,9 +430,10 @@ ENCRYPTION_KEY=your-secret-encryption-key-here
 ## Performance Considerations
 
 - **Rate Limiter**: Uses concurrent maps with RWMutex, automatic cleanup every 5 minutes
-- **Audit Logger**: Circular buffer (10k events default) to prevent unbounded memory growth
-- **GDPR Manager**: In-memory storage for demo; use database in production
+- **Audit Logger**: MongoDB collection with automatic indexing and TTL support
+- **GDPR Manager**: Uses MongoDB audit_logs collection for persistent deletion requests tracking
 - **Encryption**: AES-GCM is hardware-accelerated on modern CPUs
+- **Database**: MongoDB Atlas with X.509 certificate authentication
 
 ## Testing
 

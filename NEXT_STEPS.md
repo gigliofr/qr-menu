@@ -5,7 +5,7 @@
 
 ## 🎯 Stato Attuale
 
-### ✅ Completato (v2.0.0)
+### ✅ Completato (v2.0.0 - Marzo 2026)
 
 **Core Features:**
 - ✅ Menu digitali con QR code
@@ -23,6 +23,7 @@
 - ✅ Webhook system
 - ✅ Security (rate limit, audit, encryption)
 - ✅ GDPR compliance
+- ✅ **MongoDB Atlas** per persistent storage
 
 **ML & Analytics:**
 - ✅ Recommendation engine (collaborative filtering)
@@ -33,6 +34,9 @@
 - ✅ Docker containerization
 - ✅ Kubernetes orchestration
 - ✅ Refactored architecture (clean main.go)
+- ✅ **MongoDB Migration** completo (30+ handlers migrated)
+- ✅ Audit logging con MongoDB
+- ✅ X.509 certificate authentication
 
 ---
 

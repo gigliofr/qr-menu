@@ -10,6 +10,13 @@ import (
 	"github.com/gorilla/mux"
 )
 
+// RouteDefinition definisce una singola route
+type RouteDefinition struct {
+	Path    string
+	Handler http.HandlerFunc
+	Methods []string
+}
+
 // SetupRouter configura tutte le route dell'applicazione
 func SetupRouter(services *Services) *mux.Router {
 	r := mux.NewRouter()
@@ -44,6 +51,13 @@ func SetupRouter(services *Services) *mux.Router {
 	return r
 }
 
+// registerProtectedRoutes è un helper per registrare route protette con autenticazione
+func registerProtectedRoutes(r *mux.Router, routes []RouteDefinition) {
+	for _, route := range routes {
+		r.HandleFunc(route.Path, handlers.RequireAuth(route.Handler)).Methods(route.Methods...)
+	}
+}
+
 func setupPublicRoutes(r *mux.Router) {
 	// Pagine pubbliche
 	r.HandleFunc("/", handlers.HomeHandler).Methods("GET")
@@ -76,11 +90,7 @@ func setupProtectedRoutes(r *mux.Router) {
 	r.HandleFunc("/logout", handlers.LogoutHandler).Methods("GET", "POST")
 
 	// Gestione menu
-	menuRoutes := []struct {
-		path    string
-		handler http.HandlerFunc
-		methods []string
-	}{
+	menuRoutes := []RouteDefinition{
 		{"/admin/menu/create", handlers.CreateMenuHandler, []string{"GET"}},
 		{"/admin/menu/create", handlers.CreateMenuPostHandler, []string{"POST"}},
 		{"/admin/menu/{id}", handlers.EditMenuHandler, []string{"GET"}},
@@ -91,10 +101,7 @@ func setupProtectedRoutes(r *mux.Router) {
 		{"/admin/menu/{id}/duplicate", handlers.DuplicateMenuHandler, []string{"POST"}},
 		{"/admin/menu/{id}/add-item", handlers.AddItemHandler, []string{"POST"}},
 	}
-
-	for _, route := range menuRoutes {
-		r.HandleFunc(route.path, handlers.RequireAuth(route.handler)).Methods(route.methods...)
-	}
+	registerProtectedRoutes(r, menuRoutes)
 
 	// Gestione item menu
 	r.HandleFunc("/admin/menu/{menuId}/category/{categoryId}/item/{itemId}/duplicate",
@@ -116,11 +123,7 @@ func setupProtectedRoutes(r *mux.Router) {
 
 func setupAdminRoutes(r *mux.Router) {
 	// Backup system
-	backupRoutes := []struct {
-		path    string
-		handler http.HandlerFunc
-		methods []string
-	}{
+	backupRoutes := []RouteDefinition{
 		{"/api/backup/create", handlers.CreateBackupHandler, []string{"POST"}},
 		{"/api/backup/list", handlers.ListBackupsHandler, []string{"GET"}},
 		{"/api/backup/delete", handlers.DeleteBackupHandler, []string{"DELETE"}},
@@ -130,17 +133,10 @@ func setupAdminRoutes(r *mux.Router) {
 		{"/api/backup/stats", handlers.GetBackupStatsHandler, []string{"GET"}},
 		{"/api/backup/download", handlers.DownloadBackupHandler, []string{"GET"}},
 	}
-
-	for _, route := range backupRoutes {
-		r.HandleFunc(route.path, handlers.RequireAuth(route.handler)).Methods(route.methods...)
-	}
+	registerProtectedRoutes(r, backupRoutes)
 
 	// Notification system
-	notifRoutes := []struct {
-		path    string
-		handler http.HandlerFunc
-		methods []string
-	}{
+	notifRoutes := []RouteDefinition{
 		{"/api/notifications/send", handlers.SendNotificationHandler, []string{"POST"}},
 		{"/api/notifications/preferences", handlers.GetPreferencesHandler, []string{"GET"}},
 		{"/api/notifications/preferences", handlers.UpdatePreferencesHandler, []string{"PUT"}},
@@ -150,33 +146,19 @@ func setupAdminRoutes(r *mux.Router) {
 		{"/api/notifications/mark-read", handlers.MarkAsReadHandler, []string{"POST"}},
 		{"/api/notifications/stats", handlers.GetNotificationStatsHandler, []string{"GET"}},
 	}
-
-	for _, route := range notifRoutes {
-		r.HandleFunc(route.path, handlers.RequireAuth(route.handler)).Methods(route.methods...)
-	}
+	registerProtectedRoutes(r, notifRoutes)
 
 	// Localization (protette)
-	localeRoutes := []struct {
-		path    string
-		handler http.HandlerFunc
-		methods []string
-	}{
+	localeRoutes := []RouteDefinition{
 		{"/api/localization/set-locale", handlers.SetUserLocaleHandler, []string{"POST"}},
 		{"/api/localization/user-locale", handlers.GetUserLocaleHandler, []string{"GET"}},
 		{"/api/localization/translation", handlers.GetTranslationHandler, []string{"GET"}},
 		{"/api/localization/format-currency", handlers.FormatCurrencyHandler, []string{"GET"}},
 	}
-
-	for _, route := range localeRoutes {
-		r.HandleFunc(route.path, handlers.RequireAuth(route.handler)).Methods(route.methods...)
-	}
+	registerProtectedRoutes(r, localeRoutes)
 
 	// Database migrations
-	migrationRoutes := []struct {
-		path    string
-		handler http.HandlerFunc
-		methods []string
-	}{
+	migrationRoutes := []RouteDefinition{
 		{"/api/admin/migrations/status", handlers.GetMigrationStatusHandler, []string{"GET"}},
 		{"/api/admin/migrations/list", handlers.ListMigrationsHandler, []string{"GET"}},
 		{"/api/admin/migrations/applied", handlers.GetAppliedMigrationsHandler, []string{"GET"}},
@@ -184,8 +166,5 @@ func setupAdminRoutes(r *mux.Router) {
 		{"/api/admin/migrations/create-files", handlers.CreateMigrationFilesHandler, []string{"POST"}},
 		{"/api/admin/database/health", handlers.GetDatabaseHealthHandler, []string{"GET"}},
 	}
-
-	for _, route := range migrationRoutes {
-		r.HandleFunc(route.path, handlers.RequireAuth(route.handler)).Methods(route.methods...)
-	}
+	registerProtectedRoutes(r, migrationRoutes)
 }
