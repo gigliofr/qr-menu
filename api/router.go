@@ -587,19 +587,19 @@ func SetupSecurityRoutes(r *mux.Router, auditLogger *security.AuditLogger, gdprM
 	// TODO: Implement GDPR handlers with MongoDB support
 	// Currently commented out until migration is complete
 	/*
-	api := r.PathPrefix("/api/v1").Subrouter()
+		api := r.PathPrefix("/api/v1").Subrouter()
 
-	// GDPR endpoints (richiedono autenticazione)
-	api.HandleFunc("/gdpr/my-data", GetMyDataHandler(gdprMgr)).Methods("GET")
-	api.HandleFunc("/gdpr/request-deletion", RequestDataDeletionHandler(gdprMgr)).Methods("POST")
-	api.HandleFunc("/gdpr/cancel-deletion", CancelDataDeletionHandler(gdprMgr)).Methods("POST")
-	api.HandleFunc("/gdpr/deletion-request", GetDeletionRequestHandler(gdprMgr)).Methods("GET")
-	api.HandleFunc("/gdpr/consent", RecordConsentHandler(gdprMgr)).Methods("POST")
-	api.HandleFunc("/gdpr/consents", GetConsentsHandler(gdprMgr)).Methods("GET")
+		// GDPR endpoints (richiedono autenticazione)
+		api.HandleFunc("/gdpr/my-data", GetMyDataHandler(gdprMgr)).Methods("GET")
+		api.HandleFunc("/gdpr/request-deletion", RequestDataDeletionHandler(gdprMgr)).Methods("POST")
+		api.HandleFunc("/gdpr/cancel-deletion", CancelDataDeletionHandler(gdprMgr)).Methods("POST")
+		api.HandleFunc("/gdpr/deletion-request", GetDeletionRequestHandler(gdprMgr)).Methods("GET")
+		api.HandleFunc("/gdpr/consent", RecordConsentHandler(gdprMgr)).Methods("POST")
+		api.HandleFunc("/gdpr/consents", GetConsentsHandler(gdprMgr)).Methods("GET")
 
-	// Audit log endpoints
-	api.HandleFunc("/audit/logs", GetAuditLogsHandler(auditLogger)).Methods("GET") // Admin only
-	api.HandleFunc("/audit/my-logs", GetMyAuditLogsHandler(auditLogger)).Methods("GET")
-	api.HandleFunc("/audit/export", ExportAuditLogsHandler(auditLogger)).Methods("GET") // Admin only
+		// Audit log endpoints
+		api.HandleFunc("/audit/logs", GetAuditLogsHandler(auditLogger)).Methods("GET") // Admin only
+		api.HandleFunc("/audit/my-logs", GetMyAuditLogsHandler(auditLogger)).Methods("GET")
+		api.HandleFunc("/audit/export", ExportAuditLogsHandler(auditLogger)).Methods("GET") // Admin only
 	*/
 }

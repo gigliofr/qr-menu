@@ -237,9 +237,9 @@ func APIRegisterHandler(w http.ResponseWriter, r *http.Request) {
 	// Salva ristorante in MongoDB
 	if err := db.MongoInstance.CreateRestaurant(ctx, restaurant); err != nil {
 		logger.Error("Errore nel salvataggio del ristorante", map[string]interface{}{
-			"error":         err.Error(),
-			"username":      restaurant.Username,
-			"email":         restaurant.Email,
+			"error":    err.Error(),
+			"username": restaurant.Username,
+			"email":    restaurant.Email,
 		})
 		ErrorResponse(w, http.StatusInternalServerError, "REGISTRATION_FAILED",
 			"Errore nella registrazione", "")

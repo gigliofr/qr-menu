@@ -1545,10 +1545,10 @@ func TrackShareHandler(w http.ResponseWriter, r *http.Request) {
 
 		// Trova il menu per ottenere il restaurantID
 		var restaurantID string
-		
+
 		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 		defer cancel()
-		
+
 		if menu, err := db.MongoInstance.GetMenuByID(ctx, requestData.MenuID); err == nil && menu != nil {
 			restaurantID = menu.RestaurantID
 		}

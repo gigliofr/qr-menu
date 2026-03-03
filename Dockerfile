@@ -1,16 +1,10 @@
 # Use the official Go image 
-FROM golang:1.24-alpine AS builder
+FROM golang:1.23-alpine AS builder
 
 # Set the working directory
 WORKDIR /app
 
-# Copy go.mod and go.sum
-COPY go.mod go.sum ./
-
-# Download dependencies - generates go.sum entries
-RUN go mod download
-
-# Copy source code
+# Copy all source code including go.mod and go.sum
 COPY . .
 
 # Build the application

@@ -2,27 +2,28 @@ package db
 
 import (
 	"context"
+	"time"
+
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo/options"
-	"time"
 )
 
 // AuditLog rappresenta un log di audit
 type AuditLog struct {
-	ID            string                 `bson:"_id,omitempty"`
-	Action        string                 `bson:"action"`
-	ResourceType  string                 `bson:"resource_type"`
-	ResourceID    string                 `bson:"resource_id"`
-	RestaurantID  string                 `bson:"restaurant_id"`
-	UserID        string                 `bson:"user_id"`
-	IPAddress     string                 `bson:"ip_address"`
-	UserAgent     string                 `bson:"user_agent"`
-	Status        string                 `bson:"status"` // success, failure, warning
-	OldValue      map[string]interface{} `bson:"old_value,omitempty"`
-	NewValue      map[string]interface{} `bson:"new_value,omitempty"`
-	ErrorMessage  string                 `bson:"error_message,omitempty"`
-	Timestamp     time.Time              `bson:"timestamp"`
-	DurationMs    int64                  `bson:"duration_ms,omitempty"`
+	ID           string                 `bson:"_id,omitempty"`
+	Action       string                 `bson:"action"`
+	ResourceType string                 `bson:"resource_type"`
+	ResourceID   string                 `bson:"resource_id"`
+	RestaurantID string                 `bson:"restaurant_id"`
+	UserID       string                 `bson:"user_id"`
+	IPAddress    string                 `bson:"ip_address"`
+	UserAgent    string                 `bson:"user_agent"`
+	Status       string                 `bson:"status"` // success, failure, warning
+	OldValue     map[string]interface{} `bson:"old_value,omitempty"`
+	NewValue     map[string]interface{} `bson:"new_value,omitempty"`
+	ErrorMessage string                 `bson:"error_message,omitempty"`
+	Timestamp    time.Time              `bson:"timestamp"`
+	DurationMs   int64                  `bson:"duration_ms,omitempty"`
 }
 
 // AnalyticsEvent rappresenta un evento di analytics

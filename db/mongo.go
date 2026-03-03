@@ -9,10 +9,11 @@ import (
 	"os"
 	"time"
 
+	"qr-menu/models"
+
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
-	"qr-menu/models"
 )
 
 // MongoClient wrapper per MongoDB Atlas con autenticazione X.509
@@ -46,13 +47,13 @@ func Connect() error {
 
 	// Carica certificato per autenticazione X.509
 	tlsConfig := &tls.Config{}
-	
+
 	// Parse certificato per client certificate authentication
 	cert, err := tls.X509KeyPair(certData, certData)
 	if err != nil {
 		return fmt.Errorf("errore nel parsing del certificato: %v", err)
 	}
-	
+
 	tlsConfig.Certificates = []tls.Certificate{cert}
 	// Disabilita la verifica del server per MongoDB Atlas (usa il certificato self-signed)
 	tlsConfig.InsecureSkipVerify = false
@@ -430,7 +431,7 @@ func (m *MongoClient) createIndexes() error {
 			Keys: bson.D{{Key: "last_accessed", Value: -1}},
 		},
 		{
-			Keys: bson.D{{Key: "last_accessed", Value: 1}},
+			Keys:    bson.D{{Key: "last_accessed", Value: 1}},
 			Options: options.Index().SetExpireAfterSeconds(604800), // 7 giorni
 		},
 	}
