@@ -11,11 +11,6 @@ import (
 
 // SetupAPIRoutes configura tutte le route API
 func SetupAPIRoutes(r *mux.Router) {
-	// Seed test data (una sola volta)
-	if len(apiRestaurants) == 0 {
-		SeedTestData()
-	}
-
 	// Sottoruter per le API con prefisso /api/v1
 	api := r.PathPrefix("/api/v1").Subrouter()
 
@@ -377,8 +372,8 @@ func HealthCheckHandler(w http.ResponseWriter, r *http.Request) {
 			"rate_limiting":  "running",
 		},
 		"stats": map[string]interface{}{
-			"restaurants":   len(apiRestaurants),
-			"menus":         len(apiMenus),
+			// "restaurants":   len(apiRestaurants), // Now using MongoDB
+			// "menus":         len(apiMenus),        // Now using MongoDB
 			"active_tokens": len(revokedTokens), // Numero token revocati
 		},
 	}
@@ -589,6 +584,9 @@ func SwaggerUIHandler(w http.ResponseWriter, r *http.Request) {
 
 // SetupSecurityRoutes configura le route per sicurezza e compliance
 func SetupSecurityRoutes(r *mux.Router, auditLogger *security.AuditLogger, gdprMgr *security.GDPRManager) {
+	// TODO: Implement GDPR handlers with MongoDB support
+	// Currently commented out until migration is complete
+	/*
 	api := r.PathPrefix("/api/v1").Subrouter()
 
 	// GDPR endpoints (richiedono autenticazione)
@@ -603,4 +601,5 @@ func SetupSecurityRoutes(r *mux.Router, auditLogger *security.AuditLogger, gdprM
 	api.HandleFunc("/audit/logs", GetAuditLogsHandler(auditLogger)).Methods("GET") // Admin only
 	api.HandleFunc("/audit/my-logs", GetMyAuditLogsHandler(auditLogger)).Methods("GET")
 	api.HandleFunc("/audit/export", ExportAuditLogsHandler(auditLogger)).Methods("GET") // Admin only
+	*/
 }

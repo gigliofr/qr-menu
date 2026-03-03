@@ -1,9 +1,11 @@
 package api
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"qr-menu/db"
 	"qr-menu/logger"
 	"qr-menu/models"
 	"strings"
@@ -87,16 +89,12 @@ func APILoginHandler(w http.ResponseWriter, r *http.Request) {
 			"username": username,
 		})
 
-	// Trova il ristorante
-	var restaurant *models.Restaurant
-	for _, rest := range apiRestaurants {
-		if (rest.Username == username || rest.Email == username) && rest.IsActive {
-			restaurant = rest
-			break
-		}
-	}
+	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
+	defer cancel()
 
-	if restaurant == nil {
+	// Trova il ristorante da MongoDB
+	restaurant, err := db.MongoInstance.GetRestaurantByUsername(ctx, username)
+	if err != nil || restaurant == nil || !restaurant.IsActive {
 		logger.SecurityEvent("API_LOGIN_FAILED", "Ristorante non trovato",
 			"", ip, userAgent,
 			map[string]interface{}{
@@ -141,10 +139,16 @@ func APILoginHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Aggiorna ultimo login
+	// Aggiorna ultimo login in MongoDB
 	restaurant.LastLogin = time.Now()
+	if err := db.MongoInstance.UpdateRestaurant(ctx, restaurant); err != nil {
+		logger.Error("Errore nell'aggiornamento LastLogin", map[string]interface{}{
+			"error":         err.Error(),
+			"restaurant_id": restaurant.ID,
+		})
+		// Non bloccare il login per questo errore
+	}
 
-	// Log login riuscito
 	logger.AuditLog("API_LOGIN_SUCCESS", "authentication",
 		"Login API completato con successo", restaurant.ID, ip, userAgent,
 		map[string]interface{}{
@@ -189,10 +193,21 @@ func APIRegisterHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Verifica unicità username ed email
-	if err := checkUniqueCredentials(req.Username, req.Email); err != nil {
+	ctx, cancel := context.WithTimeout(r.Context(), 10*time.Second)
+	defer cancel()
+
+	// Verifica unicità username ed email in MongoDB
+	existingUser, _ := db.MongoInstance.GetRestaurantByUsername(ctx, req.Username)
+	if existingUser != nil {
 		ErrorResponse(w, http.StatusConflict, "DUPLICATE_CREDENTIALS",
-			"Credenziali già esistenti", err.Error())
+			"Credenziali già esistenti", "username già usato")
+		return
+	}
+
+	existingEmail, _ := db.MongoInstance.GetRestaurantByEmail(ctx, strings.ToLower(req.Email))
+	if existingEmail != nil {
+		ErrorResponse(w, http.StatusConflict, "DUPLICATE_CREDENTIALS",
+			"Credenziali già esistenti", "email già usata")
 		return
 	}
 
@@ -219,8 +234,17 @@ func APIRegisterHandler(w http.ResponseWriter, r *http.Request) {
 		IsActive:     true,
 	}
 
-	// Salva ristorante
-	apiRestaurants[restaurant.ID] = restaurant
+	// Salva ristorante in MongoDB
+	if err := db.MongoInstance.CreateRestaurant(ctx, restaurant); err != nil {
+		logger.Error("Errore nel salvataggio del ristorante", map[string]interface{}{
+			"error":         err.Error(),
+			"username":      restaurant.Username,
+			"email":         restaurant.Email,
+		})
+		ErrorResponse(w, http.StatusInternalServerError, "REGISTRATION_FAILED",
+			"Errore nella registrazione", "")
+		return
+	}
 
 	// Genera JWT token
 	token, err := GenerateJWT(restaurant)
@@ -264,9 +288,12 @@ func APIRefreshTokenHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Trova il ristorante
-	restaurant, exists := apiRestaurants[claims.RestaurantID]
-	if !exists || !restaurant.IsActive {
+	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
+	defer cancel()
+
+	// Trova il ristorante da MongoDB
+	restaurant, err := db.MongoInstance.GetRestaurantByID(ctx, claims.RestaurantID)
+	if err != nil || restaurant == nil || !restaurant.IsActive {
 		ErrorResponse(w, http.StatusUnauthorized, "RESTAURANT_NOT_FOUND",
 			"Ristorante non trovato o disattivato", "")
 		return
@@ -319,8 +346,11 @@ func APILogoutHandler(w http.ResponseWriter, r *http.Request) {
 func GetRestaurantProfileHandler(w http.ResponseWriter, r *http.Request) {
 	restaurantID := GetRestaurantIDFromRequest(r)
 
-	restaurant, exists := apiRestaurants[restaurantID]
-	if !exists {
+	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
+	defer cancel()
+
+	restaurant, err := db.MongoInstance.GetRestaurantByID(ctx, restaurantID)
+	if err != nil || restaurant == nil {
 		ErrorResponse(w, http.StatusNotFound, "RESTAURANT_NOT_FOUND",
 			"Ristorante non trovato", "")
 		return
@@ -337,8 +367,11 @@ func GetRestaurantProfileHandler(w http.ResponseWriter, r *http.Request) {
 func UpdateRestaurantProfileHandler(w http.ResponseWriter, r *http.Request) {
 	restaurantID := GetRestaurantIDFromRequest(r)
 
-	restaurant, exists := apiRestaurants[restaurantID]
-	if !exists {
+	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
+	defer cancel()
+
+	restaurant, err := db.MongoInstance.GetRestaurantByID(ctx, restaurantID)
+	if err != nil || restaurant == nil {
 		ErrorResponse(w, http.StatusNotFound, "RESTAURANT_NOT_FOUND",
 			"Ristorante non trovato", "")
 		return
@@ -365,6 +398,17 @@ func UpdateRestaurantProfileHandler(w http.ResponseWriter, r *http.Request) {
 	restaurant.Address = strings.TrimSpace(req.Address)
 	restaurant.Phone = strings.TrimSpace(req.Phone)
 
+	// Aggiorna in MongoDB
+	if err := db.MongoInstance.UpdateRestaurant(ctx, restaurant); err != nil {
+		logger.Error("Errore nell'aggiornamento del ristorante", map[string]interface{}{
+			"error":         err.Error(),
+			"restaurant_id": restaurantID,
+		})
+		ErrorResponse(w, http.StatusInternalServerError, "UPDATE_FAILED",
+			"Errore nell'aggiornamento", "")
+		return
+	}
+
 	logger.AuditLog("RESTAURANT_UPDATED", "restaurant",
 		"Profilo ristorante aggiornato via API", restaurantID, getClientIP(r), r.UserAgent(),
 		map[string]interface{}{
@@ -383,8 +427,11 @@ func UpdateRestaurantProfileHandler(w http.ResponseWriter, r *http.Request) {
 func ChangePasswordHandler(w http.ResponseWriter, r *http.Request) {
 	restaurantID := GetRestaurantIDFromRequest(r)
 
-	restaurant, exists := apiRestaurants[restaurantID]
-	if !exists {
+	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
+	defer cancel()
+
+	restaurant, err := db.MongoInstance.GetRestaurantByID(ctx, restaurantID)
+	if err != nil || restaurant == nil {
 		ErrorResponse(w, http.StatusNotFound, "RESTAURANT_NOT_FOUND",
 			"Ristorante non trovato", "")
 		return
@@ -428,7 +475,17 @@ func ChangePasswordHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Aggiorna password in MongoDB
 	restaurant.PasswordHash = string(newPasswordHash)
+	if err := db.MongoInstance.UpdateRestaurant(ctx, restaurant); err != nil {
+		logger.Error("Errore nell'aggiornamento password", map[string]interface{}{
+			"error":         err.Error(),
+			"restaurant_id": restaurantID,
+		})
+		ErrorResponse(w, http.StatusInternalServerError, "UPDATE_FAILED",
+			"Errore nell'aggiornamento", "")
+		return
+	}
 
 	logger.AuditLog("PASSWORD_CHANGED", "authentication",
 		"Password cambiata via API", restaurantID, getClientIP(r), r.UserAgent(), nil)
@@ -459,17 +516,5 @@ func validateRegisterRequest(req *RegisterRequest) error {
 		return fmt.Errorf("nome ristorante deve avere almeno 2 caratteri")
 	}
 
-	return nil
-}
-
-func checkUniqueCredentials(username, email string) error {
-	for _, restaurant := range apiRestaurants {
-		if restaurant.Username == username {
-			return fmt.Errorf("username già esistente")
-		}
-		if restaurant.Email == strings.ToLower(email) {
-			return fmt.Errorf("email già esistente")
-		}
-	}
 	return nil
 }

@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"context"
 	"crypto/rand"
 	"encoding/hex"
 	"encoding/json"
@@ -12,6 +13,7 @@ import (
 	"strings"
 	"time"
 
+	"qr-menu/db"
 	"qr-menu/logger"
 	"qr-menu/models"
 	"qr-menu/security"
@@ -228,8 +230,11 @@ func getCurrentRestaurant(r *http.Request) (*models.Restaurant, error) {
 		return nil, err
 	}
 
-	restaurant, exists := restaurants[userSession.RestaurantID]
-	if !exists || !restaurant.IsActive {
+	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
+	defer cancel()
+
+	restaurant, err := db.MongoInstance.GetRestaurantByID(ctx, userSession.RestaurantID)
+	if err != nil || restaurant == nil || !restaurant.IsActive {
 		return nil, fmt.Errorf("ristorante non trovato o disattivato")
 	}
 
@@ -263,16 +268,17 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 			"username": username,
 		})
 
-	// Trova il ristorante per username o email
-	var restaurant *models.Restaurant
-	for _, rest := range restaurants {
-		if (rest.Username == username || rest.Email == username) && rest.IsActive {
-			restaurant = rest
-			break
-		}
+	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
+	defer cancel()
+
+	// Trova il ristorante per username o email da MongoDB
+	restaurant, err := db.MongoInstance.GetRestaurantByUsername(ctx, username)
+	if err != nil || restaurant == nil {
+		// Prova con email
+		restaurant, err = db.MongoInstance.GetRestaurantByEmail(ctx, strings.ToLower(username))
 	}
 
-	if restaurant == nil || !checkPassword(restaurant.PasswordHash, password) {
+	if restaurant == nil || !restaurant.IsActive || !checkPassword(restaurant.PasswordHash, password) {
 		// Log login fallito
 		logger.SecurityEvent("LOGIN_FAILED", "Credenziali non valide",
 			"", ip, userAgent,
@@ -304,9 +310,14 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	session.Values["session_id"] = userSession.ID
 	session.Save(r, w)
 
-	// Aggiorna ultimo login
+	// Aggiorna ultimo login in MongoDB
 	restaurant.LastLogin = time.Now()
-	saveRestaurantToStorage(restaurant)
+	if err := db.MongoInstance.UpdateRestaurant(ctx, restaurant); err != nil {
+		logger.Error("Errore nell'aggiornamento LastLogin", map[string]interface{}{
+			"error":         err.Error(),
+			"restaurant_id": restaurant.ID,
+		})
+	}
 
 	// Log login riuscito
 	logger.AuditLog("LOGIN_SUCCESS", "authentication",
@@ -366,14 +377,18 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 		errors = append(errors, "Nome ristorante è richiesto")
 	}
 
-	// Controlla unicità username ed email
-	for _, rest := range restaurants {
-		if rest.Username == username {
-			errors = append(errors, "Username già esistente")
-		}
-		if rest.Email == email {
-			errors = append(errors, "Email già registrata")
-		}
+	// Controlla unicità username ed email su MongoDB
+	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
+	defer cancel()
+
+	existingUser, _ := db.MongoInstance.GetRestaurantByUsername(ctx, username)
+	if existingUser != nil {
+		errors = append(errors, "Username già esistente")
+	}
+
+	existingEmail, _ := db.MongoInstance.GetRestaurantByEmail(ctx, strings.ToLower(email))
+	if existingEmail != nil {
+		errors = append(errors, "Email già registrata")
 	}
 
 	if len(errors) > 0 {
@@ -409,7 +424,7 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 	restaurant := &models.Restaurant{
 		ID:           uuid.New().String(),
 		Username:     username,
-		Email:        email,
+		Email:        strings.ToLower(email),
 		PasswordHash: passwordHash,
 		Role:         defaultRestaurantRole,
 		Name:         restaurantName,
@@ -420,8 +435,15 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 		IsActive:     true,
 	}
 
-	restaurants[restaurant.ID] = restaurant
-	saveRestaurantToStorage(restaurant)
+	// Salva in MongoDB
+	if err := db.MongoInstance.CreateRestaurant(ctx, restaurant); err != nil {
+		logger.Error("Errore nel salvataggio del ristorante", map[string]interface{}{
+			"error":    err.Error(),
+			"username": username,
+		})
+		http.Error(w, "Errore nella creazione dell'account", http.StatusInternalServerError)
+		return
+	}
 
 	// Auto-login dopo registrazione
 	userSession, err := createSession(restaurant.ID, r)

@@ -10,7 +10,9 @@ import (
 )
 
 // GDPR API Handlers
+// TODO: Update GDPR handlers to use MongoDB when needed
 
+/*
 // GetMyDataHandler handles GDPR data export requests
 func GetMyDataHandler(gdprMgr *security.GDPRManager) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -55,6 +57,7 @@ func GetMyDataHandler(gdprMgr *security.GDPRManager) http.HandlerFunc {
 		w.Write(exportData)
 	}
 }
+*/
 
 // RequestDataDeletionHandler handles GDPR deletion requests
 func RequestDataDeletionHandler(gdprMgr *security.GDPRManager) http.HandlerFunc {

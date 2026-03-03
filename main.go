@@ -5,11 +5,29 @@ import (
 	"net/http"
 	"os"
 
+	"qr-menu/db"
 	"qr-menu/logger"
 	"qr-menu/pkg/app"
 )
 
 func main() {
+	// Connetti a MongoDB Atlas
+	if err := db.Connect(); err != nil {
+		log.Fatalf("Errore connessione MongoDB: %v", err)
+	}
+	defer func() {
+		if db.MongoInstance != nil {
+			db.MongoInstance.Disconnect()
+		}
+	}()
+
+	// Prova migrazione da file storage a MongoDB (idempotente)
+	if shouldMigrate := os.Getenv("MIGRATE_FROM_FILES"); shouldMigrate == "true" || shouldMigrate == "1" {
+		if err := db.MongoInstance.MigrateFromFileStorage(); err != nil {
+			log.Printf("⚠️  Errore durante la migrazione: %v (continuando comunque)", err)
+		}
+	}
+
 	// Configurazione
 	cfg := app.DefaultConfig()
 	cfg.DatabaseURL = os.Getenv("DATABASE_URL")

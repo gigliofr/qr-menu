@@ -28,19 +28,30 @@ Enterprise digital menu management system with QR code generation, advanced midd
 
 ### Prerequisites
 - Go 1.24+
-- PostgreSQL (optional, can use without DB)
+- MongoDB Atlas account (free tier available)
+- X.509 Certificate from MongoDB Atlas
 
 ### Installation
 
 ```bash
-# Build
-go build -o qr-menu .
+# 1. Clone repository
+git clone ...
+cd qr-menu
 
-# Run with default settings
-./qr-menu
+# 2. Get MongoDB X.509 Certificate from Atlas
+# Place in: C:\Users\gigli\Desktop\X509-cert-XXXXX.pem
 
-# Run with custom port
-PORT=3000 ./qr-menu
+# 3. Set environment variables
+$env:MONGODB_URI="mongodb+srv://qr-menu-dev@cluster0.XXXXX.mongodb.net/?authSource=$external&authMechanism=MONGODB-X509"
+$env:MONGODB_CERT_PATH="C:\Users\gigli\Desktop\X509-cert-XXXXX.pem"
+$env:MONGODB_DB_NAME="qr-menu"
+$env:MIGRATE_FROM_FILES="true"  # First run only!
+
+# 4. Build
+go build -o qr-menu.exe .
+
+# 5. Run
+./qr-menu.exe
 ```
 
 ### Access Points
@@ -48,6 +59,40 @@ PORT=3000 ./qr-menu
 - **API**: http://localhost:8080/api/v1
 - **API Docs**: http://localhost:8080/api/v1/docs
 - **Health Check**: http://localhost:8080/health
+
+---
+
+## 🗄️ Database Setup (MongoDB Atlas)
+
+This application uses **MongoDB Atlas** for data persistence.
+
+### Why MongoDB?
+✅ Cloud-based, no infrastructure needed  
+✅ Automatic backups (7-day retention free)  
+✅ X.509 certificate authentication  
+✅ Scalable (shared cluster → dedicated cluster)  
+✅ Free tier: 512MB storage, unlimited documents
+
+### Setup Guide
+
+**See: [MONGODB_SETUP.md](./MONGODB_SETUP.md)** for complete setup instructions.
+
+**Quick Setup:**
+1. Create MongoDB Atlas account: https://mongodb.com/cloud/atlas
+2. Create shared cluster (free)
+3. Generate X.509 certificate
+4. Download certificate PEM file
+5. Add your IP to whitelist
+6. Set environment variables (see above)
+7. Run application with `MIGRATE_FROM_FILES=true` first time
+
+**Environment Variables:**
+```bash
+MONGODB_URI=mongodb+srv://qr-menu-dev@cluster0.XXXXX.mongodb.net/?authSource=$external&authMechanism=MONGODB-X509
+MONGODB_CERT_PATH=C:/path/to/X509-cert-XXXXX.pem
+MONGODB_DB_NAME=qr-menu
+MIGRATE_FROM_FILES=true  # Only on first run!
+```
 
 ---
 

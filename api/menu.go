@@ -1,11 +1,12 @@
 package api
 
 import (
+	"context"
 	"encoding/json"
 	"net/http"
+	"qr-menu/db"
 	"qr-menu/logger"
 	"qr-menu/models"
-	"qr-menu/security"
 	"strconv"
 	"time"
 
@@ -52,79 +53,6 @@ type CategoryCreateRequest struct {
 	Description string `json:"description" validate:"max=500"`
 }
 
-// Simulazione storage (in produzione usare database)
-var (
-	apiMenus       = make(map[string]*models.Menu)
-	apiRestaurants = make(map[string]*models.Restaurant)
-)
-
-// SeedTestData popola il sistema con dati di test
-// Utenti definiti in TESTING_GUIDE.md
-func SeedTestData() {
-	// Seed admin user: admin / admin123
-	adminPass, _ := security.HashPassword("admin123")
-	adminRestaurant := &models.Restaurant{
-		ID:           uuid.New().String(),
-		Username:     "admin",
-		Email:        "admin@example.com",
-		PasswordHash: adminPass,
-		Role:         "admin",
-		Name:         "System Admin",
-		Description:  "Super Admin Account",
-		Address:      "Admin Panel",
-		Phone:        "+39 06 0000000",
-		IsActive:     true,
-		CreatedAt:    time.Now(),
-		LastLogin:    time.Now(),
-	}
-	apiRestaurants[adminRestaurant.ID] = adminRestaurant
-
-	// Seed owner user: owner1 / pass123
-	owner1Pass, _ := security.HashPassword("pass123")
-	owner1Restaurant := &models.Restaurant{
-		ID:           uuid.New().String(),
-		Username:     "owner1",
-		Email:        "owner1@example.com",
-		PasswordHash: owner1Pass,
-		Role:         "owner",
-		Name:         "Owner Restaurant 1",
-		Description:  "Test restaurant for owner",
-		Address:      "Via Restaurant 123, City",
-		Phone:        "+39 06 1111111",
-		IsActive:     true,
-		CreatedAt:    time.Now(),
-		LastLogin:    time.Now(),
-	}
-	apiRestaurants[owner1Restaurant.ID] = owner1Restaurant
-
-	// Seed staff user: staff1 / pass123
-	staff1Pass, _ := security.HashPassword("pass123")
-	staff1Account := &models.Restaurant{
-		ID:           uuid.New().String(),
-		Username:     "staff1",
-		Email:        "staff1@example.com",
-		PasswordHash: staff1Pass,
-		Role:         "staff",
-		Name:         "Staff Account",
-		Description:  "Staff user account",
-		Address:      "Via Staff 456, City",
-		Phone:        "+39 06 2222222",
-		IsActive:     true,
-		CreatedAt:    time.Now(),
-		LastLogin:    time.Now(),
-	}
-	apiRestaurants[staff1Account.ID] = staff1Account
-
-	logger.Info("✅ Test data seeded from TESTING_GUIDE.md", map[string]interface{}{
-		"users_created": 3,
-		"test_users": []map[string]string{
-			{"username": "admin", "password": "admin123", "role": "admin"},
-			{"username": "owner1", "password": "pass123", "role": "owner"},
-			{"username": "staff1", "password": "pass123", "role": "staff"},
-		},
-	})
-}
-
 // GetMenusHandler restituisce tutti i menu del ristorante autenticato
 func GetMenusHandler(w http.ResponseWriter, r *http.Request) {
 	start := time.Now()
@@ -140,15 +68,22 @@ func GetMenusHandler(w http.ResponseWriter, r *http.Request) {
 		perPage = 20
 	}
 
-	// Filtra menu del ristorante
-	var menus []*models.Menu
-	for _, menu := range apiMenus {
-		if menu.RestaurantID == restaurantID {
-			menus = append(menus, menu)
-		}
+	ctx, cancel := context.WithTimeout(r.Context(), 10*time.Second)
+	defer cancel()
+
+	// Ottieni menu da MongoDB
+	menus, err := db.MongoInstance.GetMenusByRestaurantID(ctx, restaurantID)
+	if err != nil {
+		logger.Error("Errore nel recupero menu", map[string]interface{}{
+			"error":         err.Error(),
+			"restaurant_id": restaurantID,
+		})
+		ErrorResponse(w, http.StatusInternalServerError, "GET_MENUS_FAILED",
+			"Errore nel recupero menu", "")
+		return
 	}
 
-	// Paginazione semplice
+	// Paginazione
 	total := len(menus)
 	start_idx := (page - 1) * perPage
 	end_idx := start_idx + perPage
@@ -186,8 +121,11 @@ func GetMenuHandler(w http.ResponseWriter, r *http.Request) {
 	menuID := vars["id"]
 	restaurantID := GetRestaurantIDFromRequest(r)
 
-	menu, exists := apiMenus[menuID]
-	if !exists {
+	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
+	defer cancel()
+
+	menu, err := db.MongoInstance.GetMenuByID(ctx, menuID)
+	if err != nil || menu == nil {
 		ErrorResponse(w, http.StatusNotFound, "MENU_NOT_FOUND",
 			"Menu non trovato", "")
 		return
@@ -221,7 +159,7 @@ func CreateMenuHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Validazione input (implementazione semplificata)
+	// Validazione input
 	if req.Name == "" {
 		ErrorResponse(w, http.StatusBadRequest, "VALIDATION_ERROR",
 			"Nome menu richiesto", "")
@@ -254,7 +192,22 @@ func CreateMenuHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	apiMenus[menu.ID] = menu
+	ctx, cancel := context.WithTimeout(r.Context(), 10*time.Second)
+	defer cancel()
+
+	// Salva menu in MongoDB
+	if err := db.MongoInstance.CreateMenu(ctx, menu); err != nil {
+		logger.Error("Errore nel salvataggio del menu", map[string]interface{}{
+			"error":         err.Error(),
+			"restaurant_id": restaurantID,
+			"menu_name":     menu.Name,
+		})
+		ErrorResponse(w, http.StatusInternalServerError, "CREATE_MENU_FAILED",
+			"Errore nella creazione del menu", "")
+		return
+	}
+
+	// TODO: Log audit to MongoDB audit_logs collection
 
 	logger.AuditLog("MENU_CREATED", "menu",
 		"Menu creato via API", restaurantID, getClientIP(r), r.UserAgent(),
@@ -273,8 +226,11 @@ func UpdateMenuHandler(w http.ResponseWriter, r *http.Request) {
 	menuID := vars["id"]
 	restaurantID := GetRestaurantIDFromRequest(r)
 
-	menu, exists := apiMenus[menuID]
-	if !exists {
+	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
+	defer cancel()
+
+	menu, err := db.MongoInstance.GetMenuByID(ctx, menuID)
+	if err != nil || menu == nil {
 		ErrorResponse(w, http.StatusNotFound, "MENU_NOT_FOUND",
 			"Menu non trovato", "")
 		return
@@ -307,6 +263,20 @@ func UpdateMenuHandler(w http.ResponseWriter, r *http.Request) {
 	menu.MealType = req.MealType
 	menu.UpdatedAt = time.Now()
 
+	// Aggiorna in MongoDB
+	if err := db.MongoInstance.UpdateMenu(ctx, menu); err != nil {
+		logger.Error("Errore nell'aggiornamento del menu", map[string]interface{}{
+			"error":         err.Error(),
+			"restaurant_id": restaurantID,
+			"menu_id":       menuID,
+		})
+		ErrorResponse(w, http.StatusInternalServerError, "UPDATE_MENU_FAILED",
+			"Errore nell'aggiornamento del menu", "")
+		return
+	}
+
+	// TODO: Log audit to MongoDB audit_logs collection
+
 	logger.AuditLog("MENU_UPDATED", "menu",
 		"Menu aggiornato via API", restaurantID, getClientIP(r), r.UserAgent(),
 		map[string]interface{}{
@@ -324,8 +294,11 @@ func DeleteMenuHandler(w http.ResponseWriter, r *http.Request) {
 	menuID := vars["id"]
 	restaurantID := GetRestaurantIDFromRequest(r)
 
-	menu, exists := apiMenus[menuID]
-	if !exists {
+	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
+	defer cancel()
+
+	menu, err := db.MongoInstance.GetMenuByID(ctx, menuID)
+	if err != nil || menu == nil {
 		ErrorResponse(w, http.StatusNotFound, "MENU_NOT_FOUND",
 			"Menu non trovato", "")
 		return
@@ -344,7 +317,19 @@ func DeleteMenuHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	delete(apiMenus, menuID)
+	// Elimina da MongoDB
+	if err := db.MongoInstance.DeleteMenu(ctx, menuID); err != nil {
+		logger.Error("Errore nell'eliminazione del menu", map[string]interface{}{
+			"error":         err.Error(),
+			"restaurant_id": restaurantID,
+			"menu_id":       menuID,
+		})
+		ErrorResponse(w, http.StatusInternalServerError, "DELETE_MENU_FAILED",
+			"Errore nell'eliminazione del menu", "")
+		return
+	}
+
+	// TODO: Log audit to MongoDB audit_logs collection
 
 	logger.AuditLog("MENU_DELETED", "menu",
 		"Menu eliminato via API", restaurantID, getClientIP(r), r.UserAgent(),
@@ -362,8 +347,11 @@ func SetActiveMenuHandler(w http.ResponseWriter, r *http.Request) {
 	menuID := vars["id"]
 	restaurantID := GetRestaurantIDFromRequest(r)
 
-	menu, exists := apiMenus[menuID]
-	if !exists {
+	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
+	defer cancel()
+
+	menu, err := db.MongoInstance.GetMenuByID(ctx, menuID)
+	if err != nil || menu == nil {
 		ErrorResponse(w, http.StatusNotFound, "MENU_NOT_FOUND",
 			"Menu non trovato", "")
 		return
@@ -381,16 +369,46 @@ func SetActiveMenuHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Disattiva altri menu
-	for _, m := range apiMenus {
-		if m.RestaurantID == restaurantID && m.IsActive {
+	// Disattiva altri menu del ristorante
+	allMenus, err := db.MongoInstance.GetMenusByRestaurantID(ctx, restaurantID)
+	if err != nil {
+		logger.Error("Errore nel recupero menu", map[string]interface{}{
+			"error":         err.Error(),
+			"restaurant_id": restaurantID,
+		})
+		ErrorResponse(w, http.StatusInternalServerError, "OPERATION_FAILED",
+			"Errore nell'operazione", "")
+		return
+	}
+
+	for _, m := range allMenus {
+		if m.IsActive && m.ID != menuID {
 			m.IsActive = false
+			m.UpdatedAt = time.Now()
+			if err := db.MongoInstance.UpdateMenu(ctx, m); err != nil {
+				logger.Error("Errore nell'aggiornamento menu", map[string]interface{}{
+					"error":         err.Error(),
+					"menu_id":       m.ID,
+					"restaurant_id": restaurantID,
+				})
+			}
 		}
 	}
 
 	// Attiva questo menu
 	menu.IsActive = true
 	menu.UpdatedAt = time.Now()
+
+	if err := db.MongoInstance.UpdateMenu(ctx, menu); err != nil {
+		logger.Error("Errore nell'attivazione del menu", map[string]interface{}{
+			"error":         err.Error(),
+			"restaurant_id": restaurantID,
+			"menu_id":       menuID,
+		})
+		ErrorResponse(w, http.StatusInternalServerError, "UPDATE_MENU_FAILED",
+			"Errore nell'attivazione del menu", "")
+		return
+	}
 
 	logger.AuditLog("MENU_ACTIVATED", "menu",
 		"Menu attivato via API", restaurantID, getClientIP(r), r.UserAgent(),
@@ -408,8 +426,11 @@ func AddCategoryHandler(w http.ResponseWriter, r *http.Request) {
 	menuID := vars["id"]
 	restaurantID := GetRestaurantIDFromRequest(r)
 
-	menu, exists := apiMenus[menuID]
-	if !exists {
+	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
+	defer cancel()
+
+	menu, err := db.MongoInstance.GetMenuByID(ctx, menuID)
+	if err != nil || menu == nil {
 		ErrorResponse(w, http.StatusNotFound, "MENU_NOT_FOUND",
 			"Menu non trovato", "")
 		return
@@ -444,6 +465,18 @@ func AddCategoryHandler(w http.ResponseWriter, r *http.Request) {
 	menu.Categories = append(menu.Categories, category)
 	menu.UpdatedAt = time.Now()
 
+	// Aggiorna in MongoDB
+	if err := db.MongoInstance.UpdateMenu(ctx, menu); err != nil {
+		logger.Error("Errore nell'aggiunta categoria", map[string]interface{}{
+			"error":         err.Error(),
+			"restaurant_id": restaurantID,
+			"menu_id":       menuID,
+		})
+		ErrorResponse(w, http.StatusInternalServerError, "UPDATE_MENU_FAILED",
+			"Errore nell'aggiunta della categoria", "")
+		return
+	}
+
 	logger.AuditLog("CATEGORY_ADDED", "menu",
 		"Categoria aggiunta via API", restaurantID, getClientIP(r), r.UserAgent(),
 		map[string]interface{}{
@@ -462,8 +495,11 @@ func AddItemHandler(w http.ResponseWriter, r *http.Request) {
 	categoryID := vars["category_id"]
 	restaurantID := GetRestaurantIDFromRequest(r)
 
-	menu, exists := apiMenus[menuID]
-	if !exists {
+	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
+	defer cancel()
+
+	menu, err := db.MongoInstance.GetMenuByID(ctx, menuID)
+	if err != nil || menu == nil {
 		ErrorResponse(w, http.StatusNotFound, "MENU_NOT_FOUND",
 			"Menu non trovato", "")
 		return
@@ -519,6 +555,19 @@ func AddItemHandler(w http.ResponseWriter, r *http.Request) {
 
 	menu.Categories[categoryIndex].Items = append(menu.Categories[categoryIndex].Items, item)
 	menu.UpdatedAt = time.Now()
+
+	// Aggiorna in MongoDB
+	if err := db.MongoInstance.UpdateMenu(ctx, menu); err != nil {
+		logger.Error("Errore nell'aggiunta piatto", map[string]interface{}{
+			"error":         err.Error(),
+			"restaurant_id": restaurantID,
+			"menu_id":       menuID,
+			"category_id":   categoryID,
+		})
+		ErrorResponse(w, http.StatusInternalServerError, "UPDATE_MENU_FAILED",
+			"Errore nell'aggiunta del piatto", "")
+		return
+	}
 
 	logger.AuditLog("ITEM_ADDED", "menu",
 		"Piatto aggiunto via API", restaurantID, getClientIP(r), r.UserAgent(),
