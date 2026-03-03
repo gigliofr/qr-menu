@@ -118,27 +118,14 @@ func init() {
 		Secure:   false, // In produzione impostare a true con HTTPS
 	}
 
-	// Carica restaurants esistenti
-	loadRestaurantsFromStorage()
-
-	// Se non ci sono restaurants, seed con test data (da TESTING_GUIDE.md)
+	// Seed test data se necessario (MongoDB-only, no file storage)
 	if len(restaurants) == 0 {
 		seedTestUsers()
 	}
 
 	logger.Info("Sistema di autenticazione inizializzato", map[string]interface{}{
 		"session_max_age":    86400 * 7,
-		"restaurants_loaded": len(restaurants),
-	})
-
-	logger.Info("Sistema di autenticazione inizializzato", map[string]interface{}{
-		"session_max_age":    86400 * 7,
-		"restaurants_loaded": len(restaurants),
-	})
-
-	logger.Info("Sistema di autenticazione inizializzato", map[string]interface{}{
-		"session_max_age":    86400 * 7,
-		"restaurants_loaded": len(restaurants),
+		"restaurants_count": len(restaurants),
 	})
 }
 

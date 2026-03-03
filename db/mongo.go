@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
+	"strings"
 	"time"
 
 	"qr-menu/models"
@@ -41,6 +42,8 @@ func Connect() error {
 	// Opzione 1: Certificato come contenuto in variabile d'ambiente (per Railway/Cloud)
 	certContent := os.Getenv("MONGODB_CERT_CONTENT")
 	if certContent != "" {
+		// Fix newlines: converte \n letterali in newlines reali
+		certContent = strings.ReplaceAll(certContent, "\\n", "\n")
 		certData = []byte(certContent)
 		log.Println("✓ Certificato MongoDB caricato da MONGODB_CERT_CONTENT")
 	} else {

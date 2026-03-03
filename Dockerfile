@@ -18,6 +18,11 @@ WORKDIR /app
 # Copy binary from builder
 COPY --from=builder /app/qr-menu /app/qr-menu
 
+# Copy required runtime assets
+COPY templates/ /app/templates/
+COPY static/ /app/static/
+COPY web/ /app/web/
+
 EXPOSE 8080
 
 # Run the application
