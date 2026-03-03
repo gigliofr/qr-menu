@@ -6,8 +6,8 @@ WORKDIR /app
 # Copy source code
 COPY . .
 
-# Download dependencies
-RUN go mod download
+# Tidy and download dependencies
+RUN go mod tidy && go mod download
 
 # Build the application
 RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o qr-menu
