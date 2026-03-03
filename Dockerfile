@@ -4,8 +4,6 @@ FROM golang:1.24 AS builder
 WORKDIR /app
 
 COPY . .
-RUN go mod edit -replace github.com/gigliofr/qr-menu=./
-RUN go mod tidy
 RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o qr-menu ./
 
 # Runtime stage
