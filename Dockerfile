@@ -1,11 +1,12 @@
 # Build stage
-FROM golang:1.24 AS builder
+FROM golang:1.24-alpine AS builder
 
 WORKDIR /app
 
 COPY . .
-RUN go mod tidy && go mod verify
-RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o qr-menu ./
+RUN go mod download
+RUN go mod verify
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o qr-menu
 
 # Runtime stage
 FROM gcr.io/distroless/static:nonroot
