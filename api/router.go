@@ -1,8 +1,10 @@
 package api
 
 import (
+	"context"
 	"encoding/json"
 	"net/http"
+	"qr-menu/db"
 	"qr-menu/security"
 	"time"
 
@@ -336,21 +338,30 @@ func APIDocsHandler(w http.ResponseWriter, r *http.Request) {
 
 // HealthCheckHandler verifica lo stato dell'API
 func HealthCheckHandler(w http.ResponseWriter, r *http.Request) {
+	// Verifica connessione MongoDB
+	dbStatus := "disconnected"
+	if db.MongoInstance != nil {
+		ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+		defer cancel()
+		
+		if err := db.MongoInstance.Ping(ctx); err == nil {
+			dbStatus = "connected"
+		}
+	}
+
 	health := map[string]interface{}{
 		"status":    "healthy",
 		"timestamp": time.Now().UTC().Format(time.RFC3339),
 		"version":   "2.0.0",
-		"uptime":    "N/A",       // Implementare se necessario
-		"database":  "in-memory", // Cambiare quando si usa database reale
+		"uptime":    "N/A",
+		"database":  dbStatus,
 		"services": map[string]string{
 			"authentication": "running",
 			"logging":        "running",
 			"rate_limiting":  "running",
 		},
 		"stats": map[string]interface{}{
-			// "restaurants":   len(apiRestaurants), // Now using MongoDB
-			// "menus":         len(apiMenus),        // Now using MongoDB
-			"active_tokens": len(revokedTokens), // Numero token revocati
+			"active_tokens": len(revokedTokens),
 		},
 	}
 
