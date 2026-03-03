@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"os"
 	"path/filepath"
-	"github.com/gigliofr/qr-menu/logger"
+	"qr-menu/logger"
 	"strings"
 	"sync"
 	"time"

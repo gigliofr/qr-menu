@@ -3,7 +3,7 @@ package handlers
 import (
 	"net/http"
 
-	"github.com/gigliofr/qr-menu/pkg/container"
+	"qr-menu/pkg/container"
 )
 
 // BaseHandlers holds common dependencies for all handlers

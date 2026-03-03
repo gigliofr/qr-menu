@@ -4,9 +4,9 @@ import (
 	"context"
 	"encoding/json"
 	"net/http"
-	"github.com/gigliofr/qr-menu/db"
-	"github.com/gigliofr/qr-menu/logger"
-	"github.com/gigliofr/qr-menu/models"
+	"qr-menu/db"
+	"qr-menu/logger"
+	"qr-menu/models"
 	"strconv"
 	"time"
 

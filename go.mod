@@ -1,4 +1,4 @@
-module github.com/gigliofr/qr-menu
+module qr-menu
 
 go 1.24.0
 
@@ -26,5 +26,3 @@ require (
 	golang.org/x/sync v0.19.0 // indirect
 	golang.org/x/text v0.34.0 // indirect
 )
-
-replace github.com/gigliofr/qr-menu => ./

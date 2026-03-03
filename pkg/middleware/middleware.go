@@ -5,9 +5,9 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/gigliofr/qr-menu/logger"
-	"github.com/gigliofr/qr-menu/pkg/errors"
-	httputil "github.com/gigliofr/qr-menu/pkg/http"
+	"qr-menu/logger"
+	"qr-menu/pkg/errors"
+	httputil "qr-menu/pkg/http"
 )
 
 // Middleware is a function that wraps an HTTP handler

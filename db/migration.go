@@ -9,7 +9,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/gigliofr/qr-menu/logger"
+	"qr-menu/logger"
 )
 
 // Migration rappresenta una singola migrazione
