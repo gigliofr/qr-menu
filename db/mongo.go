@@ -138,6 +138,11 @@ func (m *MongoClient) Disconnect() error {
 	return nil
 }
 
+// GetDB restituisce il database MongoDB (per query dirette e debug)
+func (m *MongoClient) GetDB() *mongo.Database {
+	return m.db
+}
+
 // ==================== RESTAURANTS ====================
 
 // CreateRestaurant salva un ristorante

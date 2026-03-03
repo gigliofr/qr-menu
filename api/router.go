@@ -49,6 +49,9 @@ func SetupAPIRoutes(r *mux.Router) {
 	protected.HandleFunc("/menus/{id}", RequirePermissions(PermMenusWrite)(UpdateMenuHandler)).Methods("PUT")
 	protected.HandleFunc("/menus/{id}", RequirePermissions(PermMenusDelete)(DeleteMenuHandler)).Methods("DELETE")
 	protected.HandleFunc("/menus/{id}/activate", RequirePermissions(PermMenusActivate)(SetActiveMenuHandler)).Methods("POST")
+	
+	// DEBUG endpoint temporaneo
+	protected.HandleFunc("/debug/menus", DebugMenusHandler).Methods("GET")
 
 	// Category endpoints
 	protected.HandleFunc("/menus/{id}/categories", RequirePermissions(PermMenusWrite)(AddCategoryHandler)).Methods("POST")
