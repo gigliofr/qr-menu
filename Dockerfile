@@ -1,7 +1,7 @@
 # Build stage
 FROM golang:1.24 AS builder
 
-WORKDIR /qr-menu
+WORKDIR /app
 
 COPY . .
 RUN go mod tidy
@@ -11,7 +11,7 @@ RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -mod=mod -o qr-menu ./
 FROM gcr.io/distroless/static:nonroot
 
 WORKDIR /app
-COPY --from=builder /qr-menu/qr-menu /app/qr-menu
+COPY --from=builder /app/qr-menu /app/qr-menu
 
 EXPOSE 8080
 USER nonroot:nonroot
