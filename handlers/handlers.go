@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"context"
 	"crypto/rand"
 	"encoding/base64"
 	"encoding/json"
@@ -21,6 +22,7 @@ import (
 	"time"
 
 	"qr-menu/analytics"
+	"qr-menu/db"
 	"qr-menu/models"
 
 	"github.com/google/uuid"
@@ -289,9 +291,15 @@ func CreateMenuPostHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	// Salva il menu
-	menus[menu.ID] = menu
-	saveMenuToStorage(menu)
+	// Salva il menu in MongoDB
+	ctx, cancel := context.WithTimeout(r.Context(), 10*time.Second)
+	defer cancel()
+
+	if err := db.MongoInstance.CreateMenu(ctx, menu); err != nil {
+		log.Printf("Errore nel salvataggio del menu: %v", err)
+		http.Error(w, "Errore nel salvataggio del menu", http.StatusInternalServerError)
+		return
+	}
 
 	http.Redirect(w, r, fmt.Sprintf("/admin/menu/%s", menu.ID), http.StatusFound)
 }
@@ -309,8 +317,11 @@ func EditMenuHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	menuID := vars["id"]
 
-	menu, exists := menus[menuID]
-	if !exists || menu.RestaurantID != restaurant.ID {
+	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
+	defer cancel()
+
+	menu, err := db.MongoInstance.GetMenuByID(ctx, menuID)
+	if err != nil || menu == nil || menu.RestaurantID != restaurant.ID {
 		// Usa il template 404 personalizzato per menu non trovati
 		data := struct {
 			Title   string
@@ -327,7 +338,9 @@ func EditMenuHandler(w http.ResponseWriter, r *http.Request) {
 	// Genera URL pubblico se non esiste
 	if menu.PublicURL == "" {
 		menu.PublicURL = fmt.Sprintf("http://localhost:8080/menu/%s", menuID)
-		saveMenuToStorage(menu)
+		if err := db.MongoInstance.UpdateMenu(ctx, menu); err != nil {
+			log.Printf("Errore nell'aggiornamento URL pubblico: %v", err)
+		}
 	}
 
 	data := struct {
@@ -353,8 +366,11 @@ func UpdateMenuHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	menuID := vars["id"]
 
-	menu, exists := menus[menuID]
-	if !exists || menu.RestaurantID != restaurant.ID {
+	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
+	defer cancel()
+
+	menu, err := db.MongoInstance.GetMenuByID(ctx, menuID)
+	if err != nil || menu == nil || menu.RestaurantID != restaurant.ID {
 		http.NotFound(w, r)
 		return
 	}
@@ -369,8 +385,12 @@ func UpdateMenuHandler(w http.ResponseWriter, r *http.Request) {
 	menu.Description = r.FormValue("description")
 	menu.UpdatedAt = time.Now()
 
-	// Salva le modifiche
-	saveMenuToStorage(menu)
+	// Salva le modifiche in MongoDB
+	if err := db.MongoInstance.UpdateMenu(ctx, menu); err != nil {
+		log.Printf("Errore nell'aggiornamento del menu: %v", err)
+		http.Error(w, "Errore nell'aggiornamento del menu", http.StatusInternalServerError)
+		return
+	}
 
 	http.Redirect(w, r, fmt.Sprintf("/admin/menu/%s", menu.ID), http.StatusFound)
 }
@@ -387,8 +407,11 @@ func CompleteMenuHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	menuID := vars["id"]
 
-	menu, exists := menus[menuID]
-	if !exists || menu.RestaurantID != restaurant.ID {
+	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
+	defer cancel()
+
+	menu, err := db.MongoInstance.GetMenuByID(ctx, menuID)
+	if err != nil || menu == nil || menu.RestaurantID != restaurant.ID {
 		http.NotFound(w, r)
 		return
 	}
@@ -411,8 +434,12 @@ func CompleteMenuHandler(w http.ResponseWriter, r *http.Request) {
 	menu.PublicURL = menuURL
 	menu.UpdatedAt = time.Now()
 
-	// Salva le modifiche
-	saveMenuToStorage(menu)
+	// Salva le modifiche in MongoDB
+	if err := db.MongoInstance.UpdateMenu(ctx, menu); err != nil {
+		log.Printf("Errore nell'aggiornamento del menu: %v", err)
+		http.Error(w, "Errore nell'aggiornamento del menu", http.StatusInternalServerError)
+		return
+	}
 
 	// Redirect all'admin con messaggio di successo
 	http.Redirect(w, r, "/admin?success=menu_completed", http.StatusFound)
@@ -430,8 +457,11 @@ func DeleteMenuHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	menuID := vars["id"]
 
-	menu, exists := menus[menuID]
-	if !exists || menu.RestaurantID != restaurant.ID {
+	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
+	defer cancel()
+
+	menu, err := db.MongoInstance.GetMenuByID(ctx, menuID)
+	if err != nil || menu == nil || menu.RestaurantID != restaurant.ID {
 		http.NotFound(w, r)
 		return
 	}
@@ -439,7 +469,9 @@ func DeleteMenuHandler(w http.ResponseWriter, r *http.Request) {
 	// Se era il menu attivo, rimuovi il riferimento
 	if restaurant.ActiveMenuID == menuID {
 		restaurant.ActiveMenuID = ""
-		saveRestaurantToStorage(restaurant)
+		if err := db.MongoInstance.UpdateRestaurant(ctx, restaurant); err != nil {
+			log.Printf("Errore nell'aggiornamento ristorante: %v", err)
+		}
 	}
 
 	// Elimina il file QR se esiste
@@ -447,9 +479,12 @@ func DeleteMenuHandler(w http.ResponseWriter, r *http.Request) {
 		os.Remove(menu.QRCodePath)
 	}
 
-	// Elimina il menu dalla memoria e dallo storage
-	delete(menus, menuID)
-	deleteMenuFromStorage(menuID)
+	// Elimina il menu da MongoDB
+	if err := db.MongoInstance.DeleteMenu(ctx, menuID); err != nil {
+		log.Printf("Errore nell'eliminazione del menu: %v", err)
+		http.Error(w, "Errore nell'eliminazione del menu", http.StatusInternalServerError)
+		return
+	}
 
 	http.Redirect(w, r, "/admin?success=menu_deleted", http.StatusFound)
 }
@@ -466,27 +501,45 @@ func SetActiveMenuHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	menuID := vars["id"]
 
-	menu, exists := menus[menuID]
-	if !exists || menu.RestaurantID != restaurant.ID || !menu.IsCompleted {
+	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
+	defer cancel()
+
+	menu, err := db.MongoInstance.GetMenuByID(ctx, menuID)
+	if err != nil || menu == nil || menu.RestaurantID != restaurant.ID || !menu.IsCompleted {
 		http.NotFound(w, r)
 		return
 	}
 
 	// Disattiva tutti i menu del ristorante
-	for _, m := range menus {
-		if m.RestaurantID == restaurant.ID && m.IsActive {
+	allMenus, err := db.MongoInstance.GetMenusByRestaurantID(ctx, restaurant.ID)
+	if err != nil {
+		log.Printf("Errore nel recupero menu: %v", err)
+		http.Error(w, "Errore nell'operazione", http.StatusInternalServerError)
+		return
+	}
+
+	for _, m := range allMenus {
+		if m.IsActive {
 			m.IsActive = false
-			saveMenuToStorage(m)
+			if err := db.MongoInstance.UpdateMenu(ctx, m); err != nil {
+				log.Printf("Errore nell'aggiornamento menu: %v", err)
+			}
 		}
 	}
 
 	// Attiva il menu selezionato
 	menu.IsActive = true
-	saveMenuToStorage(menu)
+	if err := db.MongoInstance.UpdateMenu(ctx, menu); err != nil {
+		log.Printf("Errore nell'attivazione del menu: %v", err)
+		http.Error(w, "Errore nell'attivazione del menu", http.StatusInternalServerError)
+		return
+	}
 
 	// Aggiorna il ristorante
 	restaurant.ActiveMenuID = menuID
-	saveRestaurantToStorage(restaurant)
+	if err := db.MongoInstance.UpdateRestaurant(ctx, restaurant); err != nil {
+		log.Printf("Errore nell'aggiornamento ristorante: %v", err)
+	}
 
 	http.Redirect(w, r, "/admin?success=menu_activated", http.StatusFound)
 }
@@ -496,16 +549,12 @@ func GetActiveMenuHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	restaurantUsername := vars["username"]
 
-	// Trova il ristorante per username
-	var restaurant *models.Restaurant
-	for _, rest := range restaurants {
-		if rest.Username == restaurantUsername && rest.IsActive {
-			restaurant = rest
-			break
-		}
-	}
+	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
+	defer cancel()
 
-	if restaurant == nil || restaurant.ActiveMenuID == "" {
+	// Trova il ristorante per username da MongoDB
+	restaurant, err := db.MongoInstance.GetRestaurantByUsername(ctx, restaurantUsername)
+	if err != nil || restaurant == nil || !restaurant.IsActive {
 		http.NotFound(w, r)
 		return
 	}
@@ -534,8 +583,11 @@ func PublicMenuHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	menuID := vars["id"]
 
-	menu, exists := menus[menuID]
-	if !exists {
+	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
+	defer cancel()
+
+	menu, err := db.MongoInstance.GetMenuByID(ctx, menuID)
+	if err != nil || menu == nil {
 		// Usa il template 404 personalizzato
 		data := struct {
 			Title   string
@@ -564,9 +616,9 @@ func PublicMenuHandler(w http.ResponseWriter, r *http.Request) {
 		analytics.GetAnalytics().TrackView(event)
 	}()
 
-	// Ottieni i dati del ristorante
-	restaurant, exists := restaurants[menu.RestaurantID]
-	if !exists {
+	// Ottieni i dati del ristorante da MongoDB
+	restaurant, err := db.MongoInstance.GetRestaurantByID(ctx, menu.RestaurantID)
+	if err != nil || restaurant == nil {
 		log.Printf("Ristorante non trovato per menu pubblico: %s", menu.RestaurantID)
 		// Continua anche se non troviamo il ristorante
 		restaurant = &models.Restaurant{
@@ -599,8 +651,11 @@ func GetMenuHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	menuID := vars["id"]
 
-	menu, exists := menus[menuID]
-	if !exists {
+	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
+	defer cancel()
+
+	menu, err := db.MongoInstance.GetMenuByID(ctx, menuID)
+	if err != nil || menu == nil {
 		http.Error(w, "Menu non trovato", http.StatusNotFound)
 		return
 	}
@@ -638,8 +693,16 @@ func CreateMenuAPIHandler(w http.ResponseWriter, r *http.Request) {
 		IsActive:     false,
 	}
 
-	menus[menu.ID] = menu
-	saveMenuToStorage(menu)
+	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
+	defer cancel()
+
+	err = db.MongoInstance.CreateMenu(ctx, menu)
+	if err != nil {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(map[string]string{"error": "Errore nella creazione del menu"})
+		return
+	}
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
@@ -664,8 +727,11 @@ func GenerateQRHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	menuID := vars["id"]
 
-	menu, exists := menus[menuID]
-	if !exists || menu.RestaurantID != restaurant.ID {
+	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
+	defer cancel()
+
+	menu, err := db.MongoInstance.GetMenuByID(ctx, menuID)
+	if err != nil || menu == nil || menu.RestaurantID != restaurant.ID {
 		response := models.QRCodeResponse{
 			Success: false,
 			Message: "Menu non trovato",
@@ -699,7 +765,18 @@ func GenerateQRHandler(w http.ResponseWriter, r *http.Request) {
 	menu.QRCodePath = qrCodePath
 	menu.PublicURL = menuURL
 	menu.UpdatedAt = time.Now()
-	saveMenuToStorage(menu)
+
+	err = db.MongoInstance.UpdateMenu(ctx, menu)
+	if err != nil {
+		response := models.QRCodeResponse{
+			Success: false,
+			Message: "Errore nell'aggiornamento del menu",
+		}
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(response)
+		return
+	}
 
 	qrCodeURL := fmt.Sprintf("%s/qr/menu_%s.png", baseURL, menu.ID)
 	response := models.QRCodeResponse{
@@ -829,8 +906,11 @@ func DuplicateItemHandler(w http.ResponseWriter, r *http.Request) {
 	categoryID := vars["categoryId"]
 	itemID := vars["itemId"]
 
-	menu, exists := menus[menuID]
-	if !exists || menu.RestaurantID != restaurant.ID {
+	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
+	defer cancel()
+
+	menu, err := db.MongoInstance.GetMenuByID(ctx, menuID)
+	if err != nil || menu == nil || menu.RestaurantID != restaurant.ID {
 		http.NotFound(w, r)
 		return
 	}
@@ -874,8 +954,13 @@ func DuplicateItemHandler(w http.ResponseWriter, r *http.Request) {
 	// Aggiorna timestamp
 	menu.UpdatedAt = time.Now()
 
-	// Salva le modifiche
-	saveMenuToStorage(menu)
+	// Salva le modifiche in MongoDB
+	err = db.MongoInstance.UpdateMenu(ctx, menu)
+	if err != nil {
+		log.Printf("Errore nell'aggiornamento del menu: %v", err)
+		http.Error(w, "Errore nell'aggiornamento", http.StatusInternalServerError)
+		return
+	}
 
 	// Redirect back to edit menu
 	http.Redirect(w, r, fmt.Sprintf("/admin/menu/%s", menuID), http.StatusSeeOther)
@@ -893,8 +978,11 @@ func DuplicateMenuHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	menuID := vars["id"]
 
-	originalMenu, exists := menus[menuID]
-	if !exists || originalMenu.RestaurantID != restaurant.ID {
+	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
+	defer cancel()
+
+	originalMenu, err := db.MongoInstance.GetMenuByID(ctx, menuID)
+	if err != nil || originalMenu == nil || originalMenu.RestaurantID != restaurant.ID {
 		http.NotFound(w, r)
 		return
 	}
@@ -938,9 +1026,13 @@ func DuplicateMenuHandler(w http.ResponseWriter, r *http.Request) {
 		duplicatedMenu.Categories[i] = newCategory
 	}
 
-	// Salva il menu duplicato
-	menus[duplicatedMenu.ID] = duplicatedMenu
-	saveMenuToStorage(duplicatedMenu)
+	// Salva il menu duplicato in MongoDB
+	err = db.MongoInstance.CreateMenu(ctx, duplicatedMenu)
+	if err != nil {
+		log.Printf("Errore nella creazione del menu duplicato: %v", err)
+		http.Error(w, "Errore nella duplicazione del menu", http.StatusInternalServerError)
+		return
+	}
 
 	// Redirect alla modifica del menu duplicato
 	http.Redirect(w, r, fmt.Sprintf("/admin/menu/%s", duplicatedMenu.ID), http.StatusSeeOther)
@@ -960,8 +1052,11 @@ func EditItemHandler(w http.ResponseWriter, r *http.Request) {
 	categoryID := vars["categoryId"]
 	itemID := vars["itemId"]
 
-	menu, exists := menus[menuID]
-	if !exists || menu.RestaurantID != restaurant.ID {
+	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
+	defer cancel()
+
+	menu, err := db.MongoInstance.GetMenuByID(ctx, menuID)
+	if err != nil || menu == nil || menu.RestaurantID != restaurant.ID {
 		http.NotFound(w, r)
 		return
 	}
@@ -989,8 +1084,13 @@ func EditItemHandler(w http.ResponseWriter, r *http.Request) {
 					// Aggiorna timestamp
 					menu.UpdatedAt = time.Now()
 
-					// Salva le modifiche
-					saveMenuToStorage(menu)
+					// Salva le modifiche in MongoDB
+					err = db.MongoInstance.UpdateMenu(ctx, menu)
+					if err != nil {
+						log.Printf("Errore nell'aggiornamento del menu: %v", err)
+						http.Error(w, "Errore nell'aggiornamento", http.StatusInternalServerError)
+						return
+					}
 
 					// Redirect back to edit menu
 					http.Redirect(w, r, fmt.Sprintf("/admin/menu/%s", menuID), http.StatusSeeOther)
@@ -1017,8 +1117,11 @@ func DeleteItemHandler(w http.ResponseWriter, r *http.Request) {
 	categoryID := vars["categoryId"]
 	itemID := vars["itemId"]
 
-	menu, exists := menus[menuID]
-	if !exists || menu.RestaurantID != restaurant.ID {
+	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
+	defer cancel()
+
+	menu, err := db.MongoInstance.GetMenuByID(ctx, menuID)
+	if err != nil || menu == nil || menu.RestaurantID != restaurant.ID {
 		http.NotFound(w, r)
 		return
 	}
@@ -1036,8 +1139,13 @@ func DeleteItemHandler(w http.ResponseWriter, r *http.Request) {
 					// Aggiorna timestamp
 					menu.UpdatedAt = time.Now()
 
-					// Salva le modifiche
-					saveMenuToStorage(menu)
+					// Salva le modifiche in MongoDB
+					err = db.MongoInstance.UpdateMenu(ctx, menu)
+					if err != nil {
+						log.Printf("Errore nell'aggiornamento del menu: %v", err)
+						http.Error(w, "Errore nell'aggiornamento", http.StatusInternalServerError)
+						return
+					}
 
 					// Redirect back to edit menu
 					http.Redirect(w, r, fmt.Sprintf("/admin/menu/%s", menuID), http.StatusSeeOther)
@@ -1062,8 +1170,11 @@ func AddItemHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	menuID := vars["id"]
 
-	menu, exists := menus[menuID]
-	if !exists || menu.RestaurantID != restaurant.ID {
+	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
+	defer cancel()
+
+	menu, err := db.MongoInstance.GetMenuByID(ctx, menuID)
+	if err != nil || menu == nil || menu.RestaurantID != restaurant.ID {
 		http.NotFound(w, r)
 		return
 	}
@@ -1107,8 +1218,13 @@ func AddItemHandler(w http.ResponseWriter, r *http.Request) {
 			// Aggiorna timestamp
 			menu.UpdatedAt = time.Now()
 
-			// Salva le modifiche
-			saveMenuToStorage(menu)
+			// Salva le modifiche in MongoDB
+			err = db.MongoInstance.UpdateMenu(ctx, menu)
+			if err != nil {
+				log.Printf("Errore nell'aggiornamento del menu: %v", err)
+				http.Error(w, "Errore nell'aggiornamento", http.StatusInternalServerError)
+				return
+			}
 
 			// Redirect back to edit menu
 			http.Redirect(w, r, fmt.Sprintf("/admin/menu/%s", menuID), http.StatusSeeOther)
@@ -1203,8 +1319,11 @@ func UploadItemImageHandler(w http.ResponseWriter, r *http.Request) {
 	categoryID := vars["categoryId"]
 	itemID := vars["itemId"]
 
-	menu, exists := menus[menuID]
-	if !exists || menu.RestaurantID != restaurant.ID {
+	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
+	defer cancel()
+
+	menu, err := db.MongoInstance.GetMenuByID(ctx, menuID)
+	if err != nil || menu == nil || menu.RestaurantID != restaurant.ID {
 		http.NotFound(w, r)
 		return
 	}
@@ -1246,8 +1365,13 @@ func UploadItemImageHandler(w http.ResponseWriter, r *http.Request) {
 					menu.Categories[i].Items[j].ImageURL = imagePath
 					menu.UpdatedAt = time.Now()
 
-					// Salva le modifiche
-					saveMenuToStorage(menu)
+					// Salva le modifiche in MongoDB
+					err = db.MongoInstance.UpdateMenu(ctx, menu)
+					if err != nil {
+						log.Printf("Errore nell'aggiornamento del menu: %v", err)
+						http.Error(w, "Errore nell'aggiornamento", http.StatusInternalServerError)
+						return
+					}
 
 					// Redirect back to edit menu
 					http.Redirect(w, r, fmt.Sprintf("/admin/menu/%s", menuID), http.StatusSeeOther)
@@ -1267,8 +1391,11 @@ func ShareMenuHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	menuID := vars["id"]
 
-	menu, exists := menus[menuID]
-	if !exists {
+	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
+	defer cancel()
+
+	menu, err := db.MongoInstance.GetMenuByID(ctx, menuID)
+	if err != nil || menu == nil {
 		http.NotFound(w, r)
 		return
 	}
@@ -1288,9 +1415,9 @@ func ShareMenuHandler(w http.ResponseWriter, r *http.Request) {
 		analytics.GetAnalytics().TrackShare(event)
 	}()
 
-	// Ottieni dati del ristorante
-	restaurant, exists := restaurants[menu.RestaurantID]
-	if !exists {
+	// Ottieni dati del ristorante da MongoDB
+	restaurant, err := db.MongoInstance.GetRestaurantByID(ctx, menu.RestaurantID)
+	if err != nil || restaurant == nil {
 		restaurant = &models.Restaurant{Name: "Ristorante"}
 	}
 
@@ -1329,6 +1456,9 @@ func AnalyticsDashboardHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
+	defer cancel()
+
 	// Parametri per filtrare i dati
 	days := 7 // default 7 giorni
 	if daysParam := r.URL.Query().Get("days"); daysParam != "" {
@@ -1340,19 +1470,9 @@ func AnalyticsDashboardHandler(w http.ResponseWriter, r *http.Request) {
 	// Ottieni dati analytics
 	dashboardData := analytics.GetAnalytics().GetDashboardData(session.RestaurantID, days)
 
-	// Ottieni informazioni ristorante
-	var restaurant *models.Restaurant
-	for _, menu := range menus {
-		if menu.RestaurantID == session.RestaurantID {
-			// Cerca il ristorante per ID
-			if rest, exists := restaurants[menu.RestaurantID]; exists {
-				restaurant = rest
-				break
-			}
-		}
-	}
-
-	if restaurant == nil {
+	// Ottieni informazioni ristorante da MongoDB
+	restaurant, err := db.MongoInstance.GetRestaurantByID(ctx, session.RestaurantID)
+	if err != nil || restaurant == nil {
 		// Crea un restaurant di default se non esiste
 		restaurant = &models.Restaurant{
 			Name:    "Il Tuo Ristorante",
@@ -1426,7 +1546,11 @@ func TrackShareHandler(w http.ResponseWriter, r *http.Request) {
 
 		// Trova il menu per ottenere il restaurantID
 		var restaurantID string
-		if menu, exists := menus[requestData.MenuID]; exists {
+		
+		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+		defer cancel()
+		
+		if menu, err := db.MongoInstance.GetMenuByID(ctx, requestData.MenuID); err == nil && menu != nil {
 			restaurantID = menu.RestaurantID
 		}
 
