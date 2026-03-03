@@ -34,15 +34,27 @@ func Connect() error {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	// Leggi certificato X.509
-	certPath := os.Getenv("MONGODB_CERT_PATH")
-	if certPath == "" {
-		certPath = "C:/Users/gigli/Desktop/X509-cert-4084673564018728353.pem"
-	}
+	// Leggi certificato X.509 - supporta sia env var che file
+	var certData []byte
+	var err error
 
-	certData, err := ioutil.ReadFile(certPath)
-	if err != nil {
-		return fmt.Errorf("errore lettura certificato: %v", err)
+	// Opzione 1: Certificato come contenuto in variabile d'ambiente (per Railway/Cloud)
+	certContent := os.Getenv("MONGODB_CERT_CONTENT")
+	if certContent != "" {
+		certData = []byte(certContent)
+		log.Println("✓ Certificato MongoDB caricato da MONGODB_CERT_CONTENT")
+	} else {
+		// Opzione 2: Certificato da file (per sviluppo locale)
+		certPath := os.Getenv("MONGODB_CERT_PATH")
+		if certPath == "" {
+			return fmt.Errorf("nessun certificato MongoDB configurato: imposta MONGODB_CERT_CONTENT (contenuto) o MONGODB_CERT_PATH (path file)")
+		}
+
+		certData, err = ioutil.ReadFile(certPath)
+		if err != nil {
+			return fmt.Errorf("errore lettura certificato da %s: %v", certPath, err)
+		}
+		log.Printf("✓ Certificato MongoDB caricato da file: %s\n", certPath)
 	}
 
 	// Carica certificato per autenticazione X.509
@@ -61,7 +73,7 @@ func Connect() error {
 	// Connection string MongoDB Atlas
 	mongoURI := os.Getenv("MONGODB_URI")
 	if mongoURI == "" {
-		mongoURI = "mongodb+srv://qr-menu-dev@cluster0.b9jfwmr.mongodb.net/?authSource=$external&authMechanism=MONGODB-X509&tlsCAFile=" + certPath
+		return fmt.Errorf("MONGODB_URI non configurato - imposta la connection string completa")
 	}
 
 	// Opzioni di connessione

@@ -11,21 +11,32 @@ import (
 )
 
 func main() {
-	// Connetti a MongoDB Atlas
-	if err := db.Connect(); err != nil {
-		log.Fatalf("Errore connessione MongoDB: %v", err)
-	}
-	defer func() {
-		if db.MongoInstance != nil {
-			db.MongoInstance.Disconnect()
-		}
-	}()
+	// Connetti a MongoDB Atlas (opzionale - fallback a file storage)
+	mongoConfigured := os.Getenv("MONGODB_URI") != "" && 
+		(os.Getenv("MONGODB_CERT_CONTENT") != "" || os.Getenv("MONGODB_CERT_PATH") != "")
+	
+	if mongoConfigured {
+		if err := db.Connect(); err != nil {
+			log.Printf("⚠️  Errore connessione MongoDB: %v", err)
+			log.Println("⚠️  Continuando con storage file...")
+		} else {
+			log.Println("✓ MongoDB connesso con successo")
+			defer func() {
+				if db.MongoInstance != nil {
+					db.MongoInstance.Disconnect()
+				}
+			}()
 
-	// Prova migrazione da file storage a MongoDB (idempotente)
-	if shouldMigrate := os.Getenv("MIGRATE_FROM_FILES"); shouldMigrate == "true" || shouldMigrate == "1" {
-		if err := db.MongoInstance.MigrateFromFileStorage(); err != nil {
-			log.Printf("⚠️  Errore durante la migrazione: %v (continuando comunque)", err)
+			// Prova migrazione da file storage a MongoDB (idempotente)
+			if shouldMigrate := os.Getenv("MIGRATE_FROM_FILES"); shouldMigrate == "true" || shouldMigrate == "1" {
+				if err := db.MongoInstance.MigrateFromFileStorage(); err != nil {
+					log.Printf("⚠️  Errore durante la migrazione: %v (continuando comunque)", err)
+				}
+			}
 		}
+	} else {
+		log.Println("ℹ️  MongoDB non configurato - usando storage file")
+		log.Println("ℹ️  Per usare MongoDB imposta: MONGODB_URI, MONGODB_CERT_CONTENT/MONGODB_CERT_PATH")
 	}
 
 	// Configurazione
