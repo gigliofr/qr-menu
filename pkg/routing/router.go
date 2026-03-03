@@ -4,11 +4,11 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"qr-menu/pkg/container"
-	"qr-menu/pkg/errors"
-	"qr-menu/pkg/handlers"
-	httputil "qr-menu/pkg/http"
-	"qr-menu/pkg/middleware"
+	"github.com/gigliofr/qr-menu/pkg/container"
+	"github.com/gigliofr/qr-menu/pkg/errors"
+	"github.com/gigliofr/qr-menu/pkg/handlers"
+	httputil "github.com/gigliofr/qr-menu/pkg/http"
+	"github.com/gigliofr/qr-menu/pkg/middleware"
 
 	"github.com/gorilla/mux"
 )

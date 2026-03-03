@@ -3,7 +3,7 @@ package api
 import (
 	"encoding/json"
 	"net/http"
-	"qr-menu/security"
+	"github.com/gigliofr/qr-menu/security"
 	"time"
 
 	"github.com/gorilla/mux"

@@ -9,10 +9,10 @@ import (
 	"testing"
 	"time"
 
-	"qr-menu/pkg/app"
-	"qr-menu/pkg/config"
-	"qr-menu/pkg/container"
-	"qr-menu/pkg/routing"
+	"github.com/gigliofr/qr-menu/pkg/app"
+	"github.com/gigliofr/qr-menu/pkg/config"
+	"github.com/gigliofr/qr-menu/pkg/container"
+	"github.com/gigliofr/qr-menu/pkg/routing"
 )
 
 // TestPhase4dApplicationIntegration validates the complete Phase 4d integration

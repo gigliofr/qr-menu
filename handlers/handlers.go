@@ -21,9 +21,9 @@ import (
 	"strings"
 	"time"
 
-	"qr-menu/analytics"
-	"qr-menu/db"
-	"qr-menu/models"
+	"github.com/gigliofr/qr-menu/analytics"
+	"github.com/gigliofr/qr-menu/db"
+	"github.com/gigliofr/qr-menu/models"
 
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
