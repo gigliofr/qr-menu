@@ -13,10 +13,10 @@ import (
 	"strings"
 	"time"
 
-	"qr-menu/db"
-	"qr-menu/logger"
-	"qr-menu/models"
-	"qr-menu/security"
+	"github.com/gigliofr/qr-menu/db"
+	"github.com/gigliofr/qr-menu/logger"
+	"github.com/gigliofr/qr-menu/models"
+	"github.com/gigliofr/qr-menu/security"
 
 	"github.com/google/uuid"
 	"github.com/gorilla/sessions"

@@ -5,8 +5,8 @@ import (
 	"testing"
 	"time"
 
-	"qr-menu/pkg/config"
-	"qr-menu/pkg/container"
+	"github.com/gigliofr/qr-menu/pkg/config"
+	"github.com/gigliofr/qr-menu/pkg/container"
 )
 
 // TestNewServiceContainer tests container creation

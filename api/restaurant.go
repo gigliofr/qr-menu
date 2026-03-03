@@ -5,9 +5,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"qr-menu/db"
-	"qr-menu/logger"
-	"qr-menu/models"
+	"github.com/gigliofr/qr-menu/db"
+	"github.com/gigliofr/qr-menu/logger"
+	"github.com/gigliofr/qr-menu/models"
 	"strings"
 	"time"
 

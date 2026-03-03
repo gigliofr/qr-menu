@@ -6,8 +6,8 @@ import (
 	"strings"
 	"time"
 
-	"qr-menu/logger"
-	"qr-menu/pkg/cache"
+	"github.com/gigliofr/qr-menu/logger"
+	"github.com/gigliofr/qr-menu/pkg/cache"
 )
 
 // ResponseCachingMiddleware creates a middleware that caches HTTP responses

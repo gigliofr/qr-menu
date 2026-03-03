@@ -3,7 +3,7 @@ package handlers
 import (
 	"net/http"
 
-	"qr-menu/pwa"
+	"github.com/gigliofr/qr-menu/pwa"
 )
 
 // ManifestHandler serve il manifest.json con i corretti header
