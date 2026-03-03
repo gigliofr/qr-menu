@@ -68,30 +68,6 @@ func SetupAPIRoutes(r *mux.Router) {
 	protected.HandleFunc("/webhooks/{id}/test", RequirePermissions(PermWebhooksDeliver)(TestWebhookHandler)).Methods("POST")
 	protected.HandleFunc("/webhooks/deliveries", RequirePermissions(PermWebhooksRead)(ListWebhookDeliveriesHandler)).Methods("GET")
 
-	// ML & Analytics endpoints
-	protected.HandleFunc("/ml/recommendations", GetRecommendationsHandler).Methods("GET")
-	protected.HandleFunc("/ml/items/{id}/similar", GetSimilarItemsHandler).Methods("GET")
-	protected.HandleFunc("/ml/items/trending", GetTrendingItemsHandler).Methods("GET")
-	protected.HandleFunc("/ml/interactions", TrackInteractionHandler).Methods("POST")
-	protected.HandleFunc("/ml/recommendations/train", TrainRecommendationsHandler).Methods("POST")
-
-	protected.HandleFunc("/ml/forecast", ForecastDemandHandler).Methods("GET")
-	protected.HandleFunc("/ml/seasonality", DetectSeasonalityHandler).Methods("GET")
-	protected.HandleFunc("/ml/trend", AnalyzeTrendHandler).Methods("GET")
-	protected.HandleFunc("/ml/peak-times", PredictPeakTimesHandler).Methods("GET")
-	protected.HandleFunc("/ml/inventory/{item_id}/optimize", OptimizeInventoryHandler).Methods("GET")
-	protected.HandleFunc("/ml/data-points", AddDataPointHandler).Methods("POST")
-
-	protected.HandleFunc("/ml/experiments", CreateExperimentHandler).Methods("POST")
-	protected.HandleFunc("/ml/experiments", ListExperimentsHandler).Methods("GET")
-	protected.HandleFunc("/ml/experiments/{id}/start", StartExperimentHandler).Methods("POST")
-	protected.HandleFunc("/ml/experiments/{id}/stop", StopExperimentHandler).Methods("POST")
-	protected.HandleFunc("/ml/experiments/{id}/results", GetExperimentResultsHandler).Methods("GET")
-	protected.HandleFunc("/ml/experiments/{id}/assign", AssignVariantHandler).Methods("POST")
-	protected.HandleFunc("/ml/experiments/conversions", TrackConversionHandler).Methods("POST")
-
-	protected.HandleFunc("/ml/stats", GetMLStatsHandler).Methods("GET")
-
 	// Billing webhook (no auth)
 	api.HandleFunc("/billing/webhook", BillingWebhookHandler).Methods("POST")
 
