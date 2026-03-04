@@ -23,6 +23,7 @@ import (
 
 	"qr-menu/analytics"
 	"qr-menu/db"
+	"qr-menu/logger"
 	"qr-menu/models"
 
 	"github.com/google/uuid"
