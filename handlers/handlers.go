@@ -45,11 +45,16 @@ var (
 	}
 )
 
+// SetTemplates imposta i template dall'esterno (chiamato da main)
+func SetTemplates(t *template.Template) {
+	templates = t
+	log.Printf("✅ Templates impostati in handlers package")
+}
+
 func init() {
 	// Crea le directory necessarie se non esistono
 	createDirectories()
-	// Carica i template HTML
-	loadTemplates()
+	// Templates sono ora caricati da main.InitTemplates()
 	// Nota: loadMenusFromStorage() rimosso - i menu sono ora caricati direttamente da MongoDB
 	// Pulisci i token CSRF scaduti periodicamente
 	go cleanupCSRFTokens()
@@ -118,15 +123,9 @@ func createDirectories() {
 }
 
 func loadTemplates() {
-	var err error
-	templates, err = template.ParseGlob("templates/*.html")
-	if err != nil {
-		log.Printf("Errore nel caricamento dei template: %v", err)
-		// Crea template di fallback in memoria
-		createFallbackTemplates()
-	} else {
-		log.Printf("✅ Template caricati con successo da templates/*.html")
-	}
+	// Non fa nulla - i template sono caricati da main.InitTemplates()
+	// Questo viene mantenuto per compatibilità
+	log.Printf("ℹ️  loadTemplates() chiamato (templates già caricati in main)")
 }
 
 func createFallbackTemplates() {

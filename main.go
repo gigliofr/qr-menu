@@ -52,6 +52,10 @@ func main() {
 	log.Println("✓ MongoDB connesso con successo")
 	logger.Info("✅ MongoDB connesso con successo", nil)
 	
+	// Carica i template HTML (con embed per Railway)
+	log.Println("🔄 Caricamento template HTML...")
+	InitTemplates()
+	
 	defer func() {
 		if db.MongoInstance != nil {
 			db.MongoInstance.Disconnect()
