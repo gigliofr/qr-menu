@@ -49,7 +49,7 @@ func (m *MongoClient) CreateAuditLog(ctx context.Context, log *AuditLog) error {
 		log.Timestamp = time.Now()
 	}
 
-	coll := m.db.Collection("audit_logs")
+	coll := m.DB.Collection("audit_logs")
 	_, err := coll.InsertOne(ctx, log)
 	if err != nil {
 		return err
@@ -59,7 +59,7 @@ func (m *MongoClient) CreateAuditLog(ctx context.Context, log *AuditLog) error {
 
 // GetAuditLogs recupera i log di audit con filtri
 func (m *MongoClient) GetAuditLogs(ctx context.Context, restaurantID string, limit int64) ([]*AuditLog, error) {
-	coll := m.db.Collection("audit_logs")
+	coll := m.DB.Collection("audit_logs")
 
 	opts := options.Find().
 		SetSort(bson.M{"timestamp": -1}).
@@ -80,7 +80,7 @@ func (m *MongoClient) GetAuditLogs(ctx context.Context, restaurantID string, lim
 
 // GetAuditLogsByAction filtra i log per azione
 func (m *MongoClient) GetAuditLogsByAction(ctx context.Context, restaurantID, action string, limit int64) ([]*AuditLog, error) {
-	coll := m.db.Collection("audit_logs")
+	coll := m.DB.Collection("audit_logs")
 
 	opts := options.Find().
 		SetSort(bson.M{"timestamp": -1}).
@@ -104,7 +104,7 @@ func (m *MongoClient) GetAuditLogsByAction(ctx context.Context, restaurantID, ac
 
 // GetAuditLogsByDateRange recupera i log in un intervallo di date
 func (m *MongoClient) GetAuditLogsByDateRange(ctx context.Context, restaurantID string, startDate, endDate time.Time) ([]*AuditLog, error) {
-	coll := m.db.Collection("audit_logs")
+	coll := m.DB.Collection("audit_logs")
 
 	cursor, err := coll.Find(ctx, bson.M{
 		"restaurant_id": restaurantID,
@@ -136,7 +136,7 @@ func (m *MongoClient) CreateAnalyticsEvent(ctx context.Context, event *Analytics
 		event.DayDate = event.Timestamp.Format("2006-01-02")
 	}
 
-	coll := m.db.Collection("analytics_events")
+	coll := m.DB.Collection("analytics_events")
 	_, err := coll.InsertOne(ctx, event)
 	if err != nil {
 		return err
@@ -146,7 +146,7 @@ func (m *MongoClient) CreateAnalyticsEvent(ctx context.Context, event *Analytics
 
 // GetAnalyticsEvents recupera gli eventi di analytics
 func (m *MongoClient) GetAnalyticsEvents(ctx context.Context, restaurantID string, limit int64) ([]*AnalyticsEvent, error) {
-	coll := m.db.Collection("analytics_events")
+	coll := m.DB.Collection("analytics_events")
 
 	opts := options.Find().
 		SetSort(bson.M{"timestamp": -1}).
@@ -167,7 +167,7 @@ func (m *MongoClient) GetAnalyticsEvents(ctx context.Context, restaurantID strin
 
 // GetAnalyticsEventsByType filtra gli eventi per tipo
 func (m *MongoClient) GetAnalyticsEventsByType(ctx context.Context, restaurantID, eventType string, limit int64) ([]*AnalyticsEvent, error) {
-	coll := m.db.Collection("analytics_events")
+	coll := m.DB.Collection("analytics_events")
 
 	opts := options.Find().
 		SetSort(bson.M{"timestamp": -1}).
@@ -191,7 +191,7 @@ func (m *MongoClient) GetAnalyticsEventsByType(ctx context.Context, restaurantID
 
 // GetAnalyticsEventsByDate recupera gli eventi di una data specifica
 func (m *MongoClient) GetAnalyticsEventsByDate(ctx context.Context, restaurantID, dateStr string) ([]*AnalyticsEvent, error) {
-	coll := m.db.Collection("analytics_events")
+	coll := m.DB.Collection("analytics_events")
 
 	cursor, err := coll.Find(ctx, bson.M{
 		"restaurant_id": restaurantID,
@@ -211,7 +211,7 @@ func (m *MongoClient) GetAnalyticsEventsByDate(ctx context.Context, restaurantID
 
 // GetAnalyticsSummary restituisce un summary degli analytics
 func (m *MongoClient) GetAnalyticsSummary(ctx context.Context, restaurantID string, days int) (map[string]interface{}, error) {
-	coll := m.db.Collection("analytics_events")
+	coll := m.DB.Collection("analytics_events")
 
 	startDate := time.Now().AddDate(0, 0, -days)
 
@@ -258,7 +258,7 @@ func (m *MongoClient) GetAnalyticsSummary(ctx context.Context, restaurantID stri
 func (m *MongoClient) DropCollections(ctx context.Context) error {
 	collections := []string{"restaurants", "menus", "sessions", "audit_logs", "analytics_events"}
 	for _, collName := range collections {
-		if err := m.db.Collection(collName).Drop(ctx); err != nil {
+		if err := m.DB.Collection(collName).Drop(ctx); err != nil {
 			return err
 		}
 	}
@@ -270,27 +270,27 @@ func (m *MongoClient) GetDatabaseStats(ctx context.Context) (map[string]interfac
 	stats := make(map[string]interface{})
 
 	// Count restaurants
-	restColl := m.db.Collection("restaurants")
+	restColl := m.DB.Collection("restaurants")
 	restCount, _ := restColl.EstimatedDocumentCount(ctx)
 	stats["restaurants"] = restCount
 
 	// Count menus
-	menuColl := m.db.Collection("menus")
+	menuColl := m.DB.Collection("menus")
 	menuCount, _ := menuColl.EstimatedDocumentCount(ctx)
 	stats["menus"] = menuCount
 
 	// Count sessions
-	sessColl := m.db.Collection("sessions")
+	sessColl := m.DB.Collection("sessions")
 	sessCount, _ := sessColl.EstimatedDocumentCount(ctx)
 	stats["sessions"] = sessCount
 
 	// Count audit logs
-	auditColl := m.db.Collection("audit_logs")
+	auditColl := m.DB.Collection("audit_logs")
 	auditCount, _ := auditColl.EstimatedDocumentCount(ctx)
 	stats["audit_logs"] = auditCount
 
 	// Count analytics events
-	analyticsColl := m.db.Collection("analytics_events")
+	analyticsColl := m.DB.Collection("analytics_events")
 	analyticsCount, _ := analyticsColl.EstimatedDocumentCount(ctx)
 	stats["analytics_events"] = analyticsCount
 

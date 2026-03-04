@@ -20,7 +20,7 @@ import (
 // MongoClient wrapper per MongoDB Atlas con autenticazione X.509
 type MongoClient struct {
 	client *mongo.Client
-	db     *mongo.Database
+	DB     *mongo.Database // Reso pubblico per accesso diretto alle collection
 	ctx    context.Context
 	cancel context.CancelFunc
 }
@@ -109,7 +109,7 @@ func Connect() error {
 
 	MongoInstance = &MongoClient{
 		client: client,
-		db:     client.Database(dbName),
+		DB:     client.Database(dbName),
 		ctx:    ctx3,
 		cancel: cancel3,
 	}
@@ -140,14 +140,14 @@ func (m *MongoClient) Disconnect() error {
 
 // GetDB restituisce il database MongoDB (per query dirette e debug)
 func (m *MongoClient) GetDB() *mongo.Database {
-	return m.db
+	return m.DB
 }
 
 // ==================== RESTAURANTS ====================
 
 // CreateRestaurant salva un ristorante
 func (m *MongoClient) CreateRestaurant(ctx context.Context, restaurant *models.Restaurant) error {
-	coll := m.db.Collection("restaurants")
+	coll := m.DB.Collection("restaurants")
 	_, err := coll.InsertOne(ctx, restaurant)
 	if err != nil {
 		return fmt.Errorf("errore insert restaurant: %v", err)
@@ -157,7 +157,7 @@ func (m *MongoClient) CreateRestaurant(ctx context.Context, restaurant *models.R
 
 // GetRestaurantByID recupera un ristorante per ID
 func (m *MongoClient) GetRestaurantByID(ctx context.Context, id string) (*models.Restaurant, error) {
-	coll := m.db.Collection("restaurants")
+	coll := m.DB.Collection("restaurants")
 	var restaurant models.Restaurant
 	err := coll.FindOne(ctx, bson.M{"_id": id}).Decode(&restaurant)
 	if err == mongo.ErrNoDocuments {
@@ -171,7 +171,7 @@ func (m *MongoClient) GetRestaurantByID(ctx context.Context, id string) (*models
 
 // GetRestaurantByUsername recupera un ristorante per username
 func (m *MongoClient) GetRestaurantByUsername(ctx context.Context, username string) (*models.Restaurant, error) {
-	coll := m.db.Collection("restaurants")
+	coll := m.DB.Collection("restaurants")
 	var restaurant models.Restaurant
 	err := coll.FindOne(ctx, bson.M{"username": username}).Decode(&restaurant)
 	if err == mongo.ErrNoDocuments {
@@ -185,7 +185,7 @@ func (m *MongoClient) GetRestaurantByUsername(ctx context.Context, username stri
 
 // GetRestaurantByEmail recupera un ristorante per email
 func (m *MongoClient) GetRestaurantByEmail(ctx context.Context, email string) (*models.Restaurant, error) {
-	coll := m.db.Collection("restaurants")
+	coll := m.DB.Collection("restaurants")
 	var restaurant models.Restaurant
 	err := coll.FindOne(ctx, bson.M{"email": email}).Decode(&restaurant)
 	if err == mongo.ErrNoDocuments {
@@ -199,7 +199,7 @@ func (m *MongoClient) GetRestaurantByEmail(ctx context.Context, email string) (*
 
 // UpdateRestaurant aggiorna un ristorante
 func (m *MongoClient) UpdateRestaurant(ctx context.Context, restaurant *models.Restaurant) error {
-	coll := m.db.Collection("restaurants")
+	coll := m.DB.Collection("restaurants")
 	result := coll.FindOneAndUpdate(ctx,
 		bson.M{"_id": restaurant.ID},
 		bson.M{"$set": restaurant},
@@ -213,7 +213,7 @@ func (m *MongoClient) UpdateRestaurant(ctx context.Context, restaurant *models.R
 
 // GetAllRestaurants recupera tutti i ristoranti
 func (m *MongoClient) GetAllRestaurants(ctx context.Context) ([]*models.Restaurant, error) {
-	coll := m.db.Collection("restaurants")
+	coll := m.DB.Collection("restaurants")
 	cursor, err := coll.Find(ctx, bson.M{})
 	if err != nil {
 		return nil, fmt.Errorf("errore find all restaurants: %v", err)
@@ -230,7 +230,7 @@ func (m *MongoClient) GetAllRestaurants(ctx context.Context) ([]*models.Restaura
 
 // CreateUser salva un nuovo utente
 func (m *MongoClient) CreateUser(ctx context.Context, user *models.User) error {
-	coll := m.db.Collection("users")
+	coll := m.DB.Collection("users")
 	_, err := coll.InsertOne(ctx, user)
 	if err != nil {
 		return fmt.Errorf("errore insert user: %v", err)
@@ -240,7 +240,7 @@ func (m *MongoClient) CreateUser(ctx context.Context, user *models.User) error {
 
 // GetUserByID recupera un utente per ID
 func (m *MongoClient) GetUserByID(ctx context.Context, id string) (*models.User, error) {
-	coll := m.db.Collection("users")
+	coll := m.DB.Collection("users")
 	var user models.User
 	err := coll.FindOne(ctx, bson.M{"_id": id}).Decode(&user)
 	if err == mongo.ErrNoDocuments {
@@ -254,7 +254,7 @@ func (m *MongoClient) GetUserByID(ctx context.Context, id string) (*models.User,
 
 // GetUserByUsername recupera un utente per username
 func (m *MongoClient) GetUserByUsername(ctx context.Context, username string) (*models.User, error) {
-	coll := m.db.Collection("users")
+	coll := m.DB.Collection("users")
 	var user models.User
 	err := coll.FindOne(ctx, bson.M{"username": username}).Decode(&user)
 	if err == mongo.ErrNoDocuments {
@@ -268,7 +268,7 @@ func (m *MongoClient) GetUserByUsername(ctx context.Context, username string) (*
 
 // GetUserByEmail recupera un utente per email
 func (m *MongoClient) GetUserByEmail(ctx context.Context, email string) (*models.User, error) {
-	coll := m.db.Collection("users")
+	coll := m.DB.Collection("users")
 	var user models.User
 	err := coll.FindOne(ctx, bson.M{"email": email}).Decode(&user)
 	if err == mongo.ErrNoDocuments {
@@ -282,7 +282,7 @@ func (m *MongoClient) GetUserByEmail(ctx context.Context, email string) (*models
 
 // GetRestaurantsByOwnerID recupera tutti i ristoranti di un utente
 func (m *MongoClient) GetRestaurantsByOwnerID(ctx context.Context, ownerID string) ([]models.Restaurant, error) {
-	coll := m.db.Collection("restaurants")
+	coll := m.DB.Collection("restaurants")
 	cursor, err := coll.Find(ctx, bson.M{"owner_id": ownerID, "is_active": true})
 	if err != nil {
 		return nil, fmt.Errorf("errore find restaurants by owner: %v", err)
@@ -298,7 +298,7 @@ func (m *MongoClient) GetRestaurantsByOwnerID(ctx context.Context, ownerID strin
 
 // UpdateUserLastLogin aggiorna il timestamp di ultimo login
 func (m *MongoClient) UpdateUserLastLogin(ctx context.Context, userID string) error {
-	coll := m.db.Collection("users")
+	coll := m.DB.Collection("users")
 	_, err := coll.UpdateOne(
 		ctx,
 		bson.M{"_id": userID},
@@ -310,7 +310,7 @@ func (m *MongoClient) UpdateUserLastLogin(ctx context.Context, userID string) er
 
 // CreateMenu salva un menu
 func (m *MongoClient) CreateMenu(ctx context.Context, menu *models.Menu) error {
-	coll := m.db.Collection("menus")
+	coll := m.DB.Collection("menus")
 	_, err := coll.InsertOne(ctx, menu)
 	if err != nil {
 		return fmt.Errorf("errore insert menu: %v", err)
@@ -320,7 +320,7 @@ func (m *MongoClient) CreateMenu(ctx context.Context, menu *models.Menu) error {
 
 // GetMenuByID recupera un menu per ID
 func (m *MongoClient) GetMenuByID(ctx context.Context, id string) (*models.Menu, error) {
-	coll := m.db.Collection("menus")
+	coll := m.DB.Collection("menus")
 	var menu models.Menu
 	err := coll.FindOne(ctx, bson.M{"id": id}).Decode(&menu)
 	if err == mongo.ErrNoDocuments {
@@ -334,7 +334,7 @@ func (m *MongoClient) GetMenuByID(ctx context.Context, id string) (*models.Menu,
 
 // GetMenusByRestaurantID recupera tutti i menu di un ristorante
 func (m *MongoClient) GetMenusByRestaurantID(ctx context.Context, restaurantID string) ([]*models.Menu, error) {
-	coll := m.db.Collection("menus")
+	coll := m.DB.Collection("menus")
 	
 	// DEBUG: Log per capire cosa sta cercando
 	log.Printf("🔍 GetMenusByRestaurantID - Cercando menu per restaurant_id: %s", restaurantID)
@@ -358,7 +358,7 @@ func (m *MongoClient) GetMenusByRestaurantID(ctx context.Context, restaurantID s
 
 // UpdateMenu aggiorna un menu
 func (m *MongoClient) UpdateMenu(ctx context.Context, menu *models.Menu) error {
-	coll := m.db.Collection("menus")
+	coll := m.DB.Collection("menus")
 	result := coll.FindOneAndUpdate(ctx,
 		bson.M{"id": menu.ID},
 		bson.M{"$set": menu},
@@ -372,7 +372,7 @@ func (m *MongoClient) UpdateMenu(ctx context.Context, menu *models.Menu) error {
 
 // DeleteMenu elimina un menu
 func (m *MongoClient) DeleteMenu(ctx context.Context, id string) error {
-	coll := m.db.Collection("menus")
+	coll := m.DB.Collection("menus")
 	result, err := coll.DeleteOne(ctx, bson.M{"id": id})
 	if err != nil {
 		return fmt.Errorf("errore delete menu: %v", err)
@@ -385,7 +385,7 @@ func (m *MongoClient) DeleteMenu(ctx context.Context, id string) error {
 
 // GetAllMenus recupera tutti i menu
 func (m *MongoClient) GetAllMenus(ctx context.Context) ([]*models.Menu, error) {
-	coll := m.db.Collection("menus")
+	coll := m.DB.Collection("menus")
 	cursor, err := coll.Find(ctx, bson.M{})
 	if err != nil {
 		return nil, fmt.Errorf("errore find all menus: %v", err)
@@ -403,7 +403,7 @@ func (m *MongoClient) GetAllMenus(ctx context.Context) ([]*models.Menu, error) {
 
 // CreateSession salva una sessione
 func (m *MongoClient) CreateSession(ctx context.Context, session *models.Session) error {
-	coll := m.db.Collection("sessions")
+	coll := m.DB.Collection("sessions")
 	_, err := coll.InsertOne(ctx, session)
 	if err != nil {
 		return fmt.Errorf("errore insert session: %v", err)
@@ -413,7 +413,7 @@ func (m *MongoClient) CreateSession(ctx context.Context, session *models.Session
 
 // GetSessionByID recupera una sessione per ID
 func (m *MongoClient) GetSessionByID(ctx context.Context, id string) (*models.Session, error) {
-	coll := m.db.Collection("sessions")
+	coll := m.DB.Collection("sessions")
 	var session models.Session
 	err := coll.FindOne(ctx, bson.M{"_id": id}).Decode(&session)
 	if err == mongo.ErrNoDocuments {
@@ -427,7 +427,7 @@ func (m *MongoClient) GetSessionByID(ctx context.Context, id string) (*models.Se
 
 // GetSessionsByRestaurantID recupera tutte le sessioni di un ristorante
 func (m *MongoClient) GetSessionsByRestaurantID(ctx context.Context, restaurantID string) ([]*models.Session, error) {
-	coll := m.db.Collection("sessions")
+	coll := m.DB.Collection("sessions")
 	cursor, err := coll.Find(ctx, bson.M{
 		"restaurant_id": restaurantID,
 		"last_accessed": bson.M{
@@ -448,7 +448,7 @@ func (m *MongoClient) GetSessionsByRestaurantID(ctx context.Context, restaurantI
 
 // UpdateSession aggiorna una sessione
 func (m *MongoClient) UpdateSession(ctx context.Context, session *models.Session) error {
-	coll := m.db.Collection("sessions")
+	coll := m.DB.Collection("sessions")
 	result := coll.FindOneAndUpdate(ctx,
 		bson.M{"_id": session.ID},
 		bson.M{"$set": session},
@@ -462,7 +462,7 @@ func (m *MongoClient) UpdateSession(ctx context.Context, session *models.Session
 
 // DeleteSession elimina una sessione
 func (m *MongoClient) DeleteSession(ctx context.Context, id string) error {
-	coll := m.db.Collection("sessions")
+	coll := m.DB.Collection("sessions")
 	_, err := coll.DeleteOne(ctx, bson.M{"_id": id})
 	if err != nil {
 		return fmt.Errorf("errore delete session: %v", err)
@@ -472,7 +472,7 @@ func (m *MongoClient) DeleteSession(ctx context.Context, id string) error {
 
 // DeleteExpiredSessions elimina sessioni scadute (>24h)
 func (m *MongoClient) DeleteExpiredSessions(ctx context.Context) error {
-	coll := m.db.Collection("sessions")
+	coll := m.DB.Collection("sessions")
 	_, err := coll.DeleteMany(ctx, bson.M{
 		"last_accessed": bson.M{
 			"$lt": time.Now().Add(-24 * time.Hour),
@@ -492,7 +492,7 @@ func (m *MongoClient) createIndexes() error {
 	defer cancel()
 
 	// Indici per restaurants
-	restColl := m.db.Collection("restaurants")
+	restColl := m.DB.Collection("restaurants")
 	restIndexModel := []mongo.IndexModel{
 		{
 			Keys: bson.D{{Key: "id", Value: 1}},
@@ -509,7 +509,7 @@ func (m *MongoClient) createIndexes() error {
 	}
 
 	// Indici per menus
-	menuColl := m.db.Collection("menus")
+	menuColl := m.DB.Collection("menus")
 	menuIndexModel := []mongo.IndexModel{
 		{
 			Keys: bson.D{{Key: "id", Value: 1}},
@@ -526,7 +526,7 @@ func (m *MongoClient) createIndexes() error {
 	}
 
 	// Indici per sessions
-	sessionColl := m.db.Collection("sessions")
+	sessionColl := m.DB.Collection("sessions")
 	sessionIndexModel := []mongo.IndexModel{
 		{
 			Keys: bson.D{{Key: "id", Value: 1}},
@@ -547,7 +547,7 @@ func (m *MongoClient) createIndexes() error {
 	}
 
 	// Indici per audit_logs
-	auditColl := m.db.Collection("audit_logs")
+	auditColl := m.DB.Collection("audit_logs")
 	auditIndexModel := []mongo.IndexModel{
 		{
 			Keys: bson.D{{Key: "restaurant_id", Value: 1}, {Key: "timestamp", Value: -1}},
@@ -567,7 +567,7 @@ func (m *MongoClient) createIndexes() error {
 	}
 
 	// Indici per analytics_events
-	analyticsColl := m.db.Collection("analytics_events")
+	analyticsColl := m.DB.Collection("analytics_events")
 	analyticsIndexModel := []mongo.IndexModel{
 		{
 			Keys: bson.D{{Key: "restaurant_id", Value: 1}, {Key: "timestamp", Value: -1}},
@@ -589,7 +589,7 @@ func (m *MongoClient) createIndexes() error {
 	// ==================== INDICI MULTI-RISTORANTE ==================== ⭐
 	
 	// Indici per users (nuovo)
-	usersColl := m.db.Collection("users")
+	usersColl := m.DB.Collection("users")
 	usersIndexModel := []mongo.IndexModel{
 		{
 			Keys:    bson.D{{Key: "username", Value: 1}},
@@ -613,7 +613,7 @@ func (m *MongoClient) createIndexes() error {
 	}
 	
 	// Indici aggiuntivi per restaurants (owner_id)
-	restaurantsColl := m.db.Collection("restaurants")
+	restaurantsColl := m.DB.Collection("restaurants")
 	restaurantsNewIndexModel := []mongo.IndexModel{
 		{
 			Keys:    bson.D{{Key: "owner_id", Value: 1}, {Key: "is_active", Value: 1}},
@@ -630,7 +630,7 @@ func (m *MongoClient) createIndexes() error {
 	}
 	
 	// Indici per sessions (user_id + TTL)
-	sessionsColl := m.db.Collection("sessions")
+	sessionsColl := m.DB.Collection("sessions")
 	sessionsIndexModel := []mongo.IndexModel{
 		{
 			Keys:    bson.D{{Key: "user_id", Value: 1}, {Key: "last_accessed", Value: -1}},

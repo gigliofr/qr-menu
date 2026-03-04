@@ -1,0 +1,585 @@
+// ===================================================================
+// Script per Correggere Menu nel Database
+// ===================================================================
+// 
+// Uso: mongosh "MONGODB_URI" --file scripts/fix_menus.js
+//
+
+const colors = {
+    reset: "\x1b[0m",
+    red: "\x1b[31m",
+    green: "\x1b[32m",
+    yellow: "\x1b[33m",
+    blue: "\x1b[34m",
+    cyan: "\x1b[36m",
+};
+
+function log(message, color = colors.reset) {
+    print(color + message + colors.reset);
+}
+
+log("\n================================================", colors.cyan);
+log("🔧 FIX MENU - Correzione Struttura Menu", colors.cyan);
+log("================================================\n", colors.cyan);
+
+db = db.getSiblingDB("qr-menu");
+
+// Elimina menu esistenti
+log("🗑️  Rimozione menu vecchi...", colors.yellow);
+const deleted = db.menus.deleteMany({});
+log("✅ Menu eliminati: " + deleted.deletedCount, colors.green);
+log("");
+
+// MENU 1: Pizzeria Napoletana
+const menu1 = {
+    id: "menu_001",
+    restaurant_id: "rest_001",
+    name: "Menu Pizzeria - Primavera 2026",
+    description: "Le nostre specialità napoletane",
+    meal_type: "dinner",
+    is_active: true,
+    is_completed: true,
+    created_at: new Date(),
+    updated_at: new Date(),
+    categories: [
+        {
+            id: "cat_001",
+            name: "Pizze Classiche",
+            description: "Le tradizionali pizze napoletane",
+            items: [
+                {
+                    id: "item_001",
+                    name: "Margherita",
+                    description: "Pomodoro, mozzarella di bufala DOP, basilico fresco",
+                    price: 8.00,
+                    category: "Pizze Classiche",
+                    available: true,
+                    image_url: ""
+                },
+                {
+                    id: "item_002",
+                    name: "Marinara",
+                    description: "Pomodoro, aglio, origano, olio EVO",
+                    price: 6.50,
+                    category: "Pizze Classiche",
+                    available: true,
+                    image_url: ""
+                },
+                {
+                    id: "item_003",
+                    name: "Diavola",
+                    description: "Pomodoro, mozzarella, salame piccante",
+                    price: 9.50,
+                    category: "Pizze Classiche",
+                    available: true,
+                    image_url: ""
+                }
+            ]
+        },
+        {
+            id: "cat_002",
+            name: "Pizze Speciali",
+            description: "Le nostre creazioni gourmet",
+            items: [
+                {
+                    id: "item_004",
+                    name: "Bufala e Pomodorini",
+                    description: "Mozzarella di bufala, pomodorini del piennolo",
+                    price: 13.00,
+                    category: "Pizze Speciali",
+                    available: true,
+                    image_url: ""
+                },
+                {
+                    id: "item_005",
+                    name: "Tartufo Nero",
+                    description: "Mozzarella, funghi porcini, tartufo nero",
+                    price: 16.00,
+                    category: "Pizze Speciali",
+                    available: true,
+                    image_url: ""
+                }
+            ]
+        },
+        {
+            id: "cat_003",
+            name: "Antipasti",
+            description: "Per iniziare",
+            items: [
+                {
+                    id: "item_006",
+                    name: "Bruschette Miste",
+                    description: "Pomodoro, olive, funghi",
+                    price: 7.00,
+                    category: "Antipasti",
+                    available: true,
+                    image_url: ""
+                }
+            ]
+        },
+        {
+            id: "cat_004",
+            name: "Bevande",
+            description: "Bibite e birre",
+            items: [
+                {
+                    id: "item_007",
+                    name: "Acqua Minerale",
+                    description: "Naturale o frizzante 1L",
+                    price: 2.50,
+                    category: "Bevande",
+                    available: true,
+                    image_url: ""
+                },
+                {
+                    id: "item_008",
+                    name: "Birra Peroni",
+                    description: "Bottiglia 66cl",
+                    price: 5.00,
+                    category: "Bevande",
+                    available: true,
+                    image_url: ""
+                }
+            ]
+        }
+    ]
+};
+
+// MENU 2: Trattoria Toscana
+const menu2 = {
+    id: "menu_002",
+    restaurant_id: "rest_002",
+    name: "Menu Toscano - Stagionale",
+    description: "I sapori della tradizione toscana",
+    meal_type: "lunch",
+    is_active: true,
+    is_completed: true,
+    created_at: new Date(),
+    updated_at: new Date(),
+    categories: [
+        {
+            id: "cat_005",
+            name: "Primi Piatti",
+            description: "Pasta fresca fatta in casa",
+            items: [
+                {
+                    id: "item_009",
+                    name: "Pappardelle al Cinghiale",
+                    description: "Pasta fresca con ragù di cinghiale",
+                    price: 14.00,
+                    category: "Primi Piatti",
+                    available: true,
+                    image_url: ""
+                },
+                {
+                    id: "item_010",
+                    name: "Ribollita",
+                    description: "Zuppa di pane e verdure",
+                    price: 10.00,
+                    category: "Primi Piatti",
+                    available: true,
+                    image_url: ""
+                },
+                {
+                    id: "item_011",
+                    name: "Pici Cacio e Pepe",
+                    description: "Pasta tipica senese",
+                    price: 12.00,
+                    category: "Primi Piatti",
+                    available: true,
+                    image_url: ""
+                }
+            ]
+        },
+        {
+            id: "cat_006",
+            name: "Secondi Piatti",
+            description: "Carni alla brace",
+            items: [
+                {
+                    id: "item_012",
+                    name: "Bistecca alla Fiorentina",
+                    description: "Chianina 1kg (per 2 persone)",
+                    price: 45.00,
+                    category: "Secondi Piatti",
+                    available: true,
+                    image_url: ""
+                },
+                {
+                    id: "item_013",
+                    name: "Arista al Forno",
+                    description: "Maiale con rosmarino e patate",
+                    price: 18.00,
+                    category: "Secondi Piatti",
+                    available: true,
+                    image_url: ""
+                }
+            ]
+        },
+        {
+            id: "cat_007",
+            name: "Contorni",
+            description: "Verdure di stagione",
+            items: [
+                {
+                    id: "item_014",
+                    name: "Fagioli all'Uccelletto",
+                    description: "Fagioli con pomodoro e salvia",
+                    price: 6.00,
+                    category: "Contorni",
+                    available: true,
+                    image_url: ""
+                },
+                {
+                    id: "item_015",
+                    name: "Patate al Forno",
+                    description: "Con rosmarino",
+                    price: 5.00,
+                    category: "Contorni",
+                    available: true,
+                    image_url: ""
+                }
+            ]
+        },
+        {
+            id: "cat_008",
+            name: "Dolci",
+            description: "I nostri dessert",
+            items: [
+                {
+                    id: "item_016",
+                    name: "Tiramisù",
+                    description: "Ricetta tradizionale",
+                    price: 7.00,
+                    category: "Dolci",
+                    available: true,
+                    image_url: ""
+                },
+                {
+                    id: "item_017",
+                    name: "Cantucci e Vin Santo",
+                    description: "Biscotti toscani con vino dolce",
+                    price: 8.00,
+                    category: "Dolci",
+                    available: true,
+                    image_url: ""
+                }
+            ]
+        }
+    ]
+};
+
+// MENU 3: Sushi-Ya Tokyo
+const menu3 = {
+    id: "menu_003",
+    restaurant_id: "rest_003",
+    name: "Menu Sushi - Akira Selection",
+    description: "Autenticità giapponese a Roma",
+    meal_type: "dinner",
+    is_active: true,
+    is_completed: true,
+    created_at: new Date(),
+    updated_at: new Date(),
+    categories: [
+        {
+            id: "cat_009",
+            name: "Nigiri",
+            description: "Pesce fresco su riso",
+            items: [
+                {
+                    id: "item_018",
+                    name: "Nigiri Salmone",
+                    description: "2 pezzi",
+                    price: 6.00,
+                    category: "Nigiri",
+                    available: true,
+                    image_url: ""
+                },
+                {
+                    id: "item_019",
+                    name: "Nigiri Tonno",
+                    description: "2 pezzi",
+                    price: 7.50,
+                    category: "Nigiri",
+                    available: true,
+                    image_url: ""
+                },
+                {
+                    id: "item_020",
+                    name: "Nigiri Gambero Rosso",
+                    description: "2 pezzi",
+                    price: 8.00,
+                    category: "Nigiri",
+                    available: true,
+                    image_url: ""
+                }
+            ]
+        },
+        {
+            id: "cat_010",
+            name: "Maki",
+            description: "Rotolini di riso",
+            items: [
+                {
+                    id: "item_021",
+                    name: "California Roll",
+                    description: "Surimi, avocado, cetriolo - 8 pezzi",
+                    price: 9.00,
+                    category: "Maki",
+                    available: true,
+                    image_url: ""
+                },
+                {
+                    id: "item_022",
+                    name: "Spicy Tuna Roll",
+                    description: "Tonno piccante, cetriolo - 8 pezzi",
+                    price: 11.00,
+                    category: "Maki",
+                    available: true,
+                    image_url: ""
+                },
+                {
+                    id: "item_023",
+                    name: "Philadelphia Roll",
+                    description: "Salmone, formaggio spalmabile - 8 pezzi",
+                    price: 10.00,
+                    category: "Maki",
+                    available: true,
+                    image_url: ""
+                }
+            ]
+        },
+        {
+            id: "cat_011",
+            name: "Ramen",
+            description: "Zuppe tradizionali",
+            items: [
+                {
+                    id: "item_024",
+                    name: "Shoyu Ramen",
+                    description: "Brodo di soia, maiale, uovo marinato",
+                    price: 14.00,
+                    category: "Ramen",
+                    available: true,
+                    image_url: ""
+                },
+                {
+                    id: "item_025",
+                    name: "Miso Ramen",
+                    description: "Brodo di miso, verdure, tofu",
+                    price: 13.00,
+                    category: "Ramen",
+                    available: true,
+                    image_url: ""
+                }
+            ]
+        },
+        {
+            id: "cat_012",
+            name: "Bevande",
+            description: "Drink giapponesi",
+            items: [
+                {
+                    id: "item_026",
+                    name: "Sake Caldo",
+                    description: "Vino di riso giapponese",
+                    price: 8.00,
+                    category: "Bevande",
+                    available: true,
+                    image_url: ""
+                },
+                {
+                    id: "item_027",
+                    name: "Birra Asahi",
+                    description: "Bottiglia 50cl",
+                    price: 6.00,
+                    category: "Bevande",
+                    available: true,
+                    image_url: ""
+                }
+            ]
+        }
+    ]
+};
+
+// MENU 4: Burger House Americana
+const menu4 = {
+    id: "menu_004",
+    restaurant_id: "rest_004",
+    name: "Burger House Menu - Classic American",
+    description: "I migliori burger di Milano",
+    meal_type: "dinner",
+    is_active: true,
+    is_completed: true,
+    created_at: new Date(),
+    updated_at: new Date(),
+    categories: [
+        {
+            id: "cat_013",
+            name: "Burgers",
+            description: "Carne 100% Black Angus",
+            items: [
+                {
+                    id: "item_028",
+                    name: "Classic Burger",
+                    description: "Carne, lattuga, pomodoro, cipolla, salse",
+                    price: 12.00,
+                    category: "Burgers",
+                    available: true,
+                    image_url: ""
+                },
+                {
+                    id: "item_029",
+                    name: "Cheeseburger Deluxe",
+                    description: "Doppia carne, doppio cheddar, bacon",
+                    price: 16.00,
+                    category: "Burgers",
+                    available: true,
+                    image_url: ""
+                },
+                {
+                    id: "item_030",
+                    name: "BBQ Bacon Burger",
+                    description: "Carne, bacon, cipolle caramellate, salsa BBQ",
+                    price: 14.50,
+                    category: "Burgers",
+                    available: true,
+                    image_url: ""
+                },
+                {
+                    id: "item_031",
+                    name: "Veggie Burger",
+                    description: "Burger vegetale, insalata, pomodoro",
+                    price: 11.00,
+                    category: "Burgers",
+                    available: true,
+                    image_url: ""
+                }
+            ]
+        },
+        {
+            id: "cat_014",
+            name: "Contorni",
+            description: "I nostri sides",
+            items: [
+                {
+                    id: "item_032",
+                    name: "Patatine Fritte",
+                    description: "Croccanti e dorate",
+                    price: 4.50,
+                    category: "Contorni",
+                    available: true,
+                    image_url: ""
+                },
+                {
+                    id: "item_033",
+                    name: "Onion Rings",
+                    description: "Anelli di cipolla fritti - 8 pezzi",
+                    price: 5.50,
+                    category: "Contorni",
+                    available: true,
+                    image_url: ""
+                },
+                {
+                    id: "item_034",
+                    name: "Chicken Wings",
+                    description: "Alette piccanti - 6 pezzi",
+                    price: 7.00,
+                    category: "Contorni",
+                    available: true,
+                    image_url: ""
+                }
+            ]
+        },
+        {
+            id: "cat_015",
+            name: "Dessert",
+            description: "Dolci americani",
+            items: [
+                {
+                    id: "item_035",
+                    name: "New York Cheesecake",
+                    description: "Con frutti di bosco",
+                    price: 6.50,
+                    category: "Dessert",
+                    available: true,
+                    image_url: ""
+                },
+                {
+                    id: "item_036",
+                    name: "Brownie al Cioccolato",
+                    description: "Con gelato alla vaniglia",
+                    price: 6.00,
+                    category: "Dessert",
+                    available: true,
+                    image_url: ""
+                }
+            ]
+        },
+        {
+            id: "cat_016",
+            name: "Bevande",
+            description: "Soft drinks e birre",
+            items: [
+                {
+                    id: "item_037",
+                    name: "Milkshake",
+                    description: "Vaniglia, cioccolato o fragola",
+                    price: 5.50,
+                    category: "Bevande",
+                    available: true,
+                    image_url: ""
+                },
+                {
+                    id: "item_038",
+                    name: "Coca-Cola",
+                    description: "Bottiglia 50cl",
+                    price: 3.50,
+                    category: "Bevande",
+                    available: true,
+                    image_url: ""
+                },
+                {
+                    id: "item_039",
+                    name: "Birra Budweiser",
+                    description: "Bottiglia 33cl",
+                    price: 5.00,
+                    category: "Bevande",
+                    available: true,
+                    image_url: ""
+                }
+            ]
+        }
+    ]
+};
+
+const menus = [menu1, menu2, menu3, menu4];
+
+log("📋 Inserimento nuovi menu...", colors.cyan);
+try {
+    const insertResult = db.menus.insertMany(menus);
+    log("✅ Menu creati: " + insertResult.insertedIds.length, colors.green);
+    log("");
+    
+    // Aggiorna active_menu_id per ogni ristorante
+    log("🔗 Collegamento menu ai ristoranti...", colors.cyan);
+    db.restaurants.updateOne({ _id: "rest_001" }, { $set: { active_menu_id: "menu_001" } });
+    db.restaurants.updateOne({ _id: "rest_002" }, { $set: { active_menu_id: "menu_002" } });
+    db.restaurants.updateOne({ _id: "rest_003" }, { $set: { active_menu_id: "menu_003" } });
+    db.restaurants.updateOne({ _id: "rest_004" }, { $set: { active_menu_id: "menu_004" } });
+    
+    log("✅ Menu attivati per ogni ristorante", colors.green);
+    log("");
+    
+    menus.forEach((menu, idx) => {
+        const totalItems = menu.categories.reduce((sum, cat) => sum + cat.items.length, 0);
+        log("   📋 " + menu.name, colors.green);
+        log("      → " + menu.categories.length + " categorie, " + totalItems + " piatti", colors.cyan);
+    });
+    
+} catch (error) {
+    log("❌ Errore creazione menu: " + error.message, colors.red);
+}
+
+log("\n✅ Fix completato!", colors.green);
+log("================================================\n", colors.cyan);
