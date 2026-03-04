@@ -63,6 +63,12 @@ func setupPublicRoutes(r *mux.Router) {
 	r.HandleFunc("/login", handlers.LoginHandler).Methods("GET", "POST")
 	r.HandleFunc("/register", handlers.RegisterHandler).Methods("GET", "POST")
 
+	// Legal pages (Italian law compliance)
+	r.HandleFunc("/privacy", handlers.PrivacyPolicyHandler).Methods("GET")
+	r.HandleFunc("/cookie-policy", handlers.CookiePolicyHandler).Methods("GET")
+	r.HandleFunc("/terms", handlers.TermsOfServiceHandler).Methods("GET")
+	r.HandleFunc("/legal", handlers.LegalNotesHandler).Methods("GET")
+
 	// Menu pubblici
 	r.HandleFunc("/menu/{id}", handlers.PublicMenuHandler).Methods("GET")
 	r.HandleFunc("/r/{username}", handlers.GetActiveMenuHandler).Methods("GET")

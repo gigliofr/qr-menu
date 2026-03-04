@@ -1576,3 +1576,46 @@ func TrackShareHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string]string{"status": "success"})
 }
+// ==========================================
+// LEGAL PAGES HANDLERS
+// ==========================================
+
+// PrivacyPolicyHandler serves the privacy policy page
+func PrivacyPolicyHandler(w http.ResponseWriter, r *http.Request) {
+	setSecurityHeaders(w)
+	tmpl := template.Must(template.ParseFiles("templates/privacy_policy.html"))
+	if err := tmpl.Execute(w, nil); err != nil {
+		log.Printf("Error rendering privacy policy: %v", err)
+		http.Error(w, "Error loading page", http.StatusInternalServerError)
+	}
+}
+
+// CookiePolicyHandler serves the cookie policy page
+func CookiePolicyHandler(w http.ResponseWriter, r *http.Request) {
+	setSecurityHeaders(w)
+	tmpl := template.Must(template.ParseFiles("templates/cookie_policy.html"))
+	if err := tmpl.Execute(w, nil); err != nil {
+		log.Printf("Error rendering cookie policy: %v", err)
+		http.Error(w, "Error loading page", http.StatusInternalServerError)
+	}
+}
+
+// TermsOfServiceHandler serves the terms of service page
+func TermsOfServiceHandler(w http.ResponseWriter, r *http.Request) {
+	setSecurityHeaders(w)
+	tmpl := template.Must(template.ParseFiles("templates/terms_of_service.html"))
+	if err := tmpl.Execute(w, nil); err != nil {
+		log.Printf("Error rendering terms of service: %v", err)
+		http.Error(w, "Error loading page", http.StatusInternalServerError)
+	}
+}
+
+// LegalNotesHandler serves the legal notes page (Italian specific)
+func LegalNotesHandler(w http.ResponseWriter, r *http.Request) {
+	setSecurityHeaders(w)
+	tmpl := template.Must(template.ParseFiles("templates/legal_notes.html"))
+	if err := tmpl.Execute(w, nil); err != nil {
+		log.Printf("Error rendering legal notes: %v", err)
+		http.Error(w, "Error loading page", http.StatusInternalServerError)
+	}
+}

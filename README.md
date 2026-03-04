@@ -5,6 +5,21 @@ Sistema di gestione menu digitali con codici QR per ristoranti. Semplice, solido
 **Versione:** 3.0.0 Simplified  
 **Stack:** Go 1.24 + MongoDB Atlas  
 **Deploy:** Railway.app  
+**Status:** 🚧 Progetto personale non commerciale - Beta testing
+
+---
+
+## 📚 Documentazione
+
+**📖 [Wiki Completa](https://github.com/gigliofr/qr-menu/wiki)** - Tutta la documentazione estesa è disponibile nella wiki:
+
+- 🏗️ [Architettura del Sistema](https://github.com/gigliofr/qr-menu/wiki/Architettura-Sistema)  
+- ⚖️ [Guida Compliance Legale Italiana](https://github.com/gigliofr/qr-menu/wiki/Guida-Compliance-Italiana)  
+- 🏢 [Configurazione Progetto Non Commerciale](https://github.com/gigliofr/qr-menu/wiki/Configurazione-Non-Commerciale)  
+- 🔒 [Modulo Security](https://github.com/gigliofr/qr-menu/wiki/Security-Module)  
+- 🧪 [Testing Guide](https://github.com/gigliofr/qr-menu/wiki/Testing-Guide)  
+- 🐛 [Troubleshooting](https://github.com/gigliofr/qr-menu/wiki/Troubleshooting-Menu-Visibili)  
+- 🛡️ [Risoluzione Alert Sicurezza](https://github.com/gigliofr/qr-menu/wiki/Security-Alert-Resolution)  
 
 ---
 
