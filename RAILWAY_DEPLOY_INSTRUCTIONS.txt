@@ -1,0 +1,240 @@
+==========================================================
+🚀 DEPLOY QR-MENU SU RAILWAY - ISTRUZIONI COMPLETE
+==========================================================
+
+📅 Data: 4 Marzo 2026
+👤 Utente: Francesco Giglio (giglio.fr@gmail.com)
+📦 Repository: https://github.com/gigliofr/qr-menu
+🏷️  Commit: 1a5a838 (Add PowerShell setup and seed script)
+
+==========================================================
+🎯 PASSAGGI (5 MINUTI)
+==========================================================
+
+1. Vai su: https://railway.app
+
+2. Click: **New Project**
+
+3. Scegli: **Deploy from GitHub repo**
+
+4. Seleziona: **gigliofr/qr-menu**
+
+5. Railway rileverà automaticamente il Dockerfile e farà il build
+
+6. Mentre fa il build (2-3 minuti), configura le variabili d'ambiente:
+
+==========================================================
+📋 VARIABILI D'AMBIENTE (4 variabili)
+==========================================================
+
+Nel progetto Railway:
+- Click tab **"Variables"**
+- Click **"+ New Variable"** per ciascuna
+
+-----------------------------------------------------------
+VARIABILE 1: MONGODB_URI
+-----------------------------------------------------------
+mongodb+srv://ac-d8zdak4.b9jfwmr.mongodb.net/?authMechanism=MONGODB-X509&authSource=$external&retryWrites=true&w=majority
+
+-----------------------------------------------------------
+VARIABILE 2: MONGODB_DB_NAME
+-----------------------------------------------------------
+qr-menu
+
+-----------------------------------------------------------
+VARIABILE 3: PORT
+-----------------------------------------------------------
+8080
+
+-----------------------------------------------------------
+VARIABILE 4: MONGODB_CERT_CONTENT
+-----------------------------------------------------------
+(Copia tutto il contenuto sotto, incluso BEGIN e END)
+
+-----BEGIN CERTIFICATE-----
+MIIFCzCCAvOgAwIBAgIIOK+s9wbD3aEwDQYJKoZIhvcNAQELBQAwSTEhMB8GA1UE
+AxMYNjlhNjk2ZjIyNWNiMGFkNTBmNDg3ZmNmMQ4wDAYDVQQLEwVBdGxhczEUMBIG
+A1UEChMLTW9uZ29EQiBJbmMwHhcNMjYwMzAzMDcyMjU3WhcNMjYwNjAzMDgyMjU3
+WjAWMRQwEgYDVQQDEwtxci1tZW51LWRldjCCAiIwDQYJKoZIhvcNAQEBBQADggIP
+ADCCAgoCggIBALGnE24xsD0P+dwIsZpBDuUZU9CDeXLevjU8IbCX278JErffUJOH
+QaoHWwfBUccC5Hp0BD+eZEX+/NVH/0lGric4mi/85OIqBYhkoxmXcQ5oIlYW0PgF
+fbZHP9ay3h4rGUhjBnLvq6kaPgWqwHeTS6tFfI69PDNvFumbUiuJg3lKGiFeczrl
+30GmyO7J+9ljEcwNfgXIEMFDvnH2pMPnbXFw7SvB8QvvgnzfGVZXjjSFp3n3EB3t
+0iw7xPFU2JDdKAUuxaFldX367MFsZAo6uzMLf1/wOVUIktRHIUTVnbaD0XemYPKa
+ZQjL+npZAIT6MSnrg5U2j1OH3tJKSQbdMwE5p1IyPhFXKDWqM1jNmp2Aey3n5Rg+
+I5WsNv5wJXpalw/097yfhwni5T2q8YVsh1U+aHIvCx3RzbP0+NpD/Eb5+Q0HeVxJ
+hTKMJ8T8TZw1E3vTMUiuF8/3tXBnWPmylNZxub8/RW+p3J4bcg0+y8dTd62QBGsH
+VpMbaQw7lQ+fA9N2uKIiqgk1VHQgjJ5QOTGuXDkL0ealRVetauuYlpEUIfSajV9O
+zP1uS2fIEgrr7HrhvOTp+rrcRLqvL2N97saET11qI2n8mhClIZatVIRtq7hL2Vuc
+V2Wxw1vaZbeuPp3RK+Pslpq5I+7EZ+cH3QsREQ1yB03plYo6vCUd3ORFAgMBAAGj
+KjAoMA4GA1UdDwEB/wQEAwIHgDAWBgNVHSUBAf8EDDAKBggrBgEFBQcDAjANBgkq
+hkiG9w0BAQsFAAOCAgEAa3WlGYZQLSt2oYPYBxn6aZv1R1UQx0mwjXpki3VHP493
+grBQUaiuepWlFszH4FKzPiuqAH0CUkTyLfIfZFXltTuEIqVbbKn6xVqQnIexNUkw
+DHPlbAbTN8ynrF8ausLhtlOSXh4OyNGsLwAgVLz7Mg3YK1xBWwm2QT6wx2HMTsbz
+Ps6Fxcy/iQiu+zCWVMfzQVzSe9I8l371x+j27gH2zPHqn39NrZ4JtQQLtpeT5oIN
+qbZohkfPYLiaBI7iiHV8KAMb23k6iGhQ0F3FDOitu9AZFLuZUcX6wyffKaBGuLCP
+zTOTqzZFSCLECvsOy/FP3Fx7Phxi0ogK2zYz31jQqbmbMHC2hh3lnyvpBAexvv6W
+v6d5ymnEb/ZyaieGoFXrLGXr2/zKUY5fCW4E+J3xPP+5ofJ9ZwBx/B10LQHUeoMG
+hmNWnjybbcjt7cGrOIJIk3pGbKYDTYyK6nEiPwANRxRV050wbAhWn1yzJRfh1fZh
+4oFnTYcbiXyeJn63XofEE0T0SYGQPMateeY5d1F+6aOfN/DIiALGzmWV7c7531Cv
+h1hklLaL1nZmnjek1ytXHbPTEsXE5b2VHVVGvU8YJcIMv96RDKcIaGAE3y7o7mNZ
+QKYU8xrcx2fC4/vKgNMdYqf86e8RbMmZ9XhAllEAzHQRrNo5izSUzt6SR8wRuG4=
+-----END CERTIFICATE-----
+-----BEGIN PRIVATE KEY-----
+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
+8WcdViiflyrZVDqj4l4r1TJ7+jEB
+-----END PRIVATE KEY-----
+
+-----------------------------------------------------------
+
+⚠️  IMPORTANTE: MongoDB Atlas Whitelist
+- Vai su MongoDB Atlas → Network Access
+- Aggiungi IP Address: 0.0.0.0/0 (permetti tutte le connessioni)
+- Questo è necessario per Railway (IP dinamici)
+
+==========================================================
+🌐 DOPO IL DEPLOY
+==========================================================
+
+7. Railway genererà automaticamente un URL pubblico tipo:
+   https://qr-menu-production.up.railway.app
+
+8. Se non compare automaticamente:
+   - Vai su Settings → Domains
+   - Click "Generate Domain"
+
+9. Testa l'applicazione:
+   - Vai su: https://tuo-dominio.railway.app/login
+   
+   Credenziali:
+   Username: admin
+   Password: admin
+
+10. Dopo il login, verrai reindirizzato a /select-restaurant
+    Potrai scegliere tra 4 ristoranti di test:
+    - 🍕 Pizzeria Napoletana (10 piatti)
+    - 🍝 Trattoria Toscana (7 piatti)
+    - 🍣 Sushi-Ya Tokyo (10 piatti)
+    - 🍔 Burger House Americana (10 piatti)
+
+==========================================================
+📊 MONITORING
+==========================================================
+
+Nel dashboard Railway puoi vedere:
+- 📈 Deployment logs (build e runtime)
+- 💾 Uso CPU e memoria
+- 🌐 Request count
+- 🐛 Errori applicazione
+
+==========================================================
+🔧 TROUBLESHOOTING
+==========================================================
+
+Se il deploy fallisce:
+
+1. Controlla i Build Logs per errori Go
+2. Verifica che tutte le 4 variabili siano configurate
+3. Controlla Deployment Logs per errori MongoDB
+4. Verifica IP whitelist su MongoDB Atlas (0.0.0.0/0)
+
+Se l'app non si connette a MongoDB:
+- MONGODB_URI deve includere "authMechanism=MONGODB-X509"
+- MONGODB_CERT_CONTENT deve avere BEGIN/END CERTIFICATE e PRIVATE KEY
+- Verifica su MongoDB Atlas che il certificato sia valido (non scaduto)
+
+==========================================================
+💰 COSTI
+==========================================================
+
+Piano gratuito Railway include:
+✅ 500 ore/mese execution time
+✅ 100GB outbound bandwidth
+✅ Sufficiente per test, demo, e piccoli progetti
+
+Per produzione, considera Railway Pro:
+- $5/mese di base
+- Pay-as-you-go per risorse extra
+
+==========================================================
+🎉 TUTTO PRONTO!
+==========================================================
+
+Una volta completati questi passaggi, l'applicazione sarà online e accessibile pubblicamente!
+
+Puoi condividere l'URL con chiunque per far testare:
+- Sistema multi-ristorante
+- Menu digitali con QR code
+- Admin panel completo
+- Analytics per ristorante
+
+Buon deploy! 🚀
+
+===========================================================
+📝 Note Tecniche
+===========================================================
+
+Stack:
+- Go 1.24 (Alpine Linux)
+- MongoDB Atlas (X509 auth)
+- Railway (container platform)
+
+Il Dockerfile è già ottimizzato per Railway:
+- Multi-stage build (builder + runtime)
+- Alpine Linux per immagine leggera (~20MB)
+- Port 8080 esposto
+- Assets statici inclusi (templates/, static/, web/)
+
+Repository GitHub:
+https://github.com/gigliofr/qr-menu
+Commit: 1a5a838
+
+===========================================================

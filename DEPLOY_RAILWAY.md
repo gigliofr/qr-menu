@@ -71,7 +71,7 @@ https://<tuo-dominio>.up.railway.app/login
 
 Credenziali:
 - **Username:** admin
-- **Password:** admin123
+- **Password:** admin
 
 ## 🎯 Alternativa: Deploy da CLI
 

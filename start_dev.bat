@@ -30,7 +30,7 @@ echo.
 echo ================================================
 echo Credenziali Admin:
 echo   Username: admin
-echo   Password: admin123
+echo   Password: admin
 echo ================================================
 echo.
 echo URL: http://localhost:8080/login

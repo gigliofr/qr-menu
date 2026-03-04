@@ -19,7 +19,7 @@
 
 2. **Crea 1 Utente Amministrativo:**
    - Username: `admin`
-   - Password: `admin123`
+   - Password: `admin`
    - Email: `admin@qrmenu.local`
    - GDPR consents: Privacy ✅, Marketing ❌
 
@@ -73,7 +73,7 @@ mongosh "mongodb+srv://your-cluster.mongodb.net/?authSource=%24external&authMech
 
 ✅ Utente admin creato:
    Username: admin
-   Password: admin123
+   Password: admin
    User ID:  admin_user_001
 
 ================================================
@@ -116,7 +116,7 @@ mongosh "mongodb+srv://your-cluster.mongodb.net/?authSource=%24external&authMech
 
 🔐 CREDENZIALI AMMINISTRATORE:
    Username: admin
-   Password: admin123
+   Password: admin
    Email:    admin@qrmenu.local
 
 🏪 RISTORANTI CREATI:
@@ -309,7 +309,7 @@ mongosh "$env:MONGODB_URI" `
 http://localhost:8080/login
 
 Username: admin
-Password: admin123
+Password: admin
 
 → Redirect a /select-restaurant
 → Scegli "Pizzeria Napoletana"
@@ -441,7 +441,7 @@ echo $env:MONGODB_DB_NAME
   _id: "admin_user_001",
   username: "admin",
   email: "admin@qrmenu.local",
-  password_hash: "$2a$10$...", // bcrypt hash di "admin123"
+  password_hash: "$2a$10$...", // bcrypt hash di "admin"
   privacy_consent: true,
   marketing_consent: false,
   consent_date: ISODate("2026-03-04T..."),

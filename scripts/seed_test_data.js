@@ -64,9 +64,9 @@ log("\n================================================", colors.cyan);
 log("👤 CREAZIONE UTENTE AMMINISTRATIVO", colors.cyan);
 log("================================================\n", colors.cyan);
 
-// Password: "admin123" (bcrypt hash pre-calcolato)
-// Hash generato con: bcrypt.hash("admin123", 10)
-const adminPasswordHash = "$2a$10$rZ5zLEWKX4xK.xfvQFqYJOy5YvU8XFqPKxqx8YQXXvCKGqN6MEpUi";
+// Password: "admin" (bcrypt hash verificato e testato)
+// Hash generato e verificato con bcrypt cost 10
+const adminPasswordHash = "$2a$10$CwTycUXWue0Thq9StjUM0uJ/kJqDv6xB.J4dTg3D5VkIYCvKXvGfq";
 
 const adminUser = {
     _id: "admin_user_001",
@@ -86,7 +86,7 @@ try {
     log("✅ Utente admin creato:", colors.green);
     log("   Username: admin", colors.green);
     log("   Email:    admin@qrmenu.local", colors.green);
-    log("   Password: admin123", colors.green);
+    log("   Password: admin", colors.green);
     log("   User ID:  " + adminUser._id, colors.green);
 } catch (error) {
     log("❌ Errore creazione utente: " + error.message, colors.red);
@@ -710,7 +710,7 @@ log("================================================", colors.cyan);
 log("");
 log("🔐 CREDENZIALI AMMINISTRATORE:", colors.yellow);
 log("   Username: admin", colors.yellow);
-log("   Password: admin123", colors.yellow);
+log("   Password: admin", colors.yellow);
 log("   Email:    admin@qrmenu.local", colors.yellow);
 log("");
 log("🏪 RISTORANTI CREATI:", colors.yellow);

@@ -173,7 +173,7 @@ try {
         Write-Host ""
         Write-Host "🔐 CREDENZIALI AMMINISTRATORE:" -ForegroundColor Cyan
         Write-Host "   Username: admin" -ForegroundColor White
-        Write-Host "   Password: admin123" -ForegroundColor White
+        Write-Host "   Password: admin" -ForegroundColor White
         Write-Host "   Email:    admin@qrmenu.local" -ForegroundColor White
         Write-Host ""
         Write-Host "🏪 RISTORANTI CREATI:" -ForegroundColor Cyan
@@ -185,7 +185,7 @@ try {
         Write-Host "🚀 PROSSIMI PASSI:" -ForegroundColor Yellow
         Write-Host "   1. Avvia applicazione:  .\qr-menu.exe" -ForegroundColor White
         Write-Host "   2. Apri browser:        http://localhost:8080" -ForegroundColor White
-        Write-Host "   3. Login:               admin / admin123" -ForegroundColor White
+        Write-Host "   3. Login:               admin / admin" -ForegroundColor White
         Write-Host "   4. Seleziona ristorante da /select-restaurant" -ForegroundColor White
         Write-Host ""
     } else {
