@@ -31,28 +31,6 @@
             position: relative;
             border-bottom: 1px solid #e9ecef;
         }
-        .back-btn {
-            position: absolute;
-            top: 24px;
-            left: 24px;
-            background: #f8f9fa;
-            border: 1px solid #e5e7eb;
-            color: #374151;
-            padding: 10px 16px;
-            border-radius: 12px;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            font-size: 15px;
-            font-weight: 600;
-            text-decoration: none;
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-        }
-        .back-btn:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-        }
         .header h1 {
             font-size: 78px;
             margin-bottom: 16px;
@@ -268,12 +246,6 @@
             .item-price {
                 font-size: 22px;
             }
-            .back-btn {
-                width: 100%;
-                justify-content: center;
-                position: static;
-                margin-bottom: 20px;
-            }
             .item-image {
                 width: 100%;
                 height: 200px;
@@ -294,7 +266,6 @@
 <body>
     <div class="container">
         <div class="header">
-            <a href="javascript:history.back()" class="back-btn">← Indietro</a>
             <div style="width: 100%;">
                 <h1>
                     {{if eq .Menu.MealType "breakfast"}}🌅{{else if eq .Menu.MealType "lunch"}}☀️{{else if eq .Menu.MealType "dinner"}}🌙{{else}}📋{{end}}

@@ -630,7 +630,8 @@ func EditMenuHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Genera URL pubblico se non esiste
 	if menu.PublicURL == "" {
-		menu.PublicURL = fmt.Sprintf("http://localhost:8080/menu/%s", menuID)
+		baseURL := getBaseURL(r)
+		menu.PublicURL = fmt.Sprintf("%s/menu/%s", baseURL, menuID)
 		if err := db.MongoInstance.UpdateMenu(ctx, menu); err != nil {
 			log.Printf("Errore nell'aggiornamento URL pubblico: %v", err)
 		}
