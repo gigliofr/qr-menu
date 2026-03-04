@@ -155,12 +155,21 @@ func AdminHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Filtra i menu per questo ristorante
+	// Carica i menu dal database MongoDB
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	menusFromDB, err := db.MongoInstance.GetMenusByRestaurantID(ctx, restaurant.ID)
+	if err != nil {
+		log.Printf("Errore nel recupero menu dal database: %v", err)
+		// Continua con array vuoto in caso di errore
+		menusFromDB = []*models.Menu{}
+	}
+
+	// Converti slice in map per compatibilità con il template
 	restaurantMenus := make(map[string]*models.Menu)
-	for id, menu := range menus {
-		if menu.RestaurantID == restaurant.ID {
-			restaurantMenus[id] = menu
-		}
+	for _, menu := range menusFromDB {
+		restaurantMenus[menu.ID] = menu
 	}
 
 	// Controlla messaggi dalla query string
