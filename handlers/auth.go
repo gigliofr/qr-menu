@@ -26,9 +26,8 @@ import (
 var (
 	// Store per le sessioni (usa cookie sicuri)
 	store *sessions.CookieStore
-	// Storage in memoria per utenti e sessioni (in produzione usare database)
-	restaurants  = make(map[string]*models.Restaurant)
-	sessions_map = make(map[string]*models.Session)
+	// Storage locale per backwards compatibility (in fase di migrazione a MongoDB)
+	restaurants = make(map[string]*models.Restaurant)
 )
 
 const defaultRestaurantRole = "owner"
@@ -173,8 +172,24 @@ func createSession(userID string, restaurantID string, r *http.Request) (*models
 		UserAgent:    r.UserAgent(),
 	}
 
-	sessions_map[session.ID] = session
-	saveSessionToStorage(session)
+	// ⭐ Salva sessione in MongoDB invece che in memoria
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	
+	if err := db.MongoInstance.CreateSession(ctx, session); err != nil {
+		logger.Error("Errore nel salvataggio della sessione in MongoDB", map[string]interface{}{
+			"error":      err.Error(),
+			"session_id": session.ID,
+			"user_id":    userID,
+		})
+		return nil, fmt.Errorf("errore salvataggio sessione: %v", err)
+	}
+	
+	logger.Info("Sessione creata in MongoDB", map[string]interface{}{
+		"session_id":    session.ID,
+		"user_id":       userID,
+		"restaurant_id": restaurantID,
+	})
 
 	return session, nil
 }
@@ -191,14 +206,31 @@ func getSessionFromRequest(r *http.Request) (*models.Session, error) {
 		return nil, fmt.Errorf("nessuna sessione trovata")
 	}
 
-	userSession, exists := sessions_map[sessionID]
-	if !exists {
+	// ⭐ Recupera sessione da MongoDB invece che da memoria
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	
+	userSession, err := db.MongoInstance.GetSessionByID(ctx, sessionID)
+	if err != nil {
+		logger.Error("Errore nel recupero della sessione da MongoDB", map[string]interface{}{
+			"error":      err.Error(),
+			"session_id": sessionID,
+		})
 		return nil, fmt.Errorf("sessione non valida")
+	}
+	
+	if userSession == nil {
+		return nil, fmt.Errorf("sessione non trovata")
 	}
 
 	// Aggiorna il timestamp dell'ultimo accesso
 	userSession.LastAccessed = time.Now()
-	saveSessionToStorage(userSession)
+	if err := db.MongoInstance.UpdateSession(ctx, userSession); err != nil {
+		logger.Warn("Errore nell'aggiornamento LastAccessed della sessione", map[string]interface{}{
+			"error":      err.Error(),
+			"session_id": sessionID,
+		})
+	}
 
 	return userSession, nil
 }
@@ -551,13 +583,35 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 	// ⭐ STEP 3: Auto-login dopo registrazione (crea session con user_id)
 	userSession, err := createSession(userID, restaurantID, r)
 	if err != nil {
+		logger.Error("Errore nella creazione della sessione dopo registrazione", map[string]interface{}{
+			"error":   err.Error(),
+			"user_id": userID,
+		})
 		http.Error(w, "Errore nella creazione della sessione", http.StatusInternalServerError)
 		return
 	}
 
-	session, _ := store.Get(r, "qr-menu-session")
+	session, err := store.Get(r, "qr-menu-session")
+	if err != nil {
+		logger.Error("Errore nel recupero del cookie store dopo registrazione", map[string]interface{}{
+			"error":   err.Error(),
+			"user_id": userID,
+		})
+		http.Error(w, "Errore nella gestione della sessione", http.StatusInternalServerError)
+		return
+	}
+	
 	session.Values["session_id"] = userSession.ID
-	session.Save(r, w)
+	
+	if err := session.Save(r, w); err != nil {
+		logger.Error("Errore nel salvataggio del cookie dopo registrazione", map[string]interface{}{
+			"error":      err.Error(),
+			"user_id":    userID,
+			"session_id": userSession.ID,
+		})
+		http.Error(w, "Errore nel salvataggio della sessione", http.StatusInternalServerError)
+		return
+	}
 
 	// Log successo registrazione GDPR
 	logger.Info("Nuova registrazione completata", map[string]interface{}{
@@ -577,10 +631,21 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 func LogoutHandler(w http.ResponseWriter, r *http.Request) {
 	session, err := store.Get(r, "qr-menu-session")
 	if err == nil {
-		// Rimuovi la sessione dal server
+		// Rimuovi la sessione da MongoDB
 		if sessionID, ok := session.Values["session_id"].(string); ok {
-			delete(sessions_map, sessionID)
-			deleteSessionFromStorage(sessionID)
+			ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+			defer cancel()
+			
+			if err := db.MongoInstance.DeleteSession(ctx, sessionID); err != nil {
+				logger.Error("Errore nella cancellazione della sessione da MongoDB", map[string]interface{}{
+					"error":      err.Error(),
+					"session_id": sessionID,
+				})
+			} else {
+				logger.Info("Sessione eliminata da MongoDB", map[string]interface{}{
+					"session_id": sessionID,
+				})
+			}
 		}
 
 		// Cancella il cookie
@@ -665,43 +730,15 @@ func loadRestaurantsFromStorage() {
 
 	log.Printf("Caricati %d ristoranti dallo storage", len(restaurants))
 
-	// Carica anche le sessioni
-	loadSessionsFromStorage()
+	// ⭐ Sessioni ora gestite direttamente da MongoDB - non serve più caricare da file
+	// loadSessionsFromStorage() - DEPRECATO
 }
 
-func loadSessionsFromStorage() {
-	files, err := filepath.Glob("storage/session_*.json")
-	if err != nil {
-		log.Printf("Errore nella lettura dei file session: %v", err)
-		return
-	}
-
-	for _, filename := range files {
-		file, err := os.Open(filename)
-		if err != nil {
-			log.Printf("Errore nell'apertura del file %s: %v", filename, err)
-			continue
-		}
-
-		var session models.Session
-		if err := json.NewDecoder(file).Decode(&session); err != nil {
-			log.Printf("Errore nel decode della session da %s: %v", filename, err)
-			file.Close()
-			continue
-		}
-
-		// Mantieni solo le sessioni recenti (ultime 24h)
-		if time.Since(session.LastAccessed) < 24*time.Hour {
-			sessions_map[session.ID] = &session
-		} else {
-			// Rimuovi sessioni scadute
-			os.Remove(filename)
-		}
-		file.Close()
-	}
-
-	log.Printf("Caricate %d sessioni attive dallo storage", len(sessions_map))
-}
+// ⭐ DEPRECATA - Le sessioni ora sono in MongoDB
+// func loadSessionsFromStorage() {
+// 	Le sessioni vengono ora recuperate dinamicamente da MongoDB
+// 	tramite GetSessionByID quando necessario
+// }
 
 // getClientIP estrae l'IP reale del client considerando proxy e load balancer
 func getClientIP(r *http.Request) string {

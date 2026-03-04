@@ -443,11 +443,19 @@ func AddRestaurantPostHandler(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/admin?success=restaurant_created", http.StatusFound)
 }
 
-// updateSessionInMemory aggiorna la sessione in memoria e nel cookie
+// updateSessionInMemory aggiorna la sessione in MongoDB
 func updateSessionInMemory(session *models.Session) {
 	session.LastAccessed = time.Now()
-	sessions_map[session.ID] = session
-	saveSessionToStorage(session)
+	
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	
+	if err := db.MongoInstance.UpdateSession(ctx, session); err != nil {
+		logger.Error("Errore nell'aggiornamento della sessione in MongoDB", map[string]interface{}{
+			"error":      err.Error(),
+			"session_id": session.ID,
+		})
+	}
 }
 
 
