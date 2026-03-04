@@ -73,6 +73,7 @@ func setupPublicRoutes(r *mux.Router) {
 	r.HandleFunc("/menu/{id}", handlers.PublicMenuHandler).Methods("GET")
 	r.HandleFunc("/r/{username}", handlers.GetActiveMenuHandler).Methods("GET")
 	r.HandleFunc("/menu/{id}/share", handlers.ShareMenuHandler).Methods("GET")
+	r.HandleFunc("/menu/{id}/qr-download", handlers.DownloadQRHandler).Methods("GET")
 
 	// Analytics tracking
 	r.HandleFunc("/api/track/share", handlers.TrackShareHandler).Methods("POST")

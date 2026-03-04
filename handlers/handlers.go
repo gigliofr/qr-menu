@@ -1901,3 +1901,42 @@ func LegalNotesHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Error loading page", http.StatusInternalServerError)
 	}
 }
+
+// DownloadQRHandler gestisce il download del QR code di un menu
+func DownloadQRHandler(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	menuID := vars["id"]
+
+	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
+	defer cancel()
+
+	// Verifica che il menu esista
+	menu, err := db.MongoInstance.GetMenuByID(ctx, menuID)
+	if err != nil || menu == nil {
+		http.Error(w, "Menu non trovato", http.StatusNotFound)
+		return
+	}
+
+	// Verifica che il QR code esista
+	qrCodePath := fmt.Sprintf("static/qrcodes/menu_%s.png", menuID)
+	if _, err := os.Stat(qrCodePath); os.IsNotExist(err) {
+		http.Error(w, "QR Code non trovato", http.StatusNotFound)
+		return
+	}
+
+	// Leggi il file
+	fileData, err := os.ReadFile(qrCodePath)
+	if err != nil {
+		log.Printf("Errore lettura QR code: %v", err)
+		http.Error(w, "Errore nel caricamento del QR code", http.StatusInternalServerError)
+		return
+	}
+
+	// Imposta gli headers per il download
+	w.Header().Set("Content-Type", "image/png")
+	w.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=qrcode_%s.png", menu.Name))
+	w.Header().Set("Content-Length", fmt.Sprintf("%d", len(fileData)))
+
+	// Scrivi il file
+	w.Write(fileData)
+}
