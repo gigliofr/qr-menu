@@ -282,9 +282,39 @@ func SelectRestaurantPostHandler(w http.ResponseWriter, r *http.Request) {
 	defer cancel()
 	
 	restaurant, err := db.MongoInstance.GetRestaurantByID(ctx, restaurantID)
-	if err != nil || restaurant == nil || restaurant.OwnerID != session.UserID {
-		log.Printf("Tentativo di accesso non autorizzato al ristorante %s da parte dell'utente %s", 
-			restaurantID, session.UserID)
+	if err != nil {
+		logger.Error("Errore nel recupero del ristorante", map[string]interface{}{
+			"error":         err.Error(),
+			"restaurant_id": restaurantID,
+			"user_id":       session.UserID,
+		})
+		http.Error(w, "Errore nel recupero del ristorante", http.StatusInternalServerError)
+		return
+	}
+	
+	if restaurant == nil {
+		logger.Warn("Ristorante non trovato", map[string]interface{}{
+			"restaurant_id": restaurantID,
+			"user_id":       session.UserID,
+		})
+		http.Error(w, "Ristorante non trovato", http.StatusNotFound)
+		return
+	}
+	
+	logger.Debug("Verifica ownership ristorante", map[string]interface{}{
+		"restaurant_id":      restaurantID,
+		"restaurant_name":    restaurant.Name,
+		"restaurant_ownerid": restaurant.OwnerID,
+		"session_userid":     session.UserID,
+		"match":              restaurant.OwnerID == session.UserID,
+	})
+	
+	if restaurant.OwnerID != session.UserID {
+		logger.Warn("Tentativo di accesso non autorizzato al ristorante", map[string]interface{}{
+			"restaurant_id":      restaurantID,
+			"restaurant_ownerid": restaurant.OwnerID,
+			"user_id":            session.UserID,
+		})
 		http.Error(w, "Accesso non autorizzato al ristorante", http.StatusForbidden)
 		return
 	}

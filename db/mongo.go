@@ -159,7 +159,7 @@ func (m *MongoClient) CreateRestaurant(ctx context.Context, restaurant *models.R
 func (m *MongoClient) GetRestaurantByID(ctx context.Context, id string) (*models.Restaurant, error) {
 	coll := m.db.Collection("restaurants")
 	var restaurant models.Restaurant
-	err := coll.FindOne(ctx, bson.M{"id": id}).Decode(&restaurant)
+	err := coll.FindOne(ctx, bson.M{"_id": id}).Decode(&restaurant)
 	if err == mongo.ErrNoDocuments {
 		return nil, nil
 	}
@@ -201,7 +201,7 @@ func (m *MongoClient) GetRestaurantByEmail(ctx context.Context, email string) (*
 func (m *MongoClient) UpdateRestaurant(ctx context.Context, restaurant *models.Restaurant) error {
 	coll := m.db.Collection("restaurants")
 	result := coll.FindOneAndUpdate(ctx,
-		bson.M{"id": restaurant.ID},
+		bson.M{"_id": restaurant.ID},
 		bson.M{"$set": restaurant},
 		options.FindOneAndUpdate().SetReturnDocument(options.After),
 	)
