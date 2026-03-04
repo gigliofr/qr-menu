@@ -16,93 +16,45 @@
 
         body {
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: #f8f9fa;
             min-height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
             padding: 40px 20px;
-            position: relative;
-            overflow-x: hidden;
-        }
-        
-        .background-animation {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: 0;
-        }
-        
-        .background-animation::before {
-            content: '';
-            position: absolute;
-            top: -50%;
-            left: -50%;
-            width: 200%;
-            height: 200%;
-            background: linear-gradient(45deg, transparent, rgba(255,255,255,0.03), transparent);
-            animation: shimmer 8s ease-in-out infinite;
-        }
-        
-        @keyframes shimmer {
-            0%, 100% { transform: translateX(-100%) translateY(-100%) rotate(45deg); }
-            50% { transform: translateX(100%) translateY(100%) rotate(45deg); }
         }
 
         .login-container {
-            background: rgba(255, 255, 255, 0.98);
-            backdrop-filter: blur(20px);
-            padding: 60px 50px;
+            background: #ffffff;
+            padding: 120px 50px;
             border-radius: 24px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.06);
             width: 100%;
             max-width: 520px;
             text-align: center;
-            position: relative;
-            z-index: 1;
-            animation: slideUp 0.6s ease-out;
-            border: 1px solid rgba(255, 255, 255, 0.5);
-        }
-        
-        @keyframes slideUp {
-            from {
-                opacity: 0;
-                transform: translateY(40px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
+            border: 1px solid #e9ecef;
         }
 
         .logo {
             font-size: 4em;
             margin-bottom: 24px;
-            animation: float 3s ease-in-out infinite;
-        }
-        
-        @keyframes float {
-            0%, 100% { transform: translateY(0px); }
-            50% { transform: translateY(-10px); }
         }
 
         h1 {
             color: #2c3e50;
             margin-bottom: 16px;
-            font-size: 2.8em;
+            font-size: 60px;
             font-weight: 800;
-            line-height: 1.2;
-            letter-spacing: -0.02em;
+            line-height: 1.1;
+            letter-spacing: -0.03em;
         }
 
         .subtitle {
             color: #7f8c8d;
             margin-bottom: 48px;
-            font-size: 1.15em;
+            font-size: 24px;
             font-weight: 500;
-            line-height: 1.6;
+            line-height: 1.5;
         }
 
         .form-group {
@@ -114,21 +66,22 @@
             display: block;
             margin-bottom: 10px;
             color: #2c3e50;
-            font-weight: 600;
-            font-size: 0.95em;
+            font-weight: 700;
+            font-size: 16px;
             letter-spacing: 0.01em;
         }
 
         input[type="text"],
-        input[type="email"], 
+        input[type="email"],
         input[type="password"] {
             width: 100%;
-            padding: 16px 20px;
-            border: 2px solid #e9ecef;
+            height: 56px;
+            padding: 0 20px;
+            border: 1px solid #e9ecef;
             border-radius: 12px;
             font-size: 16px;
             font-family: 'Inter', sans-serif;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: all 0.2s ease;
             background: white;
         }
 
@@ -137,33 +90,27 @@
         input[type="password"]:focus {
             outline: none;
             border-color: #667eea;
-            box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
-            transform: translateY(-1px);
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.08);
         }
 
         .btn {
             width: 100%;
-            padding: 18px 24px;
+            padding: 20px 40px;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
             border: none;
             border-radius: 12px;
-            font-size: 17px;
-            font-weight: 700;
+            font-size: 18px;
+            font-weight: 600;
             font-family: 'Inter', sans-serif;
             cursor: pointer;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: all 0.2s ease;
             margin-bottom: 20px;
-            letter-spacing: 0.02em;
         }
 
         .btn:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
-        }
-
-        .btn:active {
-            transform: translateY(-1px);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(102, 126, 234, 0.25);
         }
 
         .divider {
@@ -183,7 +130,7 @@
         }
 
         .divider span {
-            background: rgba(255, 255, 255, 0.98);
+            background: #ffffff;
             padding: 0 20px;
             color: #7f8c8d;
             font-size: 0.95em;
@@ -199,13 +146,11 @@
             text-decoration: none;
             font-weight: 600;
             font-size: 1.05em;
-            transition: all 0.3s ease;
+            transition: all 0.2s ease;
         }
 
         .register-link a:hover {
             color: #764ba2;
-            transform: translateY(-1px);
-            display: inline-block;
         }
 
         .error {
@@ -213,18 +158,10 @@
             color: white;
             padding: 18px 24px;
             border-radius: 12px;
-            margin-bottom: 28px;
+            margin-bottom: 20px;
             text-align: center;
             font-weight: 600;
             font-size: 0.95em;
-            box-shadow: 0 4px 15px rgba(250, 112, 154, 0.3);
-            animation: shake 0.5s ease-in-out;
-        }
-        
-        @keyframes shake {
-            0%, 100% { transform: translateX(0); }
-            25% { transform: translateX(-8px); }
-            75% { transform: translateX(8px); }
         }
 
         .error-actions {
@@ -232,210 +169,76 @@
             gap: 12px;
             margin-bottom: 28px;
         }
-        
+
+        .btn-back,
+        .btn-retry {
+            flex: 1;
+            padding: 14px 16px;
+            border-radius: 10px;
+            font-size: 15px;
+            font-weight: 600;
+            font-family: 'Inter', sans-serif;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            border: 1px solid #e9ecef;
+        }
+
         .btn-back {
-            flex: 1;
-            padding: 14px 16px;
-            background: rgba(149, 165, 166, 0.15);
+            background: #f8f9fa;
             color: #2c3e50;
-            border: 2px solid #e9ecef;
-            border-radius: 10px;
-            font-size: 15px;
-            font-weight: 600;
-            font-family: 'Inter', sans-serif;
-            cursor: pointer;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
         }
 
         .btn-back:hover {
-            background: rgba(149, 165, 166, 0.25);
-            border-color: #95a5a6;
             transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(0,0,0,0.1);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
         }
-        
+
         .btn-retry {
-            flex: 1;
-            padding: 14px 16px;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
+            color: #ffffff;
             border: none;
-            border-radius: 10px;
-            font-size: 15px;
-            font-weight: 700;
-            font-family: 'Inter', sans-serif;
-            cursor: pointer;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
         }
 
         .btn-retry:hover {
             transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+            box-shadow: 0 6px 16px rgba(102, 126, 234, 0.25);
         }
 
-        .password-hint {
-            font-size: 0.9em;
-            color: #7f8c8d;
-            margin-top: 8px;
-            font-weight: 500;
-        }
-        
-        /* Mobile responsiveness */
-        @media (max-width: 640px) {
-            body {
-                padding: 24px 16px;
-            }
-            
+        @media (max-width: 768px) {
             .login-container {
-                padding: 48px 32px;
-                border-radius: 20px;
+                padding: 60px 32px;
             }
-            
+
             h1 {
-                font-size: 2.2em;
+                font-size: 42px;
             }
-            
-            .logo {
-                font-size: 3.2em;
-            }
-            
+
             .subtitle {
-                font-size: 1.05em;
+                font-size: 18px;
             }
-            
-            input[type="text"],
-            input[type="email"],
-            input[type="password"] {
-                padding: 14px 18px;
-                font-size: 16px;
-            }
-            
+
             .btn {
-                padding: 16px 20px;
-                font-size: 16px;
+                padding: 18px 32px;
+                font-size: 17px;
             }
         }
-        
+
         @media (max-width: 400px) {
             .login-container {
-                padding: 40px 24px;
+                padding: 50px 24px;
             }
-            
+
             h1 {
-                font-size: 1.9em;
+                font-size: 36px;
             }
         }
     </style>
 </head>
 <body>
-    <div class="background-animation"></div>
-    <div class="login-container">
-            border: 2px solid #e9ecef;
-            border-radius: 10px;
-            font-size: 15px;
-            font-weight: 600;
-            font-family: 'Inter', sans-serif;
-            cursor: pointer;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-        }
-
-        .btn-back:hover {
-            background: rgba(149, 165, 166, 0.25);
-            border-color: #95a5a6;
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(0,0,0,0.1);
-        }
-
-        .btn-retry {
-            flex: 1;
-            padding: 14px 16px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border: none;
-            border-radius: 10px;
-            font-size: 15px;
-            font-weight: 700;
-            font-family: 'Inter', sans-serif;
-            cursor: pointer;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-        }
-
-        .btn-retry:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
-        }
-
-        .password-hint {
-            font-size: 0.9em;
-            color: #7f8c8d;
-            margin-top: 5px;
-        }
-
-        /* Mobile responsiveness */
-        @media (max-width: 640px) {
-            body {
-                padding: 24px 16px;
-            }
-            
-            .login-container {
-                padding: 48px 32px;
-                border-radius: 20px;
-            }
-            
-            h1 {
-                font-size: 2.2em;
-            }
-            
-            .logo {
-                font-size: 3.2em;
-            }
-            
-            .subtitle {
-                font-size: 1.05em;
-            }
-            
-            input[type="text"],
-            input[type="email"],
-            input[type="password"] {
-                padding: 14px 18px;
-                font-size: 16px;
-            }
-            
-            .btn {
-                padding: 16px 20px;
-                font-size: 16px;
-            }
-        }
-        
-        @media (max-width: 400px) {
-            .login-container {
-                padding: 40px 24px;
-            }
-            
-            h1 {
-                font-size: 1.9em;
-            }
-        }
-    </style>
-</head>
-<body>
-    <div class="background-animation"></div>
     <div class="login-container">
         <div class="logo">🍽️</div>
         <h1>QR Menu System</h1>
@@ -446,27 +249,20 @@
             ⚠️ {{.Error}}
         </div>
         <div class="error-actions">
-            <button type="button" class="btn-back" onclick="goBack()">
-                ← Torna Indietro
-            </button>
-            <button type="button" class="btn-retry" onclick="clearForm()">
-                🔄 Riprova
-            </button>
+            <button type="button" class="btn-back" onclick="goBack()">← Torna Indietro</button>
+            <button type="button" class="btn-retry" onclick="clearForm()">🔄 Riprova</button>
         </div>
         {{end}}
 
         <form method="POST" action="/login">
             <div class="form-group">
                 <label for="username">Username o Email</label>
-                <input type="text" id="username" name="username" required 
-                       placeholder="Inserisci username o email"
-                       value="{{if .Username}}{{.Username}}{{end}}">
+                <input type="text" id="username" name="username" required placeholder="Inserisci username o email" value="{{if .Username}}{{.Username}}{{end}}">
             </div>
 
             <div class="form-group">
                 <label for="password">Password</label>
-                <input type="password" id="password" name="password" required 
-                       placeholder="Inserisci la tua password">
+                <input type="password" id="password" name="password" required placeholder="Inserisci la tua password">
             </div>
 
             <button type="submit" class="btn">🔐 Accedi</button>
@@ -482,24 +278,23 @@
     </div>
 
     <script>
-        // Focus automatico sul primo campo
         document.addEventListener('DOMContentLoaded', function() {
-            document.getElementById('username').focus();
+            const usernameInput = document.getElementById('username');
+            if (usernameInput) {
+                usernameInput.focus();
+            }
         });
 
-        // Funzione per tornare indietro
         function goBack() {
             window.history.length > 1 ? window.history.back() : window.location.href = '/';
         }
 
-        // Funzione per riprovare
         function clearForm() {
             document.getElementById('username').value = '';
             document.getElementById('password').value = '';
             document.getElementById('username').focus();
         }
 
-        // Validazione client-side
         document.querySelector('form').addEventListener('submit', function(e) {
             const username = document.getElementById('username').value.trim();
             const password = document.getElementById('password').value;
@@ -513,19 +308,5 @@
             }
         });
     </script>
-
-    <!-- Legal Footer -->
-    <div style="position: fixed; bottom: 0; left: 0; right: 0; background: rgba(255,255,255,0.98); backdrop-filter: blur(20px); padding: 20px; text-align: center; border-top: 1px solid rgba(0,0,0,0.06); box-shadow: 0 -4px 20px rgba(0,0,0,0.06); z-index: 999; font-family: 'Inter', sans-serif;">
-        <p style="color: #2c3e50; font-size: 0.85em; font-weight: 600; margin-bottom: 8px;">© 2026 QR Menu</p>
-        <p style="color: #7f8c8d; font-size: 0.8em; font-weight: 500;">
-            <a href="/privacy-policy" style="color: #667eea; text-decoration: none; margin: 0 8px; transition: color 0.3s ease;" onmouseover="this.style.color='#764ba2'" onmouseout="this.style.color='#667eea'">Privacy</a>
-            <span style="color: #ddd;">•</span>
-            <a href="/cookie-policy" style="color: #667eea; text-decoration: none; margin: 0 8px; transition: color 0.3s ease;" onmouseover="this.style.color='#764ba2'" onmouseout="this.style.color='#667eea'">Cookie</a>
-            <span style="color: #ddd;">•</span>
-            <a href="/terms-of-service" style="color: #667eea; text-decoration: none; margin: 0 8px; transition: color 0.3s ease;" onmouseover="this.style.color='#764ba2'" onmouseout="this.style.color='#667eea'">Termini</a>
-            <span style="color: #ddd;">•</span>
-            <a href="/legal-notes" style="color: #667eea; text-decoration: none; margin: 0 8px; transition: color 0.3s ease;" onmouseover="this.style.color='#764ba2'" onmouseout="this.style.color='#667eea'">Note Legali</a>
-        </p>
-    </div>
 </body>
 </html>
