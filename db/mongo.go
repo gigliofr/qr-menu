@@ -415,7 +415,7 @@ func (m *MongoClient) CreateSession(ctx context.Context, session *models.Session
 func (m *MongoClient) GetSessionByID(ctx context.Context, id string) (*models.Session, error) {
 	coll := m.db.Collection("sessions")
 	var session models.Session
-	err := coll.FindOne(ctx, bson.M{"id": id}).Decode(&session)
+	err := coll.FindOne(ctx, bson.M{"_id": id}).Decode(&session)
 	if err == mongo.ErrNoDocuments {
 		return nil, nil
 	}
@@ -450,7 +450,7 @@ func (m *MongoClient) GetSessionsByRestaurantID(ctx context.Context, restaurantI
 func (m *MongoClient) UpdateSession(ctx context.Context, session *models.Session) error {
 	coll := m.db.Collection("sessions")
 	result := coll.FindOneAndUpdate(ctx,
-		bson.M{"id": session.ID},
+		bson.M{"_id": session.ID},
 		bson.M{"$set": session},
 		options.FindOneAndUpdate().SetReturnDocument(options.After),
 	)
@@ -463,7 +463,7 @@ func (m *MongoClient) UpdateSession(ctx context.Context, session *models.Session
 // DeleteSession elimina una sessione
 func (m *MongoClient) DeleteSession(ctx context.Context, id string) error {
 	coll := m.db.Collection("sessions")
-	_, err := coll.DeleteOne(ctx, bson.M{"id": id})
+	_, err := coll.DeleteOne(ctx, bson.M{"_id": id})
 	if err != nil {
 		return fmt.Errorf("errore delete session: %v", err)
 	}
