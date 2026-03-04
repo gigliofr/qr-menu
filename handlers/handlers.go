@@ -162,9 +162,14 @@ func AdminHandler(w http.ResponseWriter, r *http.Request) {
 
 	menusFromDB, err := db.MongoInstance.GetMenusByRestaurantID(ctx, restaurant.ID)
 	if err != nil {
-		log.Printf("Errore nel recupero menu dal database: %v", err)
+		log.Printf("❌ Errore nel recupero menu dal database: %v", err)
 		// Continua con array vuoto in caso di errore
 		menusFromDB = []*models.Menu{}
+	} else {
+		log.Printf("✅ AdminHandler: Recuperati %d menu per restaurant %s", len(menusFromDB), restaurant.ID)
+		for i, m := range menusFromDB {
+			log.Printf("   Menu %d: ID=%s, Name=%s, Categories=%d", i+1, m.ID, m.Name, len(m.Categories))
+		}
 	}
 
 	// Converti slice in map per compatibilità con il template
@@ -172,6 +177,8 @@ func AdminHandler(w http.ResponseWriter, r *http.Request) {
 	for _, menu := range menusFromDB {
 		restaurantMenus[menu.ID] = menu
 	}
+	
+	log.Printf("✅ AdminHandler: Mappa menu creata con %d elementi", len(restaurantMenus))
 
 	// Controlla messaggi dalla query string
 	welcome := r.URL.Query().Get("welcome")
@@ -209,7 +216,8 @@ func AdminHandler(w http.ResponseWriter, r *http.Request) {
 		Stats:        stats,
 		ActiveMenuID: activeMenuID,
 	}
-
+	
+	log.Printf("✅ AdminHandler: Rendering template 'admin' con %d menu, ActiveMenuID=%s", len(data.Menus), data.ActiveMenuID)
 	renderTemplate(w, "admin", data)
 }
 
