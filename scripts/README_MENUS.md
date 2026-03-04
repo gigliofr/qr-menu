@@ -1,25 +1,51 @@
 # Come Creare i Menu per i Ristoranti
 
-Ci sono 3 modi per creare i menu:
+## ✅ Menu Già Creati
 
-## Opzione 1: MongoDB Compass (CONSIGLIATO)
+I menu sono già stati creati ed eseguiti con lo script `fix_menus.go`. Puoi accedere all'app per vederli:
+- https://qr-menu-staging.up.railway.app/login
+- Username: `admin` / Password: `admin`
+
+## 📁 File Disponibili
+
+- **`fix_menus.go`** - Script Go per creare/ricreare menu (già eseguito)
+- **`fix_menus.js`** - Versione JavaScript mongosh (alternativa)
+- **`fix_menus.ps1`** - PowerShell wrapper per fix_menus.js
+- **`menus_data.json`** - Export JSON per MongoDB Compass/Atlas
+
+---
+
+## Opzioni per Modificare o Ricreare Menu
+
+### Opzione 1: MongoDB Compass (CONSIGLIATO per modifiche manuali)
 
 1. Apri MongoDB Compass e connettiti al tuo cluster
 2. Seleziona il database `qr-menu`  
 3. Seleziona la collection `menus`
 4. Clicca su "ADD DATA" → "Import JSON or CSV"
-5. Seleziona il file `scripts/menus_data.json`
+5. Seleziona il file **`scripts/menus_data.json`** ✅
 
-## Opzione 2: MongoDB Atlas Web Interface
+### Opzione 2: Usa lo script Go (per ricreare da zero)
+
+```powershell
+# Dalla cartella principale del progetto
+$env:MONGODB_CERT_CONTENT = Get-Content "C:\path\to\cert.pem" -Raw
+$env:MONGODB_URI = "mongodb+srv://..."
+go run scripts/fix_menus.go
+```
+
+Questo elimina i menu esistenti e li ricrea.
+
+### Opzione 3: MongoDB Atlas Web Interface
 
 1. Vai su https://cloud.mongodb.com
 2. Accedi al tuo cluster
 3. Clicca su "Browse Collections"
 4. Seleziona database `qr-menu` → collection `menus`
 5. Clicca "Insert Document"
-6. Copia e incolla il contenuto di ogni menu da `scripts/fix_menus.js`
+6. Copia e incolla il contenuto di ogni menu da **`scripts/menus_data.json`** ✅
 
-## Opzione 3: Tramite l'interfaccia Web dell'App
+### Opzione 4: Tramite l'interfaccia Web dell'App
 
 1. Accedi su https://qr-menu-staging.up.railway.app/login
 2. Username: `admin` Password: `admin`
@@ -27,7 +53,7 @@ Ci sono 3 modi per creare i menu:
 4. Vai su "Menu" → "Crea Nuovo Menu"
 5. Compila il form e aggiungi categorie e piatti
 
-⚠️ **NOTA**: L'opzione 3 è lenta se devi creare molti piatti. Meglio usare Compass o Atlas.
+⚠️ **NOTA**: L'opzione 4 è lenta se devi creare molti piatti. Meglio usare Compass, lo script Go, o Atlas.
 
 ## Struttura Menu
 
