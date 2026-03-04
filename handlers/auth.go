@@ -97,11 +97,16 @@ func init() {
 	// Inizializza il session store con una chiave segreta
 	sessionKey := getOrCreateSessionKey()
 	store = sessions.NewCookieStore([]byte(sessionKey))
+	
+	// Determina se siamo in produzione (Railway usa PORT env var)
+	isProduction := os.Getenv("PORT") != ""
+	
 	store.Options = &sessions.Options{
 		Path:     "/",
 		MaxAge:   86400 * 7, // 7 giorni
 		HttpOnly: true,
-		Secure:   false, // In produzione impostare a true con HTTPS
+		Secure:   isProduction, // ⭐ Secure=true su Railway (HTTPS), false in locale
+		SameSite: http.SameSiteLaxMode,
 	}
 
 	// Seed test data se necessario (MongoDB-only, no file storage)
@@ -112,6 +117,7 @@ func init() {
 	logger.Info("Sistema di autenticazione inizializzato", map[string]interface{}{
 		"session_max_age":    86400 * 7,
 		"restaurants_count": len(restaurants),
+		"secure_cookies":    isProduction,
 	})
 }
 
@@ -349,9 +355,32 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Imposta il cookie di sessione
-	session, _ := store.Get(r, "qr-menu-session")
+	session, err := store.Get(r, "qr-menu-session")
+	if err != nil {
+		logger.Error("Errore nel recupero della sessione cookie", map[string]interface{}{
+			"error":   err.Error(),
+			"user_id": user.ID,
+		})
+		http.Error(w, "Errore nella gestione della sessione", http.StatusInternalServerError)
+		return
+	}
+	
 	session.Values["session_id"] = userSession.ID
-	session.Save(r, w)
+	
+	// ⚠️ IMPORTANTE: Salva la sessione PRIMA del redirect
+	if err := session.Save(r, w); err != nil {
+		logger.Error("Errore nel salvataggio della sessione cookie", map[string]interface{}{
+			"error":   err.Error(),
+			"user_id": user.ID,
+		})
+		http.Error(w, "Errore nel salvataggio della sessione", http.StatusInternalServerError)
+		return
+	}
+	
+	logger.Info("Sessione cookie salvata con successo", map[string]interface{}{
+		"session_id": userSession.ID,
+		"user_id":    user.ID,
+	})
 
 	// ⭐ STEP 5: Aggiorna ultimo login su User (non Restaurant)
 	if err := db.MongoInstance.UpdateUserLastLogin(ctx, user.ID); err != nil {
