@@ -33,6 +33,31 @@
             padding: 30px;
             margin-bottom: 30px;
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            position: relative;
+        }
+        
+        .back-btn {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(102, 126, 234, 0.2);
+            border: 2px solid rgba(102, 126, 234, 0.3);
+            color: #667eea;
+            padding: 8px 15px;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 1em;
+            font-weight: bold;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .back-btn:hover {
+            background: rgba(102, 126, 234, 0.3);
+            transform: translateX(-3px);
         }
         
         .dashboard-title {
@@ -291,6 +316,7 @@
 <body>
     <div class="dashboard-container">
         <div class="dashboard-header">
+            <a href="/admin" class="back-btn">← Indietro</a>
             <h1 class="dashboard-title">📊 Analytics Dashboard</h1>
             <p class="dashboard-subtitle">{{.Restaurant.Name}} - Analisi delle performance</p>
             <div class="realtime-indicator">

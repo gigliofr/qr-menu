@@ -90,6 +90,31 @@
         .header {
             text-align: center;
             margin-bottom: 40px;
+            position: relative;
+        }
+        
+        .back-btn {
+            position: absolute;
+            top: 0;
+            left: 0;
+            background: rgba(102, 126, 234, 0.2);
+            border: 2px solid rgba(102, 126, 234, 0.3);
+            color: #667eea;
+            padding: 8px 15px;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 1em;
+            font-weight: bold;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .back-btn:hover {
+            background: rgba(102, 126, 234, 0.3);
+            transform: translateX(-3px);
         }
         
         .header h1 {
@@ -252,6 +277,7 @@
     
     <div class="container">
         <div class="header">
+            <a href="/admin" class="back-btn">← Indietro</a>
             <h1>🍽️ I tuoi Ristoranti</h1>
             <p>Hai <strong>{{.RestaurantCount}}</strong> ristorante{{if ne .RestaurantCount 1}}i{{end}}. Seleziona quale gestire:</p>
         </div>

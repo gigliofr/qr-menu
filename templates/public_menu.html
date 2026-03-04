@@ -27,6 +27,28 @@
             text-align: center;
             position: relative;
         }
+        .back-btn {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(255,255,255,0.2);
+            border: 2px solid rgba(255,255,255,0.3);
+            color: white;
+            padding: 8px 15px;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 1em;
+            font-weight: bold;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .back-btn:hover {
+            background: rgba(255,255,255,0.3);
+            transform: translateX(-3px);
+        }
         .header::after {
             content: '';
             position: absolute;
@@ -232,6 +254,7 @@
 <body>
     <div class="container">
         <div class="header">
+            <a href="javascript:history.back()" class="back-btn">← Indietro</a>
             <div style="width: 100%;">
                 <h1>
                     {{if eq .Menu.MealType "breakfast"}}🌅{{else if eq .Menu.MealType "lunch"}}☀️{{else if eq .Menu.MealType "dinner"}}🌙{{else}}📋{{end}}

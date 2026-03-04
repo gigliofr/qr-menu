@@ -1710,7 +1710,8 @@ func ShareMenuHandler(w http.ResponseWriter, r *http.Request) {
 		restaurant = &models.Restaurant{Name: "Ristorante"}
 	}
 
-	menuURL := fmt.Sprintf("http://localhost:8080/menu/%s", menuID)
+	baseURL := getBaseURL(r)
+	menuURL := fmt.Sprintf("%s/menu/%s", baseURL, menuID)
 	shareText := fmt.Sprintf("Scopri il menu di %s! 🍽️", restaurant.Name)
 
 	data := struct {
