@@ -4,26 +4,58 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{.Menu.Name}} - Menu Digitale</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { 
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
             line-height: 1.6;
-            color: #333;
+            color: #2c3e50;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
+            position: relative;
+        }
+        
+        .background-animation {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+        }
+        
+        .background-animation::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(45deg, transparent, rgba(255,255,255,0.03), transparent);
+            animation: shimmer 8s ease-in-out infinite;
+        }
+        
+        @keyframes shimmer {
+            0%, 100% { transform: translateX(-100%) translateY(-100%) rotate(45deg); }
+            50% { transform: translateX(100%) translateY(100%) rotate(45deg); }
         }
         .container {
-            max-width: 800px;
+            max-width: 900px;
             margin: 0 auto;
-            background: white;
+            background: rgba(255, 255, 255, 0.98);
+            backdrop-filter: blur(20px);
             min-height: 100vh;
-            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+            box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+            position: relative;
+            z-index: 1;
         }
         .header {
             background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
             color: white;
-            padding: 30px 20px;
+            padding: 50px 30px;
             text-align: center;
             position: relative;
         }
@@ -62,24 +94,27 @@
             border-top: 10px solid #2c3e50;
         }
         .header h1 {
-            font-size: 2.5em;
-            margin-bottom: 10px;
+            font-size: 3em;
+            margin-bottom: 16px;
             text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 10px;
+            gap: 12px;
+            font-weight: 800;
+            letter-spacing: -0.02em;
         }
         .meal-type-badge {
             display: inline-block;
-            background: rgba(255,255,255,0.2);
-            padding: 8px 16px;
-            border-radius: 20px;
-            font-size: 0.8em;
-            font-weight: 600;
-            margin-top: 10px;
-            border: 1px solid rgba(255,255,255,0.3);
+            background: rgba(255,255,255,0.25);
+            padding: 10px 20px;
+            border-radius: 24px;
+            font-size: 0.85em;
+            font-weight: 700;
+            margin-top: 12px;
+            border: 2px solid rgba(255,255,255,0.4);
             backdrop-filter: blur(10px);
+            letter-spacing: 0.5px;
         }
         .meal-type-badge.breakfast {
             background: rgba(255,200,100,0.3);
@@ -98,65 +133,85 @@
             border-color: #999999;
         }
         .header p {
-            font-size: 1.2em;
-            opacity: 0.9;
+            font-size: 1.25em;
+            opacity: 0.95;
+            font-weight: 500;
         }
         .restaurant-info {
-            background: #f8f9fa;
-            padding: 20px;
-            border-bottom: 1px solid #e9ecef;
+            background: rgba(248, 249, 250, 0.8);
+            backdrop-filter: blur(10px);
+            padding: 30px 20px;
+            border-bottom: 2px solid rgba(233, 236, 239, 0.5);
             text-align: center;
         }
         .restaurant-info h2 {
             color: #2c3e50;
-            margin-bottom: 10px;
+            margin-bottom: 12px;
+            font-size: 1.6em;
+            font-weight: 700;
+        }
+        .restaurant-info p {
+            color: #7f8c8d;
+            font-size: 1.05em;
+            font-weight: 500;
         }
         .menu-content {
-            padding: 20px;
+            padding: 40px 30px;
         }
         .category {
-            margin-bottom: 40px;
-            border-radius: 10px;
+            margin-bottom: 50px;
+            border-radius: 20px;
             overflow: hidden;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            box-shadow: 0 8px 32px rgba(0,0,0,0.08);
+            border: 1px solid rgba(0,0,0,0.05);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .category:hover {
+            box-shadow: 0 12px 48px rgba(0,0,0,0.12);
+            transform: translateY(-2px);
         }
         .category-header {
-            background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
-            padding: 20px;
+            padding: 28px 24px;
             text-align: center;
         }
         .category-header h3 {
-            font-size: 1.8em;
-            margin-bottom: 5px;
+            font-size: 2em;
+            margin-bottom: 6px;
+            font-weight: 800;
+            letter-spacing: -0.01em;
         }
         .category-items {
             background: white;
         }
         .menu-item {
-            padding: 20px;
+            padding: 28px 24px;
             border-bottom: 1px solid #f0f0f0;
             display: flex;
             justify-content: space-between;
             align-items: flex-start;
-            transition: background-color 0.3s ease, transform 0.2s ease;
-            gap: 15px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            gap: 20px;
         }
         .menu-item:hover {
-            background-color: #f8f9fa;
-            transform: translateX(5px);
+            background-color: rgba(102, 126, 234, 0.04);
+            transform: translateX(8px);
+            box-shadow: inset 4px 0 0 #667eea;
         }
         .menu-item:last-child {
             border-bottom: none;
         }
         .item-image {
             flex-shrink: 0;
-            width: 80px;
-            height: 80px;
-            border-radius: 12px;
+            width: 90px;
+            height: 90px;
+            border-radius: 16px;
             overflow: hidden;
             background: #f8f9fa;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            border: 2px solid rgba(0,0,0,0.05);
         }
         .item-image img {
             width: 100%;
@@ -169,59 +224,83 @@
         }
         .item-info {
             flex: 1;
-            margin-right: 20px;
+            margin-right: 24px;
         }
         .item-name {
-            font-size: 1.3em;
-            font-weight: bold;
+            font-size: 1.4em;
+            font-weight: 700;
             color: #2c3e50;
-            margin-bottom: 8px;
+            margin-bottom: 10px;
+            letter-spacing: -0.01em;
         }
         .item-description {
-            color: #666;
-            font-style: italic;
-            line-height: 1.4;
+            color: #7f8c8d;
+            font-style: normal;
+            line-height: 1.6;
+            font-size: 0.95em;
         }
         .item-price {
-            font-size: 1.4em;
-            font-weight: bold;
-            color: #27ae60;
+            font-size: 1.6em;
+            font-weight: 800;
+            color: #667eea;
             white-space: nowrap;
         }
         .no-items {
-            padding: 30px;
+            padding: 50px 30px;
             text-align: center;
-            color: #666;
-            font-style: italic;
+            color: #7f8c8d;
+            font-style: normal;
+            font-size: 1.05em;
+            font-weight: 500;
         }
         .footer {
-            background: #2c3e50;
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
             color: white;
-            padding: 20px;
+            padding: 40px 20px;
             text-align: center;
-            margin-top: 40px;
+            margin-top: 0;
         }
         .footer p {
-            margin-bottom: 10px;
+            margin-bottom: 12px;
+            font-weight: 500;
+            font-size: 0.95em;
         }
         .generated-info {
-            background: #e8f6f3;
-            padding: 15px;
-            margin: 20px;
-            border-radius: 8px;
+            background: rgba(232, 246, 243, 0.9);
+            backdrop-filter: blur(10px);
+            padding: 20px;
+            margin: 30px;
+            border-radius: 16px;
             text-align: center;
-            font-size: 0.9em;
+            font-size: 0.95em;
             color: #155724;
+            font-weight: 500;
+            border: 2px solid rgba(21, 87, 36, 0.1);
         }
         
         /* Mobile responsiveness */
         @media (max-width: 600px) {
-            .header h1 { font-size: 2em; }
-            .header p { font-size: 1em; }
+            .container {
+                max-width: 100%;
+            }
+            .header {
+                padding: 40px 20px;
+            }
+            .header h1 { 
+                font-size: 2.2em;
+                letter-spacing: -0.01em;
+            }
+            .header p { 
+                font-size: 1.1em; 
+            }
+            .menu-content { 
+                padding: 24px 20px; 
+            }
             .menu-item {
                 flex-direction: column;
                 align-items: flex-start;
-                gap: 10px;
+                gap: 16px;
+                padding: 24px 20px;
             }
             .item-image {
                 width: 100%;
@@ -230,19 +309,22 @@
             }
             .item-info {
                 margin-right: 0;
-                margin-bottom: 10px;
+                margin-bottom: 12px;
             }
-            .menu-content { padding: 15px; }
+            .category {
+                margin-bottom: 40px;
+            }
         }
 
         /* Animazioni */
         .category {
             animation: fadeInUp 0.6s ease-out;
         }
+        
         @keyframes fadeInUp {
             from {
                 opacity: 0;
-                transform: translateY(20px);
+                transform: translateY(30px);
             }
             to {
                 opacity: 1;
@@ -252,6 +334,7 @@
     </style>
 </head>
 <body>
+    <div class="background-animation"></div>
     <div class="container">
         <div class="header">
             <a href="javascript:history.back()" class="back-btn">← Indietro</a>

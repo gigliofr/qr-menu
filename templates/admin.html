@@ -78,8 +78,8 @@
             background: var(--surface-white);
             backdrop-filter: blur(20px);
             border-radius: var(--border-radius);
-            padding: 40px;
-            margin-bottom: 30px;
+            padding: 50px;
+            margin-bottom: 40px;
             box-shadow: var(--shadow-soft);
             border: 1px solid rgba(255, 255, 255, 0.3);
             position: relative;
@@ -105,23 +105,25 @@
         }
         
         .user-info h1 {
-            font-size: 2.5rem;
+            font-size: 3rem;
             font-weight: 800;
             background: var(--primary-gradient);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
-            margin-bottom: 8px;
+            margin-bottom: 12px;
             display: flex;
             align-items: center;
             gap: 15px;
+            letter-spacing: -0.02em;
         }
         
         .user-info p {
             color: var(--text-secondary);
-            font-size: 1.1rem;
+            font-size: 1.15rem;
             font-weight: 500;
-            margin-bottom: 4px;
+            margin-bottom: 6px;
+            line-height: 1.6;
         }
         
         .user-actions {
@@ -135,17 +137,18 @@
             align-items: center;
             justify-content: center;
             gap: 10px;
-            padding: 14px 28px;
+            padding: 16px 32px;
             border: none;
-            border-radius: 15px;
+            border-radius: 16px;
             text-decoration: none;
-            font-weight: 600;
-            font-size: 0.95rem;
+            font-weight: 700;
+            font-size: 1rem;
             cursor: pointer;
             transition: var(--transition);
             position: relative;
             overflow: hidden;
             backdrop-filter: blur(10px);
+            letter-spacing: 0.01em;
         }
         
         .btn::before {
@@ -248,7 +251,7 @@
         .stat-card {
             background: var(--surface-white);
             backdrop-filter: blur(20px);
-            padding: 35px;
+            padding: 45px;
             border-radius: var(--border-radius);
             text-align: center;
             box-shadow: var(--shadow-soft);
@@ -274,27 +277,29 @@
         }
         
         .stat-number {
-            font-size: 3.5rem;
+            font-size: 4rem;
             font-weight: 800;
             background: var(--primary-gradient);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
-            margin-bottom: 12px;
+            margin-bottom: 16px;
+            letter-spacing: -0.02em;
         }
         
         .stat-label {
             color: var(--text-secondary);
-            font-size: 1.1rem;
+            font-size: 1.15rem;
             font-weight: 600;
+            letter-spacing: 0.01em;
         }
         
         .active-menu-section {
             background: var(--surface-white);
             backdrop-filter: blur(20px);
-            padding: 35px;
+            padding: 45px;
             border-radius: var(--border-radius);
-            margin-bottom: 40px;
+            margin-bottom: 50px;
             box-shadow: var(--shadow-soft);
             border: 1px solid rgba(255, 255, 255, 0.3);
             position: relative;
@@ -312,32 +317,34 @@
         }
         
         .active-menu-section h3 {
-            font-size: 1.8rem;
+            font-size: 2rem;
             font-weight: 700;
-            margin-bottom: 20px;
+            margin-bottom: 24px;
             background: var(--primary-gradient);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
+            letter-spacing: -0.01em;
         }
         
         .no-active-menu {
             text-align: center;
-            padding: 50px;
+            padding: 60px;
             color: var(--text-secondary);
         }
         
         .no-active-menu h3 {
-            font-size: 1.5rem;
-            margin-bottom: 15px;
+            font-size: 1.6rem;
+            margin-bottom: 20px;
+            font-weight: 600;
         }
         
         .menu-card {
             background: var(--surface-white);
             backdrop-filter: blur(20px);
             border-radius: var(--border-radius);
-            padding: 30px;
-            margin-bottom: 25px;
+            padding: 40px;
+            margin-bottom: 30px;
             box-shadow: var(--shadow-soft);
             border: 1px solid rgba(255, 255, 255, 0.3);
             transition: var(--transition);

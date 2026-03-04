@@ -4,6 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login - QR Menu System</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         * {
             margin: 0;
@@ -12,98 +15,159 @@
         }
 
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
-            padding: 20px;
+            padding: 40px 20px;
+            position: relative;
+            overflow-x: hidden;
+        }
+        
+        .background-animation {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+        }
+        
+        .background-animation::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(45deg, transparent, rgba(255,255,255,0.03), transparent);
+            animation: shimmer 8s ease-in-out infinite;
+        }
+        
+        @keyframes shimmer {
+            0%, 100% { transform: translateX(-100%) translateY(-100%) rotate(45deg); }
+            50% { transform: translateX(100%) translateY(100%) rotate(45deg); }
         }
 
         .login-container {
-            background: white;
-            padding: 40px;
-            border-radius: 15px;
-            box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+            background: rgba(255, 255, 255, 0.98);
+            backdrop-filter: blur(20px);
+            padding: 60px 50px;
+            border-radius: 24px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.15);
             width: 100%;
-            max-width: 400px;
+            max-width: 520px;
             text-align: center;
+            position: relative;
+            z-index: 1;
+            animation: slideUp 0.6s ease-out;
+            border: 1px solid rgba(255, 255, 255, 0.5);
+        }
+        
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(40px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
         .logo {
-            font-size: 3em;
-            margin-bottom: 10px;
+            font-size: 4em;
+            margin-bottom: 24px;
+            animation: float 3s ease-in-out infinite;
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
         }
 
         h1 {
             color: #2c3e50;
-            margin-bottom: 10px;
-            font-size: 2em;
+            margin-bottom: 16px;
+            font-size: 2.8em;
+            font-weight: 800;
+            line-height: 1.2;
+            letter-spacing: -0.02em;
         }
 
         .subtitle {
             color: #7f8c8d;
-            margin-bottom: 30px;
-            font-size: 1.1em;
+            margin-bottom: 48px;
+            font-size: 1.15em;
+            font-weight: 500;
+            line-height: 1.6;
         }
 
         .form-group {
-            margin-bottom: 20px;
+            margin-bottom: 24px;
             text-align: left;
         }
 
         label {
             display: block;
-            margin-bottom: 8px;
+            margin-bottom: 10px;
             color: #2c3e50;
             font-weight: 600;
+            font-size: 0.95em;
+            letter-spacing: 0.01em;
         }
 
         input[type="text"],
         input[type="email"], 
         input[type="password"] {
             width: 100%;
-            padding: 12px 15px;
+            padding: 16px 20px;
             border: 2px solid #e9ecef;
-            border-radius: 8px;
+            border-radius: 12px;
             font-size: 16px;
-            transition: all 0.3s ease;
+            font-family: 'Inter', sans-serif;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            background: white;
         }
 
         input[type="text"]:focus,
         input[type="email"]:focus,
         input[type="password"]:focus {
             outline: none;
-            border-color: #3498db;
-            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+            border-color: #667eea;
+            box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+            transform: translateY(-1px);
         }
 
         .btn {
             width: 100%;
-            padding: 15px;
-            background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+            padding: 18px 24px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
             border: none;
-            border-radius: 8px;
-            font-size: 16px;
-            font-weight: 600;
+            border-radius: 12px;
+            font-size: 17px;
+            font-weight: 700;
+            font-family: 'Inter', sans-serif;
             cursor: pointer;
-            transition: all 0.3s ease;
-            margin-bottom: 15px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            margin-bottom: 20px;
+            letter-spacing: 0.02em;
         }
 
         .btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(52, 152, 219, 0.3);
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
         }
 
         .btn:active {
-            transform: translateY(0);
+            transform: translateY(-1px);
         }
 
         .divider {
-            margin: 30px 0;
+            margin: 36px 0;
             position: relative;
             text-align: center;
         }
@@ -119,9 +183,11 @@
         }
 
         .divider span {
-            background: white;
-            padding: 0 15px;
+            background: rgba(255, 255, 255, 0.98);
+            padding: 0 20px;
             color: #7f8c8d;
+            font-size: 0.95em;
+            font-weight: 500;
         }
 
         .register-link {
@@ -129,41 +195,56 @@
         }
 
         .register-link a {
-            color: #3498db;
+            color: #667eea;
             text-decoration: none;
             font-weight: 600;
+            font-size: 1.05em;
+            transition: all 0.3s ease;
         }
 
         .register-link a:hover {
-            text-decoration: underline;
+            color: #764ba2;
+            transform: translateY(-1px);
+            display: inline-block;
         }
 
         .error {
-            background: #e74c3c;
+            background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
             color: white;
-            padding: 15px;
-            border-radius: 8px;
-            margin-bottom: 20px;
+            padding: 18px 24px;
+            border-radius: 12px;
+            margin-bottom: 28px;
             text-align: center;
+            font-weight: 600;
+            font-size: 0.95em;
+            box-shadow: 0 4px 15px rgba(250, 112, 154, 0.3);
+            animation: shake 0.5s ease-in-out;
+        }
+        
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-8px); }
+            75% { transform: translateX(8px); }
         }
 
         .error-actions {
             display: flex;
-            gap: 10px;
-            margin-bottom: 20px;
+            gap: 12px;
+            margin-bottom: 28px;
         }
-
+        
         .btn-back {
             flex: 1;
-            padding: 12px;
-            background: #95a5a6;
-            color: white;
-            border: none;
-            border-radius: 8px;
-            font-size: 14px;
+            padding: 14px 16px;
+            background: rgba(149, 165, 166, 0.15);
+            color: #2c3e50;
+            border: 2px solid #e9ecef;
+            border-radius: 10px;
+            font-size: 15px;
             font-weight: 600;
+            font-family: 'Inter', sans-serif;
             cursor: pointer;
-            transition: all 0.3s ease;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             display: flex;
             align-items: center;
             justify-content: center;
@@ -171,22 +252,24 @@
         }
 
         .btn-back:hover {
-            background: #7f8c8d;
+            background: rgba(149, 165, 166, 0.25);
+            border-color: #95a5a6;
             transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.1);
         }
-
+        
         .btn-retry {
             flex: 1;
-            padding: 12px;
-            background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
+            padding: 14px 16px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
             border: none;
-            border-radius: 8px;
-            font-size: 14px;
-            font-weight: 600;
+            border-radius: 10px;
+            font-size: 15px;
+            font-weight: 700;
+            font-family: 'Inter', sans-serif;
             cursor: pointer;
-            transition: all 0.3s ease;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             display: flex;
             align-items: center;
             justify-content: center;
@@ -195,7 +278,107 @@
 
         .btn-retry:hover {
             transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(243, 156, 18, 0.3);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+        }
+
+        .password-hint {
+            font-size: 0.9em;
+            color: #7f8c8d;
+            margin-top: 8px;
+            font-weight: 500;
+        }
+        
+        /* Mobile responsiveness */
+        @media (max-width: 640px) {
+            body {
+                padding: 24px 16px;
+            }
+            
+            .login-container {
+                padding: 48px 32px;
+                border-radius: 20px;
+            }
+            
+            h1 {
+                font-size: 2.2em;
+            }
+            
+            .logo {
+                font-size: 3.2em;
+            }
+            
+            .subtitle {
+                font-size: 1.05em;
+            }
+            
+            input[type="text"],
+            input[type="email"],
+            input[type="password"] {
+                padding: 14px 18px;
+                font-size: 16px;
+            }
+            
+            .btn {
+                padding: 16px 20px;
+                font-size: 16px;
+            }
+        }
+        
+        @media (max-width: 400px) {
+            .login-container {
+                padding: 40px 24px;
+            }
+            
+            h1 {
+                font-size: 1.9em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="background-animation"></div>
+    <div class="login-container">
+            border: 2px solid #e9ecef;
+            border-radius: 10px;
+            font-size: 15px;
+            font-weight: 600;
+            font-family: 'Inter', sans-serif;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-back:hover {
+            background: rgba(149, 165, 166, 0.25);
+            border-color: #95a5a6;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.1);
+        }
+
+        .btn-retry {
+            flex: 1;
+            padding: 14px 16px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 15px;
+            font-weight: 700;
+            font-family: 'Inter', sans-serif;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-retry:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
         }
 
         .password-hint {
@@ -205,39 +388,54 @@
         }
 
         /* Mobile responsiveness */
-        @media (max-width: 480px) {
+        @media (max-width: 640px) {
+            body {
+                padding: 24px 16px;
+            }
+            
             .login-container {
-                padding: 30px 20px;
-                margin: 10px;
+                padding: 48px 32px;
+                border-radius: 20px;
             }
             
             h1 {
-                font-size: 1.8em;
+                font-size: 2.2em;
             }
             
             .logo {
-                font-size: 2.5em;
+                font-size: 3.2em;
+            }
+            
+            .subtitle {
+                font-size: 1.05em;
+            }
+            
+            input[type="text"],
+            input[type="email"],
+            input[type="password"] {
+                padding: 14px 18px;
+                font-size: 16px;
+            }
+            
+            .btn {
+                padding: 16px 20px;
+                font-size: 16px;
             }
         }
-
-        /* Animation */
-        .login-container {
-            animation: slideUp 0.6s ease-out;
-        }
-
-        @keyframes slideUp {
-            from {
-                opacity: 0;
-                transform: translateY(30px);
+        
+        @media (max-width: 400px) {
+            .login-container {
+                padding: 40px 24px;
             }
-            to {
-                opacity: 1;
-                transform: translateY(0);
+            
+            h1 {
+                font-size: 1.9em;
             }
         }
     </style>
 </head>
 <body>
+    <div class="background-animation"></div>
     <div class="login-container">
         <div class="logo">🍽️</div>
         <h1>QR Menu System</h1>
@@ -284,13 +482,14 @@
     </div>
 
     <script>
+        // Focus automatico sul primo campo
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('username').focus();
+        });
+
         // Funzione per tornare indietro
         function goBack() {
-            if (window.history.length > 1) {
-                window.history.back();
-            } else {
-                window.location.href = '/';
-            }
+            window.history.length > 1 ? window.history.back() : window.location.href = '/';
         }
 
         // Funzione per riprovare
@@ -300,28 +499,6 @@
             document.getElementById('username').focus();
         }
 
-        // Focus automatico sul primo campo
-        document.addEventListener('DOMContentLoaded', function() {
-            document.getElementById('username').focus();
-        });
-
-        // Animazione errore
-        const errorDiv = document.querySelector('.error');
-        if (errorDiv) {
-            errorDiv.style.animation = 'shake 0.5s ease-in-out';
-        }
-
-        // Keyframe per shake animation
-        const style = document.createElement('style');
-        style.textContent = `
-            @keyframes shake {
-                0%, 100% { transform: translateX(0); }
-                25% { transform: translateX(-5px); }
-                75% { transform: translateX(5px); }
-            }
-        `;
-        document.head.appendChild(style);
-
         // Validazione client-side
         document.querySelector('form').addEventListener('submit', function(e) {
             const username = document.getElementById('username').value.trim();
@@ -330,25 +507,24 @@
             if (!username) {
                 e.preventDefault();
                 alert('Inserisci username o email');
-                return;
-            }
-
-            if (!password) {
+            } else if (!password) {
                 e.preventDefault();
                 alert('Inserisci la password');
-                return;
             }
         });
     </script>
 
     <!-- Legal Footer -->
-    <div style="position: fixed; bottom: 0; left: 0; right: 0; background: rgba(255,255,255,0.95); backdrop-filter: blur(10px); padding: 15px 0; text-align: center; border-top: 1px solid rgba(0,0,0,0.06); box-shadow: 0 -2px 10px rgba(0,0,0,0.05);">
-        <p style="color: #7f8c8d; font-size: 0.75em; margin-bottom: 8px;">© 2026 QR Menu</p>
-        <p style="color: #95a5a6; font-size: 0.7em;">
-            <a href="/privacy" style="color: #3498db; text-decoration: none; margin: 0 6px;">Privacy</a> •
-            <a href="/cookie-policy" style="color: #3498db; text-decoration: none; margin: 0 6px;">Cookie</a> •
-            <a href="/terms" style="color: #3498db; text-decoration: none; margin: 0 6px;">Termini</a> •
-            <a href="/legal" style="color: #3498db; text-decoration: none; margin: 0 6px;">Note Legali</a>
+    <div style="position: fixed; bottom: 0; left: 0; right: 0; background: rgba(255,255,255,0.98); backdrop-filter: blur(20px); padding: 20px; text-align: center; border-top: 1px solid rgba(0,0,0,0.06); box-shadow: 0 -4px 20px rgba(0,0,0,0.06); z-index: 999; font-family: 'Inter', sans-serif;">
+        <p style="color: #2c3e50; font-size: 0.85em; font-weight: 600; margin-bottom: 8px;">© 2026 QR Menu</p>
+        <p style="color: #7f8c8d; font-size: 0.8em; font-weight: 500;">
+            <a href="/privacy-policy" style="color: #667eea; text-decoration: none; margin: 0 8px; transition: color 0.3s ease;" onmouseover="this.style.color='#764ba2'" onmouseout="this.style.color='#667eea'">Privacy</a>
+            <span style="color: #ddd;">•</span>
+            <a href="/cookie-policy" style="color: #667eea; text-decoration: none; margin: 0 8px; transition: color 0.3s ease;" onmouseover="this.style.color='#764ba2'" onmouseout="this.style.color='#667eea'">Cookie</a>
+            <span style="color: #ddd;">•</span>
+            <a href="/terms-of-service" style="color: #667eea; text-decoration: none; margin: 0 8px; transition: color 0.3s ease;" onmouseover="this.style.color='#764ba2'" onmouseout="this.style.color='#667eea'">Termini</a>
+            <span style="color: #ddd;">•</span>
+            <a href="/legal-notes" style="color: #667eea; text-decoration: none; margin: 0 8px; transition: color 0.3s ease;" onmouseover="this.style.color='#764ba2'" onmouseout="this.style.color='#667eea'">Note Legali</a>
         </p>
     </div>
 </body>

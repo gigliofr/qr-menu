@@ -4,9 +4,76 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Crea Nuovo Menu - QR Menu</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
-        body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
-        .header { background: #2c3e50; color: white; padding: 20px; margin: -20px -20px 20px -20px; position: relative; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 40px 20px;
+            position: relative;
+        }
+        
+        .background-animation {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+        }
+        
+        .background-animation::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(45deg, transparent, rgba(255,255,255,0.03), transparent);
+            animation: shimmer 8s ease-in-out infinite;
+        }
+        
+        @keyframes shimmer {
+            0%, 100% { transform: translateX(-100%) translateY(-100%) rotate(45deg); }
+            50% { transform: translateX(100%) translateY(100%) rotate(45deg); }
+        }
+        
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 1;
+        }
+        .header { 
+            background: rgba(255, 255, 255, 0.98);
+            backdrop-filter: blur(20px);
+            color: #2c3e50;
+            padding: 50px 40px;
+            margin-bottom: 30px;
+            border-radius: 24px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+            position: relative;
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            text-align: center;
+        }
+        .header h1 {
+            font-size: 2.8em;
+            font-weight: 800;
+            margin-bottom: 14px;
+            letter-spacing: -0.02em;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .header p {
+            font-size: 1.15em;
+            color: #7f8c8d;
+            font-weight: 500;
+        }
         .back-btn {
             position: absolute;
             top: 20px;
@@ -29,29 +96,123 @@
             background: rgba(255,255,255,0.3);
             transform: translateX(-3px);
         }
-        .form-group { margin-bottom: 15px; }
-        label { display: block; margin-bottom: 5px; font-weight: bold; }
-        input, textarea, select { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box; }
-        textarea { height: 80px; resize: vertical; }
-        .btn { padding: 10px 20px; margin: 5px; text-decoration: none; color: white; border: none; border-radius: 4px; cursor: pointer; }
-        .btn-primary { background: #3498db; }
-        .btn-success { background: #27ae60; }
-        .btn-secondary { background: #95a5a6; }
-        .category-section { border: 1px solid #ddd; padding: 15px; margin: 15px 0; border-radius: 5px; }
-        .category-header { background: #ecf0f1; padding: 10px; margin: -15px -15px 15px -15px; border-radius: 5px 5px 0 0; }
-        .item-row { display: flex; gap: 10px; margin-bottom: 10px; }
+        .form-container {
+            background: rgba(255, 255, 255, 0.98);
+            backdrop-filter: blur(20px);
+            padding: 45px 40px;
+            border-radius: 24px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+        }
+        .form-group { margin-bottom: 28px; }
+        label { 
+            display: block;
+            margin-bottom: 10px;
+            font-weight: 700;
+            color: #2c3e50;
+            font-size: 0.95em;
+            letter-spacing: 0.01em;
+        }
+        input, textarea, select { 
+            width: 100%;
+            padding: 16px 20px;
+            border: 2px solid #e9ecef;
+            border-radius: 14px;
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+            font-size: 16px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            background: white;
+        }
+        input:focus, textarea:focus, select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+            transform: translateY(-1px);
+        }
+        textarea { height: 120px; resize: vertical; }
+        .btn { 
+            padding: 16px 32px;
+            margin: 8px;
+            text-decoration: none;
+            color: white;
+            border: none;
+            border-radius: 14px;
+            cursor: pointer;
+            font-weight: 700;
+            font-size: 1rem;
+            font-family: 'Inter', sans-serif;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            letter-spacing: 0.01em;
+        }
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+        }
+        .btn-primary { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+        .btn-success { background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); }
+        .btn-secondary { background: linear-gradient(135deg, #95a5a6 0%, #7f8c8d 100%); }
+        .category-section { 
+            border: 2px solid #e9ecef;
+            padding: 30px;
+            margin: 30px 0;
+            border-radius: 20px;
+            background: rgba(248, 249, 250, 0.5);
+            backdrop-filter: blur(10px);
+        }
+        .category-header { 
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            margin: -30px -30px 25px -30px;
+            border-radius: 20px 20px 0 0;
+        }
+        .category-header h4 {
+            font-size: 1.4em;
+            font-weight: 700;
+        }
+        .item-row { display: flex; gap: 14px; margin-bottom: 14px; }
         .item-row input { flex: 1; }
-        .remove-btn { background: #e74c3c; color: white; border: none; padding: 5px 10px; border-radius: 3px; cursor: pointer; }
+        .remove-btn { 
+            background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+            color: white;
+            border: none;
+            padding: 10px 18px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 700;
+            transition: all 0.3s ease;
+        }
+        .remove-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(250, 112, 154, 0.4);
+        }
+        h3 {
+            font-size: 1.8em;
+            margin: 40px 0 24px 0;
+            color: #2c3e50;
+            font-weight: 700;
+            letter-spacing: -0.01em;
+        }
+        h5 {
+            font-size: 1.2em;
+            margin: 24px 0 16px 0;
+            color: #2c3e50;
+            font-weight: 600;
+        }
     </style>
 </head>
 <body>
-    <div class="header">
-        <a href="/admin" class="back-btn">← Indietro</a>
-        <h1>➕ Crea Nuovo Menu</h1>
-        <p>Compila i dettagli del tuo menu digitale</p>
-    </div>
+    <div class="background-animation"></div>
+    <div class="container">
+        <div class="header">
+            <a href="/admin" class="back-btn">← Indietro</a>
+            <h1>➕ Crea Nuovo Menu</h1>
+            <p>Compila i dettagli del tuo menu digitale</p>
+        </div>
 
-    <form method="POST" id="menuForm">
+        <div class="form-container">
+            <form method="POST" id="menuForm">
         <div class="form-group">
             <label for="name">Nome del Menu:</label>
             <input type="text" id="name" name="name" required placeholder="es: Menu della Casa">
@@ -98,6 +259,8 @@
             <a href="/admin" class="btn btn-secondary">❌ Annulla</a>
         </div>
     </form>
+        </div> <!-- end form-container -->
+    </div> <!-- end container -->
 
     <script>
         let categoryCount = 1;
