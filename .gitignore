@@ -17,7 +17,21 @@ logs/
 
 # Environment files
 .env
+.env.*
 .env.local
+.env.production
+.env.development
+config.local.*
+secrets.json
+credentials.json
+
+# Certificates and Keys
+*.pem
+*.key
+*.cert
+*.crt
+*.p12
+*.pfx
 
 # IDE
 .vscode/

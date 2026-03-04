@@ -2,7 +2,55 @@
 
 ## Overview
 
-This module provides comprehensive security and GDPR compliance features for the QR Menu System, including rate limiting, audit logging, GDPR data management, encryption utilities, and security headers.
+This module provides comprehensive security and GDPR compliance features for the QR Menu System, including rate limiting, audit logging, GDPR data management, encryption utilities, security headers, and pre-commit security checks.
+
+## 🔒 Pre-Commit Security Check
+
+**Nuovo:** Script per prevenire commit accidentali di credenziali.
+
+### Uso Manuale
+
+Prima di ogni commit importante:
+```powershell
+.\security\pre-commit-check.ps1
+```
+
+Lo script scansiona i file staged cercando:
+- ✅ MongoDB URI con credenziali
+- ✅ Password in chiaro
+- ✅ API Keys
+- ✅ AWS credentials
+- ✅ GitHub tokens
+- ✅ Private keys
+- ✅ JWT tokens
+- ✅ Bearer tokens
+
+### Setup Git Hook (Automatico)
+
+Per eseguire automaticamente ad ogni commit:
+
+```powershell
+# Windows
+Copy-Item security\pre-commit-check.ps1 .git\hooks\pre-commit.ps1
+
+# Crea hook wrapper
+@"
+#!/bin/sh
+powershell.exe -ExecutionPolicy Bypass -File .git/hooks/pre-commit.ps1
+"@ | Out-File .git\hooks\pre-commit -Encoding ASCII
+
+# Rendi eseguibile (Git Bash)
+chmod +x .git/hooks/pre-commit
+```
+
+### False Positives
+
+Se il check blocca erroneamente:
+1. Verifica che non ci siano davvero segreti
+2. Se è un falso positivo, committa con:
+   ```powershell
+   git commit --no-verify -m "messaggio"
+   ```
 
 ## Components
 
