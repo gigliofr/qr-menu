@@ -12,7 +12,7 @@ print("Utenti admin eliminati: " + deletedUsers.deletedCount);
 
 // Password: "admin"
 // Hash bcrypt verificato e testato (cost 10)
-const passwordHash = "$2a$10$CwTycUXWue0Thq9StjUM0uJ/kJqDv6xB.J4dTg3D5VkIYCvKXvGfq";
+const passwordHash = "$2a$10$dopU1ueHFSSkCmD78zuJCe1H0jBgtfnDp.pofNxNrleXL5SEGiCVK";
 
 const adminUser = {
     _id: "admin_user_001",

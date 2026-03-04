@@ -66,7 +66,7 @@ log("================================================\n", colors.cyan);
 
 // Password: "admin" (bcrypt hash verificato e testato)
 // Hash generato e verificato con bcrypt cost 10
-const adminPasswordHash = "$2a$10$CwTycUXWue0Thq9StjUM0uJ/kJqDv6xB.J4dTg3D5VkIYCvKXvGfq";
+const adminPasswordHash = "$2a$10$dopU1ueHFSSkCmD78zuJCe1H0jBgtfnDp.pofNxNrleXL5SEGiCVK";
 
 const adminUser = {
     _id: "admin_user_001",
