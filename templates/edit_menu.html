@@ -463,8 +463,8 @@
     <div style="margin-top: 30px; padding: 15px; background: #f8f9fa; border-radius: 5px; font-size: 0.9em;">
         <strong>Informazioni Menu:</strong>
         <ul>
-            <li>Creato: {{.Menu.CreatedAt.Format "02/01/2006 alle 15:04"}}</li>
-            <li>Ultima modifica: {{.Menu.UpdatedAt.Format "02/01/2006 alle 15:04"}}</li>
+            {{if not .Menu.CreatedAt.IsZero}}<li>Creato: {{.Menu.CreatedAt.Format "02/01/2006 alle 15:04"}}</li>{{end}}
+            {{if not .Menu.UpdatedAt.IsZero}}<li>Ultima modifica: {{.Menu.UpdatedAt.Format "02/01/2006 alle 15:04"}}</li>{{end}}
             <li>Stato: {{if .Menu.IsCompleted}}Completato e pubblico{{else}}In lavorazione{{end}}</li>
         </ul>
     </div>

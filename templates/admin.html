@@ -499,7 +499,7 @@
                     <div>
                         <h4 style="font-size: 1.5rem; margin-bottom: 10px;">{{$activeMenu.Name}}</h4>
                         <p style="margin-bottom: 10px; color: var(--text-secondary);">{{$activeMenu.Description}}</p>
-                        <p><strong>Categorie:</strong> {{len $activeMenu.Categories}} | <strong>Aggiornato:</strong> {{$activeMenu.UpdatedAt.Format "02/01/2006 15:04"}}</p>
+                        <p><strong>Categorie:</strong> {{len $activeMenu.Categories}}{{if not $activeMenu.UpdatedAt.IsZero}} | <strong>Aggiornato:</strong> {{$activeMenu.UpdatedAt.Format "02/01/2006 15:04"}}{{end}}</p>
                     </div>
                     {{if $activeMenu.QRCodePath}}
                     <div style="text-align: center;">
@@ -544,8 +544,8 @@
                             {{end}}
                         </h3>
                         <p style="margin-bottom: 8px;"><strong>Descrizione:</strong> {{$menu.Description}}</p>
-                        <p style="margin-bottom: 8px;"><strong>Categorie:</strong> {{len $menu.Categories}} | <strong>Creato:</strong> {{$menu.CreatedAt.Format "02/01/2006 15:04"}}</p>
-                        <p><strong>Ultima modifica:</strong> {{$menu.UpdatedAt.Format "02/01/2006 15:04"}}</p>
+                        <p style="margin-bottom: 8px;"><strong>Categorie:</strong> {{len $menu.Categories}}{{if not $menu.CreatedAt.IsZero}} | <strong>Creato:</strong> {{$menu.CreatedAt.Format "02/01/2006 15:04"}}{{end}}</p>
+                        {{if not $menu.UpdatedAt.IsZero}}<p><strong>Ultima modifica:</strong> {{$menu.UpdatedAt.Format "02/01/2006 15:04"}}</p>{{end}}
                     </div>
                     
                     {{if and $menu.IsCompleted $menu.QRCodePath}}

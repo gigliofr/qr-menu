@@ -333,7 +333,9 @@
         </div>
 
         <div class="generated-info">
+            {{if not .Menu.UpdatedAt.IsZero}}
             <p>📅 <strong>Menu aggiornato il:</strong> {{.Menu.UpdatedAt.Format "02/01/2006 alle 15:04"}}</p>
+            {{end}}
             <p>🔗 Menu generato con QR Menu System</p>
         </div>
 
