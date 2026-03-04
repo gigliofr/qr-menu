@@ -82,15 +82,15 @@ func setupProtectedRoutes(r *mux.Router) {
 	// Dashboard e admin base
 	r.HandleFunc("/admin", handlers.RequireAuth(handlers.AdminHandler)).Methods("GET")
 	r.HandleFunc("/admin/analytics", handlers.RequireAuth(handlers.AnalyticsDashboardHandler)).Methods("GET")
-	r.HandleFunc("/logout", handlers.LogoutHandler).Methods("GET", "POST")
+	r.HandleFunc("/logout", handlers.RequireUser(handlers.LogoutHandler)).Methods("GET", "POST")
 	
 	// Multi-restaurant: selezione ristorante
-	r.HandleFunc("/select-restaurant", handlers.RequireAuth(handlers.SelectRestaurantHandler)).Methods("GET")
-	r.HandleFunc("/select-restaurant", handlers.RequireAuth(handlers.SelectRestaurantPostHandler)).Methods("POST")
+	r.HandleFunc("/select-restaurant", handlers.RequireUser(handlers.SelectRestaurantHandler)).Methods("GET")
+	r.HandleFunc("/select-restaurant", handlers.RequireUser(handlers.SelectRestaurantPostHandler)).Methods("POST")
 	
 	// Multi-restaurant: aggiungi nuovo ristorante
-	r.HandleFunc("/add-restaurant", handlers.RequireAuth(handlers.AddRestaurantHandler)).Methods("GET")
-	r.HandleFunc("/add-restaurant", handlers.RequireAuth(handlers.AddRestaurantPostHandler)).Methods("POST")
+	r.HandleFunc("/add-restaurant", handlers.RequireUser(handlers.AddRestaurantHandler)).Methods("GET")
+	r.HandleFunc("/add-restaurant", handlers.RequireUser(handlers.AddRestaurantPostHandler)).Methods("POST")
 
 	// Gestione menu
 	menuRoutes := []RouteDefinition{

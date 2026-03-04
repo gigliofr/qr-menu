@@ -196,15 +196,36 @@ func createSession(userID string, restaurantID string, r *http.Request) (*models
 
 // getSessionFromRequest recupera la sessione dalla richiesta HTTP
 func getSessionFromRequest(r *http.Request) (*models.Session, error) {
+	logger.Debug("=== SESSION RETRIEVAL START ===", map[string]interface{}{
+		"path": r.URL.Path,
+		"method": r.Method,
+	})
+	
 	session, err := store.Get(r, "qr-menu-session")
 	if err != nil {
+		logger.Error("Errore nel recupero del cookie store", map[string]interface{}{
+			"error": err.Error(),
+		})
 		return nil, err
 	}
 
+	logger.Debug("Cookie store.Get result", map[string]interface{}{
+		"has_values": len(session.Values) > 0,
+		"is_new": session.IsNew,
+	})
+
 	sessionID, ok := session.Values["session_id"].(string)
 	if !ok || sessionID == "" {
+		logger.Warn("Session ID non trovato nel cookie", map[string]interface{}{
+			"ok": ok,
+			"session_id": sessionID,
+		})
 		return nil, fmt.Errorf("nessuna sessione trovata")
 	}
+
+	logger.Debug("Session ID estratto dal cookie", map[string]interface{}{
+		"session_id": sessionID,
+	})
 
 	// ⭐ Recupera sessione da MongoDB invece che da memoria
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
@@ -220,8 +241,17 @@ func getSessionFromRequest(r *http.Request) (*models.Session, error) {
 	}
 	
 	if userSession == nil {
+		logger.Error("Sessione non trovata in MongoDB", map[string]interface{}{
+			"session_id": sessionID,
+		})
 		return nil, fmt.Errorf("sessione non trovata")
 	}
+
+	logger.Debug("Sessione recuperata con successo da MongoDB", map[string]interface{}{
+		"session_id": sessionID,
+		"user_id": userSession.UserID,
+		"restaurant_id": userSession.RestaurantID,
+	})
 
 	// Aggiorna il timestamp dell'ultimo accesso
 	userSession.LastAccessed = time.Now()
@@ -232,6 +262,7 @@ func getSessionFromRequest(r *http.Request) (*models.Session, error) {
 		})
 	}
 
+	logger.Debug("=== SESSION RETRIEVAL END ===", nil)
 	return userSession, nil
 }
 
@@ -658,13 +689,63 @@ func LogoutHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 // RequireAuth middleware per proteggere le route
+// RequireAuth middleware per proteggere le route che richiedono un ristorante selezionato
 func RequireAuth(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		logger.AuditLog("ACCESS_ATTEMPT", "protected_route",
+			"Tentativo di accesso a risorsa protetta", "", getClientIP(r), r.UserAgent(), nil)
+		
 		_, err := getCurrentRestaurant(r)
 		if err != nil {
+			logger.Warn("Accesso negato: ristorante non selezionato", map[string]interface{}{
+				"error": err.Error(),
+				"url":   r.URL.Path,
+			})
 			http.Redirect(w, r, "/login", http.StatusFound)
 			return
 		}
+		next(w, r)
+	}
+}
+
+// RequireUser middleware per proteggere route che richiedono solo utente loggato (senza ristorante)
+// Usato per /select-restaurant, /add-restaurant, ecc.
+func RequireUser(next http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		logger.AuditLog("USER_ACCESS_ATTEMPT", "user_route",
+			"Tentativo di accesso a risorsa utente", "", getClientIP(r), r.UserAgent(), nil)
+		
+		userSession, err := getSessionFromRequest(r)
+		if err != nil || userSession == nil {
+			logger.Warn("Accesso negato: sessione non trovata", map[string]interface{}{
+				"error": err.Error(),
+				"url":   r.URL.Path,
+			})
+			http.Redirect(w, r, "/login", http.StatusFound)
+			return
+		}
+		
+		// Verifica che l'utente esista e sia attivo
+		ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
+		defer cancel()
+		
+		user, err := db.MongoInstance.GetUserByID(ctx, userSession.UserID)
+		if err != nil || user == nil || !user.IsActive {
+			logger.Warn("Accesso negato: utente non trovato o non attivo", map[string]interface{}{
+				"error":   err,
+				"user_id": userSession.UserID,
+				"url":     r.URL.Path,
+			})
+			http.Redirect(w, r, "/login", http.StatusFound)
+			return
+		}
+		
+		logger.Info("Accesso utente autorizzato", map[string]interface{}{
+			"user_id":  user.ID,
+			"username": user.Username,
+			"url":      r.URL.Path,
+		})
+		
 		next(w, r)
 	}
 }
