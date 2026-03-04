@@ -121,9 +121,11 @@ func loadTemplates() {
 	var err error
 	templates, err = template.ParseGlob("templates/*.html")
 	if err != nil {
-		log.Printf("Attenzione: errore nel caricamento dei template: %v", err)
+		log.Printf("Errore nel caricamento dei template: %v", err)
 		// Crea template di fallback in memoria
 		createFallbackTemplates()
+	} else {
+		log.Printf("✅ Template caricati con successo da templates/*.html")
 	}
 }
 
