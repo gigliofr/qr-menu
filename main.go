@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -11,18 +12,45 @@ import (
 )
 
 func main() {
+	// Inizializza il logger PRIMA di tutto
+	logLevel := logger.INFO
+	if lvl := os.Getenv("LOG_LEVEL"); lvl == "DEBUG" {
+		logLevel = logger.DEBUG
+	}
+	
+	// Su Railway/Cloud usa directory temporanea, in locale usa ./logs
+	logDir := "./logs"
+	if os.Getenv("PORT") != "" {
+		// In produzione (Railway) usa /tmp per i log
+		logDir = "/tmp/logs"
+	}
+	
+	if err := logger.Init(logLevel, logDir); err != nil {
+		log.Printf("⚠️ Errore nell'inizializzazione del logger: %v (continuo con log.Println)", err)
+	}
+	defer logger.Close()
+	
+	logger.Info("🚀 QR Menu System starting...", map[string]interface{}{
+		"version": "1.0.0",
+		"env":     os.Getenv("PORT") != "",
+	})
+	
 	// Connetti a MongoDB Atlas (OBBLIGATORIO)
 	log.Println("🔄 Connessione a MongoDB Atlas...")
+	logger.Info("Connessione a MongoDB Atlas", nil)
 	
 	if err := db.Connect(); err != nil {
-		log.Fatalf("❌ Errore connessione MongoDB: %v\n\n"+
+		errMsg := fmt.Sprintf("❌ Errore connessione MongoDB: %v\n\n"+
 			"Configura le variabili d'ambiente:\n"+
 			"  - MONGODB_URI: connection string MongoDB Atlas\n"+
 			"  - MONGODB_CERT_CONTENT: contenuto del certificato PEM (per Railway/Cloud)\n"+
 			"  - MONGODB_CERT_PATH: path al file certificato (per sviluppo locale)\n"+
 			"  - MONGODB_DB_NAME: nome del database (default: qr-menu)", err)
+		log.Fatalf(errMsg)
+		logger.Fatal("Errore connessione MongoDB", map[string]interface{}{"error": err.Error()})
 	}
 	log.Println("✓ MongoDB connesso con successo")
+	logger.Info("✅ MongoDB connesso con successo", nil)
 	
 	defer func() {
 		if db.MongoInstance != nil {
