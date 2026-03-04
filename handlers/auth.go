@@ -76,34 +76,20 @@ func seedTestUsers() {
 			continue
 		}
 
-		// Create restaurant record
-		restaurant := &models.Restaurant{
-			ID:           uuid.New().String(),
-			Username:     user.username,
-			Email:        user.email,
-			PasswordHash: hashedPassword,
-			Role:         user.role,
-			Name:         user.name,
-			Description:  "Test " + user.role + " account for QR Menu",
-			Address:      "Test Address",
-			Phone:        "555-0000",
-			IsActive:     true,
-			CreatedAt:    time.Now(),
-		}
-
-		// Store in restaurants map
-		restaurants[restaurant.ID] = restaurant
+		// NOTA: Seed disabilitato per nuova architettura User/Restaurant
+		// TODO: Implementare seed MongoDB con createUser + createRestaurant
+		_ = hashedPassword // evita warning unused
 
 		logger.Info("Utente di test creato", map[string]interface{}{
 			"username": user.username,
 			"role":     user.role,
-			"id":       restaurant.ID,
+			//"id": restaurant.ID, // COMMENTATO
 		})
 	}
 
 	logger.Info("Seeding utenti di test completato", map[string]interface{}{
 		"total_users": len(testUsers),
-		"restaurants": len(restaurants),
+		//"restaurants": len(restaurants), // COMMENTATO
 	})
 }
 
@@ -169,11 +155,12 @@ func checkPassword(hashedPassword, password string) bool {
 	return err == nil
 }
 
-// createSession crea una nuova sessione per un ristorante
-func createSession(restaurantID string, r *http.Request) (*models.Session, error) {
+// createSession crea una nuova sessione per un utente (con ristorante opzionale)
+func createSession(userID string, restaurantID string, r *http.Request) (*models.Session, error) {
 	session := &models.Session{
 		ID:           uuid.New().String(),
-		RestaurantID: restaurantID,
+		UserID:       userID,       // ⭐ Utente loggato
+		RestaurantID: restaurantID, // ⭐ Ristorante selezionato (può essere vuoto)
 		CreatedAt:    time.Now(),
 		LastAccessed: time.Now(),
 		IPAddress:    r.RemoteAddr,
@@ -217,6 +204,11 @@ func getCurrentRestaurant(r *http.Request) (*models.Restaurant, error) {
 		return nil, err
 	}
 
+	// ⭐ Verifica che un ristorante sia stato selezionato
+	if userSession.RestaurantID == "" {
+		return nil, fmt.Errorf("nessun ristorante selezionato")
+	}
+
 	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
 	defer cancel()
 
@@ -228,7 +220,26 @@ func getCurrentRestaurant(r *http.Request) (*models.Restaurant, error) {
 	return restaurant, nil
 }
 
-// LoginHandler gestisce il login
+// handleAuthError gestisce gli errori di autenticazione in modo centralizzato
+// Ritorna true se ha gestito l'errore (con redirect), false altrimenti
+func handleAuthError(w http.ResponseWriter, r *http.Request, err error) bool {
+	if err == nil {
+		return false
+	}
+	
+	// Se l'errore è "nessun ristorante selezionato", redirect a selezione
+	if err.Error() == "nessun ristorante selezionato" {
+		http.Redirect(w, r, "/select-restaurant", http.StatusFound)
+		return true
+	}
+	
+	// Per tutti gli altri errori, redirect al login
+	http.Redirect(w, r, "/login", http.StatusFound)
+	return true
+}
+
+
+// LoginHandler gestisce il login con supporto multi-ristorante
 func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	setSecurityHeaders(w)
 	if r.Method == "GET" {
@@ -258,14 +269,15 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
 	defer cancel()
 
-	// Trova il ristorante per username o email da MongoDB
-	restaurant, err := db.MongoInstance.GetRestaurantByUsername(ctx, username)
-	if err != nil || restaurant == nil {
+	// ⭐ STEP 1: Trova User (non Restaurant) per username o email
+	user, err := db.MongoInstance.GetUserByUsername(ctx, username)
+	if err != nil || user == nil {
 		// Prova con email
-		restaurant, err = db.MongoInstance.GetRestaurantByEmail(ctx, strings.ToLower(username))
+		user, err = db.MongoInstance.GetUserByEmail(ctx, strings.ToLower(username))
 	}
 
-	if restaurant == nil || !restaurant.IsActive || !checkPassword(restaurant.PasswordHash, password) {
+	// ⭐ STEP 2: Verifica credenziali su User
+	if user == nil || !user.IsActive || !checkPassword(user.PasswordHash, password) {
 		// Log login fallito
 		logger.SecurityEvent("LOGIN_FAILED", "Credenziali non valide",
 			"", ip, userAgent,
@@ -285,8 +297,52 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Crea sessione
-	userSession, err := createSession(restaurant.ID, r)
+	// ⭐ STEP 3: Ottieni tutti i ristoranti dell'utente
+	restaurants, err := db.MongoInstance.GetRestaurantsByOwnerID(ctx, user.ID)
+	if err != nil {
+		logger.Error("Errore nel recupero ristoranti", map[string]interface{}{
+			"error":   err.Error(),
+			"user_id": user.ID,
+		})
+		http.Error(w, "Errore nel recupero dei ristoranti", http.StatusInternalServerError)
+		return
+	}
+
+	// ⭐ STEP 4: Gestisci multi-ristorante
+	var userSession *models.Session
+	var redirectURL string
+
+	if len(restaurants) == 0 {
+		// Caso edge: utente senza ristoranti → crea il primo
+		userSession, err = createSession(user.ID, "", r)
+		redirectURL = "/add-restaurant"
+
+		logger.Warn("Utente senza ristoranti", map[string]interface{}{
+			"user_id":  user.ID,
+			"username": user.Username,
+		})
+
+	} else if len(restaurants) == 1 {
+		// Un solo ristorante → seleziona automaticamente
+		userSession, err = createSession(user.ID, restaurants[0].ID, r)
+		redirectURL = "/admin"
+
+		logger.Info("Login con ristorante singolo", map[string]interface{}{
+			"user_id":       user.ID,
+			"restaurant_id": restaurants[0].ID,
+		})
+
+	} else {
+		// Più ristoranti → mostra pagina di selezione
+		userSession, err = createSession(user.ID, "", r) // ⭐ RestaurantID vuoto
+		redirectURL = "/select-restaurant"
+
+		logger.Info("Login multi-ristorante", map[string]interface{}{
+			"user_id":          user.ID,
+			"restaurant_count": len(restaurants),
+		})
+	}
+
 	if err != nil {
 		http.Error(w, "Errore nella creazione della sessione", http.StatusInternalServerError)
 		return
@@ -297,28 +353,28 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	session.Values["session_id"] = userSession.ID
 	session.Save(r, w)
 
-	// Aggiorna ultimo login in MongoDB
-	restaurant.LastLogin = time.Now()
-	if err := db.MongoInstance.UpdateRestaurant(ctx, restaurant); err != nil {
+	// ⭐ STEP 5: Aggiorna ultimo login su User (non Restaurant)
+	if err := db.MongoInstance.UpdateUserLastLogin(ctx, user.ID); err != nil {
 		logger.Error("Errore nell'aggiornamento LastLogin", map[string]interface{}{
-			"error":         err.Error(),
-			"restaurant_id": restaurant.ID,
+			"error":   err.Error(),
+			"user_id": user.ID,
 		})
 	}
 
 	// Log login riuscito
 	logger.AuditLog("LOGIN_SUCCESS", "authentication",
-		"Login completato con successo", restaurant.ID, ip, userAgent,
+		"Login completato con successo", user.ID, ip, userAgent,
 		map[string]interface{}{
-			"username":        username,
-			"restaurant_name": restaurant.Name,
+			"user_id":         user.ID,
+			"username":        user.Username,
+			"restaurant_count": len(restaurants),
 		})
 
-	// Redirect all'admin
-	http.Redirect(w, r, "/admin", http.StatusFound)
+	// Redirect appropriato
+	http.Redirect(w, r, redirectURL, http.StatusFound)
 }
 
-// RegisterHandler gestisce la registrazione
+// RegisterHandler gestisce la registrazione (User + Restaurant separati + GDPR)
 func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 	setSecurityHeaders(w)
 	if r.Method == "GET" {
@@ -340,6 +396,10 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 	description := r.FormValue("description")
 	address := r.FormValue("address")
 	phone := r.FormValue("phone")
+	
+	// ⭐ GDPR: leggi consensi dal form
+	privacyConsent := r.FormValue("privacy_consent") == "on"
+	marketingConsent := r.FormValue("marketing_consent") == "on"
 
 	// Validazioni
 	var errors []string
@@ -364,16 +424,21 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 		errors = append(errors, "Nome ristorante è richiesto")
 	}
 
-	// Controlla unicità username ed email su MongoDB
+	// ⭐ GDPR: validazione consenso obbligatorio
+	if !privacyConsent {
+		errors = append(errors, "Devi accettare la Privacy Policy per continuare (GDPR Art. 7)")
+	}
+
+	// Controlla unicità username ed email su MongoDB (nella nuova collection users)
 	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
 	defer cancel()
 
-	existingUser, _ := db.MongoInstance.GetRestaurantByUsername(ctx, username)
+	existingUser, _ := db.MongoInstance.GetUserByUsername(ctx, username)
 	if existingUser != nil {
 		errors = append(errors, "Username già esistente")
 	}
 
-	existingEmail, _ := db.MongoInstance.GetRestaurantByEmail(ctx, strings.ToLower(email))
+	existingEmail, _ := db.MongoInstance.GetUserByEmail(ctx, strings.ToLower(email))
 	if existingEmail != nil {
 		errors = append(errors, "Email già registrata")
 	}
@@ -407,22 +472,44 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Crea nuovo ristorante
-	restaurant := &models.Restaurant{
-		ID:           uuid.New().String(),
-		Username:     username,
-		Email:        strings.ToLower(email),
-		PasswordHash: passwordHash,
-		Role:         defaultRestaurantRole,
-		Name:         restaurantName,
-		Description:  description,
-		Address:      address,
-		Phone:        phone,
-		CreatedAt:    time.Now(),
-		IsActive:     true,
+	// ⭐ STEP 1: Crea nuovo User (autenticazione)
+	userID := uuid.New().String()
+	user := &models.User{
+		ID:               userID,
+		Username:         username,
+		Email:            strings.ToLower(email),
+		PasswordHash:     passwordHash,
+		PrivacyConsent:   privacyConsent,
+		MarketingConsent: marketingConsent,
+		ConsentDate:      time.Now(),
+		CreatedAt:        time.Now(),
+		IsActive:         true,
 	}
 
-	// Salva in MongoDB
+	// Salva User in MongoDB
+	if err := db.MongoInstance.CreateUser(ctx, user); err != nil {
+		logger.Error("Errore nel salvataggio dell'utente", map[string]interface{}{
+			"error":    err.Error(),
+			"username": username,
+		})
+		http.Error(w, "Errore nella creazione dell'account", http.StatusInternalServerError)
+		return
+	}
+
+	// ⭐ STEP 2: Crea primo Restaurant dell'utente
+	restaurantID := uuid.New().String()
+	restaurant := &models.Restaurant{
+		ID:          restaurantID,
+		OwnerID:     userID, // ⭐ Link a User
+		Name:        restaurantName,
+		Description: description,
+		Address:     address,
+		Phone:       phone,
+		CreatedAt:   time.Now(),
+		IsActive:    true,
+	}
+
+	// Salva Restaurant in MongoDB
 	if err := db.MongoInstance.CreateRestaurant(ctx, restaurant); err != nil {
 		logger.Error("Errore nel salvataggio del ristorante", map[string]interface{}{
 			"error":    err.Error(),
@@ -432,8 +519,8 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Auto-login dopo registrazione
-	userSession, err := createSession(restaurant.ID, r)
+	// ⭐ STEP 3: Auto-login dopo registrazione (crea session con user_id)
+	userSession, err := createSession(userID, restaurantID, r)
 	if err != nil {
 		http.Error(w, "Errore nella creazione della sessione", http.StatusInternalServerError)
 		return
@@ -442,6 +529,16 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 	session, _ := store.Get(r, "qr-menu-session")
 	session.Values["session_id"] = userSession.ID
 	session.Save(r, w)
+
+	// Log successo registrazione GDPR
+	logger.Info("Nuova registrazione completata", map[string]interface{}{
+		"user_id":           userID,
+		"username":          username,
+		"email":             email,
+		"restaurant_id":     restaurantID,
+		"privacy_consent":   privacyConsent,
+		"marketing_consent": marketingConsent,
+	})
 
 	// Redirect all'admin con messaggio di benvenuto
 	http.Redirect(w, r, "/admin?welcome=1", http.StatusFound)
@@ -530,9 +627,8 @@ func loadRestaurantsFromStorage() {
 			continue
 		}
 
-		if restaurant.Role == "" {
-			restaurant.Role = defaultRestaurantRole
-		}
+		// NOTA: Role rimosso dalla struttura Restaurant
+		// TODO: Aggiornare load per usare MongoDB
 
 		restaurants[restaurant.ID] = &restaurant
 		file.Close()

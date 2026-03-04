@@ -148,10 +148,9 @@ func HomeHandler(w http.ResponseWriter, r *http.Request) {
 // AdminHandler mostra l'interfaccia di amministrazione
 func AdminHandler(w http.ResponseWriter, r *http.Request) {
 	setSecurityHeaders(w)
-	// Verifica autenticazione
+	// Verifica autenticazione e selezione ristorante
 	restaurant, err := getCurrentRestaurant(r)
-	if err != nil {
-		http.Redirect(w, r, "/login", http.StatusFound)
+	if handleAuthError(w, r, err) {
 		return
 	}
 
@@ -212,6 +211,246 @@ func AdminHandler(w http.ResponseWriter, r *http.Request) {
 	renderTemplate(w, "admin", data)
 }
 
+// SelectRestaurantHandler mostra la pagina di selezione ristorante (GET)
+func SelectRestaurantHandler(w http.ResponseWriter, r *http.Request) {
+	setSecurityHeaders(w)
+	
+	// Verifica che l'utente sia autenticato
+	session, err := getSessionFromRequest(r)
+	if err != nil || session == nil || session.UserID == "" {
+		http.Redirect(w, r, "/login", http.StatusFound)
+		return
+	}
+	
+	// Recupera tutti i ristoranti dell'utente
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	
+	restaurants, err := db.MongoInstance.GetRestaurantsByOwnerID(ctx, session.UserID)
+	if err != nil {
+		log.Printf("Errore nel recupero ristoranti: %v", err)
+		http.Error(w, "Errore nel recupero dei ristoranti", http.StatusInternalServerError)
+		return
+	}
+	
+	// Se l'utente ha un solo ristorante, selezionalo automaticamente
+	if len(restaurants) == 1 {
+		// Aggiorna la sessione con il ristorante selezionato
+		session.RestaurantID = restaurants[0].ID
+		updateSessionInMemory(session)
+		http.Redirect(w, r, "/admin", http.StatusFound)
+		return
+	}
+	
+	// Mostra la pagina di selezione
+	data := struct {
+		Restaurants     []models.Restaurant
+		RestaurantCount int
+	}{
+		Restaurants:     restaurants,
+		RestaurantCount: len(restaurants),
+	}
+	
+	renderTemplate(w, "select_restaurant", data)
+}
+
+// SelectRestaurantPostHandler gestisce la selezione del ristorante (POST)
+func SelectRestaurantPostHandler(w http.ResponseWriter, r *http.Request) {
+	setSecurityHeaders(w)
+	
+	if err := r.ParseForm(); err != nil {
+		http.Error(w, "Errore nel parsing del form", http.StatusBadRequest)
+		return
+	}
+	
+	restaurantID := r.FormValue("restaurant_id")
+	if restaurantID == "" {
+		http.Error(w, "ID ristorante mancante", http.StatusBadRequest)
+		return
+	}
+	
+	// Verifica che l'utente sia autenticato
+	session, err := getSessionFromRequest(r)
+	if err != nil || session == nil || session.UserID == "" {
+		http.Redirect(w, r, "/login", http.StatusFound)
+		return
+	}
+	
+	// Verifica che il ristorante appartenga all'utente
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	
+	restaurant, err := db.MongoInstance.GetRestaurantByID(ctx, restaurantID)
+	if err != nil || restaurant == nil || restaurant.OwnerID != session.UserID {
+		log.Printf("Tentativo di accesso non autorizzato al ristorante %s da parte dell'utente %s", 
+			restaurantID, session.UserID)
+		http.Error(w, "Accesso non autorizzato al ristorante", http.StatusForbidden)
+		return
+	}
+	
+	// Aggiorna la sessione con il ristorante selezionato
+	session.RestaurantID = restaurantID
+	updateSessionInMemory(session)
+	
+	// Log della selezione
+	ip := getClientIP(r)
+	log.Printf("Utente %s ha selezionato il ristorante %s (%s) da IP %s", 
+		session.UserID, restaurantID, restaurant.Name, ip)
+	
+	// Redirect all'admin
+	http.Redirect(w, r, "/admin", http.StatusFound)
+}
+
+// AddRestaurantHandler mostra il form per aggiungere un nuovo ristorante (GET)
+func AddRestaurantHandler(w http.ResponseWriter, r *http.Request) {
+	setSecurityHeaders(w)
+	
+	// Verifica che l'utente sia autenticato
+	session, err := getSessionFromRequest(r)
+	if err != nil || session == nil || session.UserID == "" {
+		http.Redirect(w, r, "/login", http.StatusFound)
+		return
+	}
+	
+	data := struct {
+		Errors   []string
+		FormData struct {
+			Name        string
+			Description string
+			Address     string
+			Phone       string
+		}
+	}{}
+	
+	renderTemplate(w, "add_restaurant", data)
+}
+
+// AddRestaurantPostHandler gestisce la creazione di un nuovo ristorante (POST)
+func AddRestaurantPostHandler(w http.ResponseWriter, r *http.Request) {
+	setSecurityHeaders(w)
+	
+	if err := r.ParseForm(); err != nil {
+		http.Error(w, "Errore nel parsing del form", http.StatusBadRequest)
+		return
+	}
+	
+	// Verifica che l'utente sia autenticato
+	session, err := getSessionFromRequest(r)
+	if err != nil || session == nil || session.UserID == "" {
+		http.Redirect(w, r, "/login", http.StatusFound)
+		return
+	}
+	
+	// Valida input
+	name := strings.TrimSpace(r.FormValue("name"))
+	description := strings.TrimSpace(r.FormValue("description"))
+	address := strings.TrimSpace(r.FormValue("address"))
+	phone := strings.TrimSpace(r.FormValue("phone"))
+	
+	var errors []string
+	
+	if name == "" {
+		errors = append(errors, "Il nome del ristorante è obbligatorio")
+	} else if len(name) < 2 {
+		errors = append(errors, "Il nome del ristorante deve essere almeno 2 caratteri")
+	} else if len(name) > 100 {
+		errors = append(errors, "Il nome del ristorante non può superare 100 caratteri")
+	}
+	
+	if len(description) > 500 {
+		errors = append(errors, "La descrizione non può superare 500 caratteri")
+	}
+	
+	if len(address) > 200 {
+		errors = append(errors, "L'indirizzo non può superare 200 caratteri")
+	}
+	
+	if len(phone) > 20 {
+		errors = append(errors, "Il telefono non può superare 20 caratteri")
+	}
+	
+	// Se ci sono errori, mostra il form con i dati inseriti
+	if len(errors) > 0 {
+		data := struct {
+			Errors   []string
+			FormData struct {
+				Name        string
+				Description string
+				Address     string
+				Phone       string
+			}
+		}{
+			Errors: errors,
+		}
+		data.FormData.Name = name
+		data.FormData.Description = description
+		data.FormData.Address = address
+		data.FormData.Phone = phone
+		
+		renderTemplate(w, "add_restaurant", data)
+		return
+	}
+	
+	// Crea nuovo ristorante
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	
+	restaurant := &models.Restaurant{
+		ID:          uuid.New().String(),
+		OwnerID:     session.UserID, // ⭐ Collega al user loggato
+		Name:        name,
+		Description: description,
+		Address:     address,
+		Phone:       phone,
+		CreatedAt:   time.Now(),
+		IsActive:    true,
+	}
+	
+	if err := db.MongoInstance.CreateRestaurant(ctx, restaurant); err != nil {
+		log.Printf("Errore nella creazione del ristorante: %v", err)
+		errors = append(errors, "Errore durante la creazione del ristorante. Riprova.")
+		
+		data := struct {
+			Errors   []string
+			FormData struct {
+				Name        string
+				Description string
+				Address     string
+				Phone       string
+			}
+		}{
+			Errors: errors,
+		}
+		data.FormData.Name = name
+		data.FormData.Description = description
+		data.FormData.Address = address
+		data.FormData.Phone = phone
+		
+		renderTemplate(w, "add_restaurant", data)
+		return
+	}
+	
+	// Log creazione
+	ip := getClientIP(r)
+	log.Printf("Nuovo ristorante creato: %s (ID: %s) da user %s da IP %s", 
+		restaurant.Name, restaurant.ID, session.UserID, ip)
+	
+	// Aggiorna sessione per selezionare automaticamente il nuovo ristorante
+	session.RestaurantID = restaurant.ID
+	updateSessionInMemory(session)
+	
+	// Redirect all'admin con messaggio di successo
+	http.Redirect(w, r, "/admin?success=restaurant_created", http.StatusFound)
+}
+
+// updateSessionInMemory aggiorna la sessione in memoria e nel cookie
+func updateSessionInMemory(session *models.Session) {
+	session.LastAccessed = time.Now()
+	sessions_map[session.ID] = session
+	saveSessionToStorage(session)
+}
+
+
 // CreateMenuHandler mostra il form per creare un nuovo menu
 func CreateMenuHandler(w http.ResponseWriter, r *http.Request) {
 	setSecurityHeaders(w)
@@ -223,8 +462,7 @@ func CreateMenuPostHandler(w http.ResponseWriter, r *http.Request) {
 	setSecurityHeaders(w)
 	// Verifica autenticazione
 	restaurant, err := getCurrentRestaurant(r)
-	if err != nil {
-		http.Redirect(w, r, "/login", http.StatusFound)
+	if handleAuthError(w, r, err) {
 		return
 	}
 
@@ -317,8 +555,7 @@ func EditMenuHandler(w http.ResponseWriter, r *http.Request) {
 	setSecurityHeaders(w)
 	// Verifica autenticazione
 	restaurant, err := getCurrentRestaurant(r)
-	if err != nil {
-		http.Redirect(w, r, "/login", http.StatusFound)
+	if handleAuthError(w, r, err) {
 		return
 	}
 
@@ -366,8 +603,7 @@ func EditMenuHandler(w http.ResponseWriter, r *http.Request) {
 func UpdateMenuHandler(w http.ResponseWriter, r *http.Request) {
 	// Verifica autenticazione
 	restaurant, err := getCurrentRestaurant(r)
-	if err != nil {
-		http.Redirect(w, r, "/login", http.StatusFound)
+	if handleAuthError(w, r, err) {
 		return
 	}
 
@@ -407,8 +643,7 @@ func UpdateMenuHandler(w http.ResponseWriter, r *http.Request) {
 func CompleteMenuHandler(w http.ResponseWriter, r *http.Request) {
 	// Verifica autenticazione
 	restaurant, err := getCurrentRestaurant(r)
-	if err != nil {
-		http.Redirect(w, r, "/login", http.StatusFound)
+	if handleAuthError(w, r, err) {
 		return
 	}
 
@@ -457,8 +692,7 @@ func CompleteMenuHandler(w http.ResponseWriter, r *http.Request) {
 func DeleteMenuHandler(w http.ResponseWriter, r *http.Request) {
 	// Verifica autenticazione
 	restaurant, err := getCurrentRestaurant(r)
-	if err != nil {
-		http.Redirect(w, r, "/login", http.StatusFound)
+	if handleAuthError(w, r, err) {
 		return
 	}
 
@@ -501,8 +735,7 @@ func DeleteMenuHandler(w http.ResponseWriter, r *http.Request) {
 func SetActiveMenuHandler(w http.ResponseWriter, r *http.Request) {
 	// Verifica autenticazione
 	restaurant, err := getCurrentRestaurant(r)
-	if err != nil {
-		http.Redirect(w, r, "/login", http.StatusFound)
+	if handleAuthError(w, r, err) {
 		return
 	}
 
@@ -1486,7 +1719,6 @@ func AnalyticsDashboardHandler(w http.ResponseWriter, r *http.Request) {
 			Name:    "Il Tuo Ristorante",
 			Address: "Indirizzo non specificato",
 			Phone:   "Telefono non specificato",
-			Email:   "Email non specificata",
 		}
 	}
 

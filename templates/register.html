@@ -316,6 +316,34 @@
                 </div>
             </div>
 
+            <div class="section-title">📜 Consensi Privacy (GDPR)</div>
+
+            <div class="consent-box" style="margin-bottom: 15px; padding: 15px; background: #f8f9fa; border-radius: 8px; border-left: 4px solid #3498db;">
+                <label style="display: flex; align-items: flex-start; cursor: pointer; font-weight: normal;">
+                    <input type="checkbox" id="privacy_consent" name="privacy_consent" required 
+                           style="margin-right: 10px; margin-top: 3px; width: 18px; height: 18px; cursor: pointer;">
+                    <span>
+                        ✅ <strong>Accetto la <a href="/privacy" target="_blank" style="color: #3498db; text-decoration: underline;">Privacy Policy</a></strong> <span class="required">*</span><br>
+                        <small style="color: #7f8c8d; display: block; margin-top: 5px;">
+                            Confermo di aver letto e compreso come vengono trattati i miei dati personali secondo il GDPR (Regolamento UE 2016/679).
+                        </small>
+                    </span>
+                </label>
+            </div>
+
+            <div class="consent-box" style="margin-bottom: 25px; padding: 15px; background: #f8f9fa; border-radius: 8px; border-left: 4px solid #95a5a6;">
+                <label style="display: flex; align-items: flex-start; cursor: pointer; font-weight: normal;">
+                    <input type="checkbox" id="marketing_consent" name="marketing_consent" 
+                           style="margin-right: 10px; margin-top: 3px; width: 18px; height: 18px; cursor: pointer;">
+                    <span>
+                        📧 Accetto di ricevere comunicazioni promoz ionali e newsletter (facoltativo)<br>
+                        <small style="color: #7f8c8d; display: block; margin-top: 5px;">
+                            Potrai revocare il consenso in qualsiasi momento dal tuo profilo o cliccando "unsubscribe" nelle email.
+                        </small>
+                    </span>
+                </label>
+            </div>
+
             <button type="submit" class="btn">🚀 Registra Ristorante</button>
         </form>
 
@@ -379,6 +407,7 @@
             const user = username.value.trim();
             const email = document.getElementById('email').value.trim();
             const restaurantName = document.getElementById('restaurant_name').value.trim();
+            const privacyConsent = document.getElementById('privacy_consent').checked;
 
             let errors = [];
 
@@ -404,6 +433,11 @@
 
             if (!restaurantName) {
                 errors.push('Nome ristorante è richiesto');
+            }
+
+            // ⭐ VALIDAZIONE GDPR
+            if (!privacyConsent) {
+                errors.push('⚠️ Devi accettare la Privacy Policy per continuare (requisito GDPR)');
             }
 
             if (errors.length > 0) {

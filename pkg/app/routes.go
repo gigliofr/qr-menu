@@ -2,7 +2,7 @@ package app
 
 import (
 	"net/http"
-	"qr-menu/api"
+	// "qr-menu/api" // Temporaneamente disabilitato - API legacy non compatibili
 	"qr-menu/handlers"
 	"qr-menu/middleware"
 	"qr-menu/security"
@@ -40,9 +40,9 @@ func SetupRouter(services *Services) *mux.Router {
 	// Route protette
 	setupProtectedRoutes(r)
 
-	// API REST v2
-	api.SetupAPIRoutes(r)
-	api.SetupSecurityRoutes(r, services.AuditLogger, services.GDPRManager)
+	// API REST v2 - Temporaneamente disabilitato
+	// api.SetupAPIRoutes(r)
+	// api.SetupSecurityRoutes(r, services.AuditLogger, services.GDPRManager)
 
 	// Route amministrative
 	setupAdminRoutes(r)
@@ -83,6 +83,14 @@ func setupProtectedRoutes(r *mux.Router) {
 	r.HandleFunc("/admin", handlers.RequireAuth(handlers.AdminHandler)).Methods("GET")
 	r.HandleFunc("/admin/analytics", handlers.RequireAuth(handlers.AnalyticsDashboardHandler)).Methods("GET")
 	r.HandleFunc("/logout", handlers.LogoutHandler).Methods("GET", "POST")
+	
+	// Multi-restaurant: selezione ristorante
+	r.HandleFunc("/select-restaurant", handlers.RequireAuth(handlers.SelectRestaurantHandler)).Methods("GET")
+	r.HandleFunc("/select-restaurant", handlers.RequireAuth(handlers.SelectRestaurantPostHandler)).Methods("POST")
+	
+	// Multi-restaurant: aggiungi nuovo ristorante
+	r.HandleFunc("/add-restaurant", handlers.RequireAuth(handlers.AddRestaurantHandler)).Methods("GET")
+	r.HandleFunc("/add-restaurant", handlers.RequireAuth(handlers.AddRestaurantPostHandler)).Methods("POST")
 
 	// Gestione menu
 	menuRoutes := []RouteDefinition{

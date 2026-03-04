@@ -226,7 +226,86 @@ func (m *MongoClient) GetAllRestaurants(ctx context.Context) ([]*models.Restaura
 	}
 	return restaurants, nil
 }
+// ==================== USERS ====================
 
+// CreateUser salva un nuovo utente
+func (m *MongoClient) CreateUser(ctx context.Context, user *models.User) error {
+	coll := m.db.Collection("users")
+	_, err := coll.InsertOne(ctx, user)
+	if err != nil {
+		return fmt.Errorf("errore insert user: %v", err)
+	}
+	return nil
+}
+
+// GetUserByID recupera un utente per ID
+func (m *MongoClient) GetUserByID(ctx context.Context, id string) (*models.User, error) {
+	coll := m.db.Collection("users")
+	var user models.User
+	err := coll.FindOne(ctx, bson.M{"_id": id}).Decode(&user)
+	if err == mongo.ErrNoDocuments {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, fmt.Errorf("errore find user: %v", err)
+	}
+	return &user, nil
+}
+
+// GetUserByUsername recupera un utente per username
+func (m *MongoClient) GetUserByUsername(ctx context.Context, username string) (*models.User, error) {
+	coll := m.db.Collection("users")
+	var user models.User
+	err := coll.FindOne(ctx, bson.M{"username": username}).Decode(&user)
+	if err == mongo.ErrNoDocuments {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, fmt.Errorf("errore find user by username: %v", err)
+	}
+	return &user, nil
+}
+
+// GetUserByEmail recupera un utente per email
+func (m *MongoClient) GetUserByEmail(ctx context.Context, email string) (*models.User, error) {
+	coll := m.db.Collection("users")
+	var user models.User
+	err := coll.FindOne(ctx, bson.M{"email": email}).Decode(&user)
+	if err == mongo.ErrNoDocuments {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, fmt.Errorf("errore find user by email: %v", err)
+	}
+	return &user, nil
+}
+
+// GetRestaurantsByOwnerID recupera tutti i ristoranti di un utente
+func (m *MongoClient) GetRestaurantsByOwnerID(ctx context.Context, ownerID string) ([]models.Restaurant, error) {
+	coll := m.db.Collection("restaurants")
+	cursor, err := coll.Find(ctx, bson.M{"owner_id": ownerID, "is_active": true})
+	if err != nil {
+		return nil, fmt.Errorf("errore find restaurants by owner: %v", err)
+	}
+	defer cursor.Close(ctx)
+
+	var restaurants []models.Restaurant
+	if err := cursor.All(ctx, &restaurants); err != nil {
+		return nil, fmt.Errorf("errore decode restaurants: %v", err)
+	}
+	return restaurants, nil
+}
+
+// UpdateUserLastLogin aggiorna il timestamp di ultimo login
+func (m *MongoClient) UpdateUserLastLogin(ctx context.Context, userID string) error {
+	coll := m.db.Collection("users")
+	_, err := coll.UpdateOne(
+		ctx,
+		bson.M{"_id": userID},
+		bson.M{"$set": bson.M{"last_login": time.Now()}},
+	)
+	return err
+}
 // ==================== MENUS ====================
 
 // CreateMenu salva un menu
@@ -506,6 +585,71 @@ func (m *MongoClient) createIndexes() error {
 	if _, err := analyticsColl.Indexes().CreateMany(ctx, analyticsIndexModel); err != nil {
 		return fmt.Errorf("errore creazione indici analytics_events: %v", err)
 	}
+
+	// ==================== INDICI MULTI-RISTORANTE ==================== ⭐
+	
+	// Indici per users (nuovo)
+	usersColl := m.db.Collection("users")
+	usersIndexModel := []mongo.IndexModel{
+		{
+			Keys:    bson.D{{Key: "username", Value: 1}},
+			Options: options.Index().SetUnique(true).SetName("idx_username"),
+		},
+		{
+			Keys:    bson.D{{Key: "email", Value: 1}},
+			Options: options.Index().SetUnique(true).SetName("idx_email"),
+		},
+		{
+			Keys:    bson.D{{Key: "is_active", Value: 1}, {Key: "last_login", Value: -1}},
+			Options: options.Index().SetName("idx_active_login"),
+		},
+		{
+			Keys:    bson.D{{Key: "created_at", Value: -1}},
+			Options: options.Index().SetName("idx_created_at"),
+		},
+	}
+	if _, err := usersColl.Indexes().CreateMany(ctx, usersIndexModel); err != nil {
+		return fmt.Errorf("errore creazione indici users: %v", err)
+	}
+	
+	// Indici aggiuntivi per restaurants (owner_id)
+	restaurantsColl := m.db.Collection("restaurants")
+	restaurantsNewIndexModel := []mongo.IndexModel{
+		{
+			Keys:    bson.D{{Key: "owner_id", Value: 1}, {Key: "is_active", Value: 1}},
+			Options: options.Index().SetName("idx_owner_active"),
+		},
+		{
+			Keys:    bson.D{{Key: "owner_id", Value: 1}, {Key: "created_at", Value: -1}},
+			Options: options.Index().SetName("idx_owner_created"),
+		},
+	}
+	if _, err := restaurantsColl.Indexes().CreateMany(ctx, restaurantsNewIndexModel); err != nil {
+		// Non è fatale se esistono già
+		log.Printf("⚠️ Attenzione: alcuni indici restaurants potrebbero esistere già: %v", err)
+	}
+	
+	// Indici per sessions (user_id + TTL)
+	sessionsColl := m.db.Collection("sessions")
+	sessionsIndexModel := []mongo.IndexModel{
+		{
+			Keys:    bson.D{{Key: "user_id", Value: 1}, {Key: "last_accessed", Value: -1}},
+			Options: options.Index().SetName("idx_user_session"),
+		},
+		{
+			Keys:    bson.D{{Key: "restaurant_id", Value: 1}},
+			Options: options.Index().SetName("idx_restaurant_session"),
+		},
+		{
+			Keys:    bson.D{{Key: "last_accessed", Value: 1}},
+			Options: options.Index().SetExpireAfterSeconds(2592000).SetName("idx_session_ttl"), // 30 giorni
+		},
+	}
+	if _, err := sessionsColl.Indexes().CreateMany(ctx, sessionsIndexModel); err != nil {
+		log.Printf("⚠️ Attenzione: alcuni indici sessions potrebbero esistere già: %v", err)
+	}
+	
+	log.Println("✅ Indici multi-ristorante creati con successo")
 
 	return nil
 }

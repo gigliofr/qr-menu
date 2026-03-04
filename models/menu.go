@@ -39,13 +39,24 @@ type Menu struct {
 	PublicURL    string         `json:"public_url,omitempty" bson:"public_url,omitempty"`
 }
 
-// Restaurant rappresenta le informazioni del ristorante con autenticazione
+// User rappresenta un utente del sistema (autenticazione separata dal ristorante)
+type User struct {
+	ID               string    `json:"id" bson:"_id"`
+	Username         string    `json:"username" bson:"username"`         // Username unico per login
+	Email            string    `json:"email" bson:"email"`               // Email unica
+	PasswordHash     string    `json:"-" bson:"password_hash"`           // Password hash (non serializzata in JSON)
+	PrivacyConsent   bool      `json:"privacy_consent" bson:"privacy_consent"` // GDPR: consenso obbligatorio Privacy Policy
+	MarketingConsent bool      `json:"marketing_consent" bson:"marketing_consent"` // GDPR: consenso facoltativo marketing
+	ConsentDate      time.Time `json:"consent_date" bson:"consent_date"` // Data consenso GDPR
+	CreatedAt        time.Time `json:"created_at" bson:"created_at"`
+	LastLogin        time.Time `json:"last_login,omitempty" bson:"last_login,omitempty"`
+	IsActive         bool      `json:"is_active" bson:"is_active"` // Account attivo
+}
+
+// Restaurant rappresenta le informazioni del ristorante (SEPARATO dall'autenticazione)
 type Restaurant struct {
-	ID           string    `json:"id" bson:"id"`
-	Username     string    `json:"username" bson:"username"` // Username unico per login
-	Email        string    `json:"email" bson:"email"`       // Email unica
-	PasswordHash string    `json:"-" bson:"password_hash"`   // Password hash (non serializzata in JSON)
-	Role         string    `json:"role" bson:"role"`         // Role for RBAC (owner/admin/manager/staff/viewer)
+	ID           string    `json:"id" bson:"_id"`
+	OwnerID      string    `json:"owner_id" bson:"owner_id"` // ⭐ Link a User.ID - un utente può avere più ristoranti
 	Name         string    `json:"name" bson:"name"`         // Nome del ristorante
 	Description  string    `json:"description" bson:"description"`
 	Address      string    `json:"address" bson:"address"`
@@ -53,8 +64,7 @@ type Restaurant struct {
 	Logo         string    `json:"logo,omitempty" bson:"logo,omitempty"`
 	ActiveMenuID string    `json:"active_menu_id,omitempty" bson:"active_menu_id,omitempty"` // ID del menu attivo per QR code
 	CreatedAt    time.Time `json:"created_at" bson:"created_at"`
-	LastLogin    time.Time `json:"last_login,omitempty" bson:"last_login,omitempty"`
-	IsActive     bool      `json:"is_active" bson:"is_active"` // Account attivo
+	IsActive     bool      `json:"is_active" bson:"is_active"` // Ristorante attivo
 }
 
 // MenuRequest rappresenta i dati per creare/modificare un menu
@@ -77,14 +87,16 @@ type QRCodeResponse struct {
 
 // RegisterRequest rappresenta i dati per la registrazione
 type RegisterRequest struct {
-	Username        string `json:"username"`
-	Email           string `json:"email"`
-	Password        string `json:"password"`
-	ConfirmPassword string `json:"confirm_password"`
-	RestaurantName  string `json:"restaurant_name"`
-	Description     string `json:"description,omitempty"`
-	Address         string `json:"address,omitempty"`
-	Phone           string `json:"phone,omitempty"`
+	Username         string `json:"username"`
+	Email            string `json:"email"`
+	Password         string `json:"password"`
+	ConfirmPassword  string `json:"confirm_password"`
+	RestaurantName   string `json:"restaurant_name"`
+	Description      string `json:"description,omitempty"`
+	Address          string `json:"address,omitempty"`
+	Phone            string `json:"phone,omitempty"`
+	PrivacyConsent   bool   `json:"privacy_consent"`   // ⭐ GDPR: obbligatorio
+	MarketingConsent bool   `json:"marketing_consent"` // ⭐ GDPR: facoltativo
 }
 
 // LoginRequest rappresenta i dati per il login
@@ -95,15 +107,17 @@ type LoginRequest struct {
 
 // AuthResponse rappresenta la risposta di autenticazione
 type AuthResponse struct {
-	Success    bool        `json:"success"`
-	Message    string      `json:"message"`
-	Restaurant *Restaurant `json:"restaurant,omitempty"`
+	Success      bool          `json:"success"`
+	Message      string        `json:"message"`
+	User         *User         `json:"user,omitempty"`         // ⭐ Ora restituisce User
+	Restaurants  []Restaurant  `json:"restaurants,omitempty"` // ⭐ Lista ristoranti dell'utente
 }
 
 // Session rappresenta una sessione utente
 type Session struct {
-	ID           string    `json:"id" bson:"id"`
-	RestaurantID string    `json:"restaurant_id" bson:"restaurant_id"`
+	ID           string    `json:"id" bson:"_id"`
+	UserID       string    `json:"user_id" bson:"user_id"`             // ⭐ ID dell'utente loggato
+	RestaurantID string    `json:"restaurant_id" bson:"restaurant_id"` // ID ristorante selezionato (può essere vuoto)
 	CreatedAt    time.Time `json:"created_at" bson:"created_at"`
 	LastAccessed time.Time `json:"last_accessed" bson:"last_accessed"`
 	IPAddress    string    `json:"ip_address" bson:"ip_address"`
@@ -113,4 +127,9 @@ type Session struct {
 // SetActiveMenuRequest rappresenta la richiesta per impostare un menu come attivo
 type SetActiveMenuRequest struct {
 	MenuID string `json:"menu_id"`
+}
+
+// SelectRestaurantRequest rappresenta la richiesta per selezionare un ristorante attivo
+type SelectRestaurantRequest struct {
+	RestaurantID string `json:"restaurant_id"`
 }
