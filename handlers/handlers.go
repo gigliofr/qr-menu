@@ -208,6 +208,7 @@ func AdminHandler(w http.ResponseWriter, r *http.Request) {
 		Success      string
 		Stats        interface{}
 		ActiveMenuID string
+		BaseURL      string
 	}{
 		Restaurant:   restaurant,
 		Menus:        restaurantMenus,
@@ -215,6 +216,7 @@ func AdminHandler(w http.ResponseWriter, r *http.Request) {
 		Success:      success,
 		Stats:        stats,
 		ActiveMenuID: activeMenuID,
+		BaseURL:      getBaseURL(r),
 	}
 	
 	log.Printf("✅ AdminHandler: Rendering template 'admin' con %d menu, ActiveMenuID=%s", len(data.Menus), data.ActiveMenuID)

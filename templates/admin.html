@@ -512,7 +512,7 @@
                     <a href="/menu/{{.ActiveMenuID}}" target="_blank" class="btn btn-primary">👁️ Visualizza Menu</a>
                     <a href="/admin/menu/{{.ActiveMenuID}}" class="btn btn-warning">✏️ Modifica</a>
                     <a href="/menu/{{.ActiveMenuID}}/share" class="btn btn-share">📤 Condividi</a>
-                    <button onclick="copyToClipboard('http://localhost:8080/menu/{{.ActiveMenuID}}')" class="btn btn-info">📋 Copia Link</button>
+                    <button onclick="copyToClipboard('{{.BaseURL}}/menu/{{.ActiveMenuID}}')" class="btn btn-info">📋 Copia Link</button>
                 </div>
             </div>
             {{end}}
