@@ -56,8 +56,9 @@ type User struct {
 // Restaurant rappresenta le informazioni del ristorante (SEPARATO dall'autenticazione)
 type Restaurant struct {
 	ID           string    `json:"id" bson:"_id"`
-	OwnerID      string    `json:"owner_id" bson:"owner_id"` // ⭐ Link a User.ID - un utente può avere più ristoranti
-	Name         string    `json:"name" bson:"name"`         // Nome del ristorante
+	Username     string    `json:"username" bson:"username"`     // ⭐ Username univoco per URL pubblico (/r/{username})
+	OwnerID      string    `json:"owner_id" bson:"owner_id"`     // ⭐ Link a User.ID - un utente può avere più ristoranti
+	Name         string    `json:"name" bson:"name"`             // Nome del ristorante
 	Description  string    `json:"description" bson:"description"`
 	Address      string    `json:"address" bson:"address"`
 	Phone        string    `json:"phone" bson:"phone"`

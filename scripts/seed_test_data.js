@@ -106,6 +106,7 @@ const restaurants = [
     {
         _id: "rest_001",
         owner_id: adminUser._id,
+        username: "pizzeria-napoletana",
         name: "Pizzeria Napoletana",
         description: "Autentica pizza napoletana con forno a legna. Impasto lievitato 48 ore.",
         address: "Via Roma 123, Napoli, 80100",
@@ -118,6 +119,7 @@ const restaurants = [
     {
         _id: "rest_002",
         owner_id: adminUser._id,
+        username: "trattoria-toscana",
         name: "Trattoria Toscana",
         description: "Cucina tipica toscana con ingredienti biologici e a km zero.",
         address: "Piazza del Duomo 45, Firenze, 50122",
@@ -130,6 +132,7 @@ const restaurants = [
     {
         _id: "rest_003",
         owner_id: adminUser._id,
+        username: "sushi-ya-tokyo",
         name: "Sushi-Ya Tokyo",
         description: "Sushi giapponese autentico con chef certificato da Tokyo. Pesce freschissimo.",
         address: "Corso Venezia 88, Milano, 20121",
@@ -142,6 +145,7 @@ const restaurants = [
     {
         _id: "rest_004",
         owner_id: adminUser._id,
+        username: "burger-house-americana",
         name: "Burger House Americana",
         description: "Hamburger gourmet con carne 100% italiana e pane fatto in casa.",
         address: "Via Garibaldi 77, Roma, 00153",

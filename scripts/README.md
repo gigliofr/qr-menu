@@ -5,6 +5,7 @@
 1. [seed_test_data.js](#seed_test_datajs) - Script MongoDB per creare dati di test
 2. [setup_and_seed.ps1](#setup_and_seedps1) - Helper PowerShell per setup automatico
 3. [migrate_user_restaurant.js](#migrate_user_restaurantjs) - Migrazione produzione
+4. [migrate_restaurant_usernames.js](#migrate_restaurant_usernamesjs) - Migrazione username ristoranti
 
 ---
 
@@ -238,6 +239,36 @@ $env:MONGODB_DB_NAME="qr-menu"
 
 | Aspetto | seed_test_data.js | migrate_user_restaurant.js |
 |---------|-------------------|----------------------------|
+
+---
+
+## 🆔 migrate_restaurant_usernames.js
+
+**Scopo:** Popola/corregge il campo `username` nei ristoranti legacy per supportare URL pubbliche permanenti `/r/{username}`.
+
+### Cosa Fa
+
+1. Scansiona tutti i documenti in `restaurants`
+2. Genera username slugificato dal nome (`Pizzeria Napoletana` → `pizzeria-napoletana`)
+3. Risolve collisioni con suffisso numerico (`-2`, `-3`, ...)
+4. Aggiorna solo i documenti necessari (idempotente)
+5. Verifica eventuali duplicati
+6. Crea/verifica indice unico parziale su `restaurants.username`
+
+### Uso
+
+```powershell
+mongosh "$env:MONGODB_URI" `
+   --tls `
+   --tlsCertificateKeyFile "$env:MONGODB_CERT_PATH" `
+   --file "scripts/migrate_restaurant_usernames.js"
+```
+
+### Quando usarlo
+
+- Dopo deploy della feature QR permanente su URL ristorante
+- Se esistono ristoranti creati prima dell'introduzione del campo `username`
+- Prima di stampare QR code definitivi
 | Scopo | Dati di test sviluppo | Migrazione produzione |
 | Pulizia | Elimina TUTTO | Converte dati esistenti |
 | Dati | Crea dati fake | Preserva dati reali |

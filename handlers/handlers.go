@@ -103,6 +103,74 @@ func sanitizeInput(input string) string {
 	return strings.TrimSpace(input)
 }
 
+func normalizeRestaurantUsername(name string) string {
+	username := strings.ToLower(strings.TrimSpace(name))
+	reInvalid := regexp.MustCompile(`[^a-z0-9]+`)
+	username = reInvalid.ReplaceAllString(username, "-")
+	username = strings.Trim(username, "-")
+	if username == "" {
+		username = "ristorante"
+	}
+	if len(username) > 40 {
+		username = strings.Trim(username[:40], "-")
+	}
+	if username == "" {
+		username = "ristorante"
+	}
+	return username
+}
+
+func generateUniqueRestaurantUsername(ctx context.Context, name string) (string, error) {
+	base := normalizeRestaurantUsername(name)
+
+	for i := 0; i < 1000; i++ {
+		candidate := base
+		if i > 0 {
+			suffix := fmt.Sprintf("-%d", i+1)
+			trimmedBase := base
+			if len(trimmedBase)+len(suffix) > 50 {
+				trimmedBase = strings.Trim(trimmedBase[:50-len(suffix)], "-")
+				if trimmedBase == "" {
+					trimmedBase = "ristorante"
+				}
+			}
+			candidate = trimmedBase + suffix
+		}
+
+		existingRestaurant, err := db.MongoInstance.GetRestaurantByUsername(ctx, candidate)
+		if err != nil {
+			return "", fmt.Errorf("errore controllo username ristorante: %v", err)
+		}
+		if existingRestaurant == nil {
+			return candidate, nil
+		}
+	}
+
+	return "", fmt.Errorf("impossibile generare username univoco per il ristorante")
+}
+
+func ensureRestaurantUsername(ctx context.Context, restaurant *models.Restaurant) (string, error) {
+	if restaurant == nil {
+		return "", fmt.Errorf("ristorante non valido")
+	}
+
+	if strings.TrimSpace(restaurant.Username) != "" {
+		return restaurant.Username, nil
+	}
+
+	username, err := generateUniqueRestaurantUsername(ctx, restaurant.Name)
+	if err != nil {
+		return "", err
+	}
+
+	restaurant.Username = username
+	if err := db.MongoInstance.UpdateRestaurant(ctx, restaurant); err != nil {
+		return "", fmt.Errorf("errore aggiornamento username ristorante: %v", err)
+	}
+
+	return username, nil
+}
+
 // setSecurityHeaders imposta gli header di sicurezza
 func setSecurityHeaders(w http.ResponseWriter) {
 	w.Header().Set("X-Content-Type-Options", "nosniff")
@@ -436,9 +504,35 @@ func AddRestaurantPostHandler(w http.ResponseWriter, r *http.Request) {
 	// Crea nuovo ristorante
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
+
+	restaurantUsername, err := generateUniqueRestaurantUsername(ctx, name)
+	if err != nil {
+		log.Printf("Errore nella generazione username ristorante: %v", err)
+		errors = append(errors, "Errore durante la creazione del ristorante. Riprova.")
+
+		data := struct {
+			Errors   []string
+			FormData struct {
+				Name        string
+				Description string
+				Address     string
+				Phone       string
+			}
+		}{
+			Errors: errors,
+		}
+		data.FormData.Name = name
+		data.FormData.Description = description
+		data.FormData.Address = address
+		data.FormData.Phone = phone
+
+		renderTemplate(w, "add_restaurant", data)
+		return
+	}
 	
 	restaurant := &models.Restaurant{
 		ID:          uuid.New().String(),
+		Username:    restaurantUsername,
 		OwnerID:     session.UserID, // ⭐ Collega al user loggato
 		Name:        name,
 		Description: description,
@@ -710,13 +804,21 @@ func CompleteMenuHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Genera l'URL pubblico del menu
-	baseURL := getBaseURL(r)
-	menuURL := fmt.Sprintf("%s/menu/%s", baseURL, menu.ID)
+	username, err := ensureRestaurantUsername(ctx, restaurant)
+	if err != nil {
+		log.Printf("Errore nella gestione username ristorante: %v", err)
+		http.Error(w, "Errore nella generazione del QR code", http.StatusInternalServerError)
+		return
+	}
 
-	// Genera il QR code
-	qrCodePath := fmt.Sprintf("static/qrcodes/menu_%s.png", menu.ID)
-	err = qrcode.WriteFile(menuURL, qrcode.Medium, 256, qrCodePath)
+	// Genera l'URL pubblico del ristorante (non del menu specifico)
+	// Il QR code punta al ristorante, che mostrerà sempre il menu attivo
+	baseURL := getBaseURL(r)
+	restaurantURL := fmt.Sprintf("%s/r/%s", baseURL, username)
+
+	// Genera il QR code che punta al ristorante (permanente)
+	qrCodePath := fmt.Sprintf("static/qrcodes/restaurant_%s.png", restaurant.ID)
+	err = qrcode.WriteFile(restaurantURL, qrcode.Medium, 256, qrCodePath)
 	if err != nil {
 		http.Error(w, "Errore nella generazione del QR code", http.StatusInternalServerError)
 		return
@@ -725,7 +827,7 @@ func CompleteMenuHandler(w http.ResponseWriter, r *http.Request) {
 	// Aggiorna il menu
 	menu.IsCompleted = true
 	menu.QRCodePath = qrCodePath
-	menu.PublicURL = menuURL
+	menu.PublicURL = restaurantURL // URL del ristorante, non del menu specifico
 	menu.UpdatedAt = time.Now()
 
 	// Salva le modifiche in MongoDB
@@ -1034,13 +1136,25 @@ func GenerateQRHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Genera l'URL pubblico del menu
-	baseURL := getBaseURL(r)
-	menuURL := fmt.Sprintf("%s/menu/%s", baseURL, menu.ID)
+	username, err := ensureRestaurantUsername(ctx, restaurant)
+	if err != nil {
+		response := models.QRCodeResponse{
+			Success: false,
+			Message: "Errore nella generazione del QR code",
+		}
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(response)
+		return
+	}
 
-	// Genera il QR code
-	qrCodePath := fmt.Sprintf("static/qrcodes/menu_%s.png", menu.ID)
-	err = qrcode.WriteFile(menuURL, qrcode.Medium, 256, qrCodePath)
+	// Genera l'URL pubblico del ristorante (permanente)
+	baseURL := getBaseURL(r)
+	restaurantURL := fmt.Sprintf("%s/r/%s", baseURL, username)
+
+	// Genera il QR code del ristorante
+	qrCodePath := fmt.Sprintf("static/qrcodes/restaurant_%s.png", restaurant.ID)
+	err = qrcode.WriteFile(restaurantURL, qrcode.Medium, 256, qrCodePath)
 	if err != nil {
 		response := models.QRCodeResponse{
 			Success: false,
@@ -1055,7 +1169,7 @@ func GenerateQRHandler(w http.ResponseWriter, r *http.Request) {
 	// Aggiorna il menu
 	menu.IsCompleted = true
 	menu.QRCodePath = qrCodePath
-	menu.PublicURL = menuURL
+	menu.PublicURL = restaurantURL
 	menu.UpdatedAt = time.Now()
 
 	err = db.MongoInstance.UpdateMenu(ctx, menu)
@@ -1070,12 +1184,12 @@ func GenerateQRHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	qrCodeURL := fmt.Sprintf("%s/qr/menu_%s.png", baseURL, menu.ID)
+	qrCodeURL := fmt.Sprintf("%s/qr/restaurant_%s.png", baseURL, restaurant.ID)
 	response := models.QRCodeResponse{
 		Success:   true,
 		Message:   "QR code generato con successo",
 		QRCodeURL: qrCodeURL,
-		MenuURL:   menuURL,
+		MenuURL:   restaurantURL,
 	}
 
 	w.Header().Set("Content-Type", "application/json")
@@ -1714,10 +1828,10 @@ func ShareMenuHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	baseURL := getBaseURL(r)
-	menuURL := fmt.Sprintf("%s/menu/%s", baseURL, menuID)
-	shareText := fmt.Sprintf("Scopri il menu di %s! 🍽️", restaurant.Name)
-
-	data := struct {
+	restaurantURL := fmt.Sprintf("%s/r/%s", baseURL, restaurant.Username)
+	// Genera il QR code che punta al ristorante (permanente)
+	qrCodePath := fmt.Sprintf("static/qrcodes/restaurant_%s.png", restaurant.ID)
+	err = qrcode.WriteFile(restaurantURL, qrcode.Medium, 256, qrCodePath)
 		Menu        *models.Menu
 		Restaurant  *models.Restaurant
 		MenuURL     string

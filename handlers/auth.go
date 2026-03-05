@@ -590,8 +590,19 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 
 	// ⭐ STEP 2: Crea primo Restaurant dell'utente
 	restaurantID := uuid.New().String()
+	restaurantUsername, err := generateUniqueRestaurantUsername(ctx, restaurantName)
+	if err != nil {
+		logger.Error("Errore nella generazione username ristorante", map[string]interface{}{
+			"error":    err.Error(),
+			"username": username,
+		})
+		http.Error(w, "Errore nella creazione dell'account", http.StatusInternalServerError)
+		return
+	}
+
 	restaurant := &models.Restaurant{
 		ID:          restaurantID,
+		Username:    restaurantUsername,
 		OwnerID:     userID, // ⭐ Link a User
 		Name:        restaurantName,
 		Description: description,
