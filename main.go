@@ -86,6 +86,13 @@ func main() {
 	// Setup router con tutte le route
 	router := app.SetupRouter(services)
 
+	// HTTPS Redirect Middleware (solo in staging/production)
+	env := os.Getenv("ENVIRONMENT")
+	if env == "production" || env == "staging" {
+		router.Use(httpsRedirectMiddleware)
+		logger.Info("HTTPS redirect enabled", map[string]interface{}{"env": env})
+	}
+
 	// Determina porta
 	port := os.Getenv("PORT")
 	if port == "" {
@@ -105,6 +112,22 @@ func main() {
 	if err := http.ListenAndServe(":"+port, router); err != nil {
 		logger.Fatal("Server failed", map[string]interface{}{"error": err.Error()})
 	}
+}
+
+// httpsRedirectMiddleware forza HTTPS in produzione/staging
+func httpsRedirectMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// Railway usa X-Forwarded-Proto header
+		if r.Header.Get("X-Forwarded-Proto") != "https" {
+			target := "https://" + r.Host + r.URL.Path
+			if r.URL.RawQuery != "" {
+				target += "?" + r.URL.RawQuery
+			}
+			http.Redirect(w, r, target, http.StatusMovedPermanently)
+			return
+		}
+		next.ServeHTTP(w, r)
+	})
 }
 
 func createDirectories() {

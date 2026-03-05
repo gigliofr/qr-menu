@@ -1832,6 +1832,14 @@ func ShareMenuHandler(w http.ResponseWriter, r *http.Request) {
 	// Genera il QR code che punta al ristorante (permanente)
 	qrCodePath := fmt.Sprintf("static/qrcodes/restaurant_%s.png", restaurant.ID)
 	err = qrcode.WriteFile(restaurantURL, qrcode.Medium, 256, qrCodePath)
+	if err != nil {
+		log.Printf("Errore nella generazione del QR code: %v", err)
+	}
+
+	menuURL := restaurantURL
+	shareText := fmt.Sprintf("Guarda il menu di %s", restaurant.Name)
+
+	data := struct {
 		Menu        *models.Menu
 		Restaurant  *models.Restaurant
 		MenuURL     string

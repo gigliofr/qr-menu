@@ -97,8 +97,9 @@ func init() {
 	sessionKey := getOrCreateSessionKey()
 	store = sessions.NewCookieStore([]byte(sessionKey))
 	
-	// Determina se siamo in produzione (Railway usa PORT env var)
-	isProduction := os.Getenv("PORT") != ""
+	// Determina ambiente (Railway/Cloud usa ENVIRONMENT o PORT)
+	env := os.Getenv("ENVIRONMENT")
+	isProduction := env == "production" || env == "staging" || os.Getenv("PORT") != ""
 	
 	store.Options = &sessions.Options{
 		Path:     "/",
@@ -121,7 +122,20 @@ func init() {
 }
 
 // getOrCreateSessionKey genera o recupera una chiave segreta per le sessioni
+// Priorità: 1) Env var SESSION_SECRET (prod/staging), 2) File (dev)
 func getOrCreateSessionKey() string {
+	// 🔐 PRIORITÀ 1: Env var (PRODUCTION/STAGING)
+	if key := os.Getenv("SESSION_SECRET"); key != "" {
+		log.Println("✅ Using SESSION_SECRET from environment variable")
+		return key
+	}
+
+	// 📁 PRIORITÀ 2: File (DEVELOPMENT ONLY)
+	log.Println("⚠️  SESSION_SECRET not set, using file storage (dev only)")
+	return getOrCreateSessionKeyFromFile()
+}
+
+func getOrCreateSessionKeyFromFile() string {
 	keyPath := "storage/session_key.txt"
 
 	if data, err := os.ReadFile(keyPath); err == nil {
@@ -504,8 +518,8 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 		errors = append(errors, "Email è richiesta")
 	}
 
-	if password == "" || len(password) < 6 {
-		errors = append(errors, "Password deve essere di almeno 6 caratteri")
+	if password == "" || len(password) < 8 {
+		errors = append(errors, "Password deve essere di almeno 8 caratteri")
 	}
 
 	if password != confirmPassword {
