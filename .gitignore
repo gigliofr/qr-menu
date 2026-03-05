@@ -24,6 +24,7 @@ logs/
 config.local.*
 secrets.json
 credentials.json
+railway_config_*.txt
 
 # Certificates and Keys
 *.pem
