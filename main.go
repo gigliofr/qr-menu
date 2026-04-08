@@ -3,8 +3,11 @@ package main
 import (
 	"fmt"
 	"log"
+	"net"
 	"net/http"
 	"os"
+	"strconv"
+	"strings"
 
 	"qr-menu/db"
 	"qr-menu/logger"
@@ -90,9 +93,11 @@ func main() {
 
 	// HTTPS Redirect Middleware (solo in staging/production)
 	env := os.Getenv("ENVIRONMENT")
-	if env == "production" || env == "staging" {
+	if (env == "production" || env == "staging") && shouldEnableHTTPSRedirect() {
 		router.Use(httpsRedirectMiddleware)
 		logger.Info("HTTPS redirect enabled", map[string]interface{}{"env": env})
+	} else if env == "production" || env == "staging" {
+		logger.Info("HTTPS redirect disabled (proxy-managed TLS)", map[string]interface{}{"env": env})
 	}
 
 	// Determina porta
@@ -119,17 +124,75 @@ func main() {
 // httpsRedirectMiddleware forza HTTPS in produzione/staging
 func httpsRedirectMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// Railway usa X-Forwarded-Proto header
-		if r.Header.Get("X-Forwarded-Proto") != "https" {
+		if isHTTPSRequest(r) || looksLikeInternalProxyHop(r) {
+			next.ServeHTTP(w, r)
+			return
+		}
+
+		if r.Host == "" {
+			next.ServeHTTP(w, r)
+			return
+		}
+
 			target := "https://" + r.Host + r.URL.Path
 			if r.URL.RawQuery != "" {
 				target += "?" + r.URL.RawQuery
 			}
 			http.Redirect(w, r, target, http.StatusMovedPermanently)
 			return
-		}
-		next.ServeHTTP(w, r)
+		
 	})
+}
+
+func shouldEnableHTTPSRedirect() bool {
+	value := strings.TrimSpace(strings.ToLower(os.Getenv("ENABLE_HTTPS_REDIRECT")))
+	if value == "" {
+		return false
+	}
+	enabled, err := strconv.ParseBool(value)
+	if err != nil {
+		return false
+	}
+	return enabled
+}
+
+func isHTTPSRequest(r *http.Request) bool {
+	if r.TLS != nil {
+		return true
+	}
+
+	if strings.EqualFold(strings.TrimSpace(r.Header.Get("X-Forwarded-Proto")), "https") {
+		return true
+	}
+
+	forwarded := strings.ToLower(r.Header.Get("Forwarded"))
+	if strings.Contains(forwarded, "proto=https") {
+		return true
+	}
+
+	if strings.EqualFold(strings.TrimSpace(r.Header.Get("X-Forwarded-Ssl")), "on") {
+		return true
+	}
+
+	if strings.EqualFold(strings.TrimSpace(r.Header.Get("X-Url-Scheme")), "https") {
+		return true
+	}
+
+	return false
+}
+
+func looksLikeInternalProxyHop(r *http.Request) bool {
+	remoteHost := r.RemoteAddr
+	if host, _, err := net.SplitHostPort(r.RemoteAddr); err == nil {
+		remoteHost = host
+	}
+
+	ip := net.ParseIP(strings.TrimSpace(remoteHost))
+	if ip == nil {
+		return false
+	}
+
+	return ip.IsLoopback() || ip.IsPrivate()
 }
 
 func createDirectories() {

@@ -2,6 +2,9 @@ package security
 
 import (
 	"net/http"
+	"net"
+	"strconv"
+	"strings"
 	"sync"
 	"time"
 
@@ -147,7 +150,7 @@ func (rl *RateLimiter) RateLimitMiddleware(next http.Handler) http.Handler {
 		// Get user identifier (IP or user ID from JWT)
 		userID := r.Header.Get("X-User-ID")
 		if userID == "" {
-			userID = r.RemoteAddr
+			userID = extractClientIP(r)
 		}
 
 		// Get endpoint pattern
@@ -194,7 +197,30 @@ func formatFloat(f float64) string {
 }
 
 func formatInt(i int) string {
-	return string(rune(i + '0'))
+	return strconv.Itoa(i)
+}
+
+func extractClientIP(r *http.Request) string {
+	if xff := strings.TrimSpace(r.Header.Get("X-Forwarded-For")); xff != "" {
+		parts := strings.Split(xff, ",")
+		for _, part := range parts {
+			candidate := strings.TrimSpace(part)
+			if candidate != "" {
+				return candidate
+			}
+		}
+	}
+
+	if xrip := strings.TrimSpace(r.Header.Get("X-Real-Ip")); xrip != "" {
+		return xrip
+	}
+
+	host, _, err := net.SplitHostPort(strings.TrimSpace(r.RemoteAddr))
+	if err == nil && host != "" {
+		return host
+	}
+
+	return strings.TrimSpace(r.RemoteAddr)
 }
 
 // Stop stops the rate limiter cleanup goroutine
