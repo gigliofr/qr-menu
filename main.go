@@ -43,10 +43,12 @@ func main() {
 		errMsg := fmt.Sprintf("❌ Errore connessione MongoDB: %v\n\n"+
 			"Configura le variabili d'ambiente:\n"+
 			"  - MONGODB_URI: connection string MongoDB Atlas\n"+
-			"  - MONGODB_CERT_CONTENT: contenuto del certificato PEM (per Railway/Cloud)\n"+
-			"  - MONGODB_CERT_PATH: path al file certificato (per sviluppo locale)\n"+
+			"    * auth standard: mongodb+srv://user:pass@cluster/...\n"+
+			"    * X.509: mongodb+srv://.../?authSource=$external&authMechanism=MONGODB-X509\n"+
+			"  - MONGODB_CERT_CONTENT: contenuto del certificato PEM (solo X.509)\n"+
+			"  - MONGODB_CERT_PATH: path al file certificato (solo X.509 locale)\n"+
 			"  - MONGODB_DB_NAME: nome del database (default: qr-menu)", err)
-		log.Fatalf(errMsg)
+		log.Fatal(errMsg)
 		logger.Fatal("Errore connessione MongoDB", map[string]interface{}{"error": err.Error()})
 	}
 	log.Println("✓ MongoDB connesso con successo")

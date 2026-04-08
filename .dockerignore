@@ -1,0 +1,12 @@
+.git
+.gitignore
+logs
+backup
+backups
+*.exe
+*.exe~
+*.log
+.env
+.env.*
+node_modules
+tmp

@@ -4,7 +4,7 @@ Sistema di gestione menu digitali con codici QR per ristoranti. Semplice, solido
 
 **Versione:** 3.0.0 Simplified  
 **Stack:** Go 1.24 + MongoDB Atlas  
-**Deploy:** Railway.app  
+**Deploy:** Railway.app / Coolify  
 **Status:** 🚧 Progetto personale non commerciale - Beta testing
 
 ---
@@ -23,15 +23,15 @@ Sistema di gestione menu digitali con codici QR per ristoranti. Semplice, solido
 
 ---
 
-## 🚀 Deploy su Railway (Produzione)
+## 🚀 Deploy su Railway o Coolify (Produzione)
 
 ### 1. Setup MongoDB Atlas
 
 1. Crea account gratuito su [MongoDB Atlas](https://www.mongodb.com/cloud/atlas)
 2. Crea cluster (free tier M0)
 3. Vai a: **Security → Database Access → Add Database User**
-4. Scegli: **Certificate** (X.509 authentication)
-5. Scarica il certificato PEM (include certificate + private key)
+4. Consigliato per Coolify: crea un utente con password
+5. Se vuoi usare X.509, scarica il certificato PEM (include certificate + private key)
 
 ### 2. Setup Railway
 
@@ -40,14 +40,29 @@ Sistema di gestione menu digitali con codici QR per ristoranti. Semplice, solido
 3. Configura variabili d'ambiente:
 
 ```bash
-MONGODB_URI=mongodb+srv://qr-menu-dev@cluster0.XXXXX.mongodb.net/?authSource=$external&authMechanism=MONGODB-X509
-MONGODB_CERT_CONTENT=<incolla-contenuto-certificato-PEM>
+MONGODB_URI=mongodb+srv://user:password@cluster0.XXXXX.mongodb.net/qr-menu?retryWrites=true&w=majority
 MONGODB_DB_NAME=qr-menu
+SESSION_SECRET=change_me_in_production_min_32_chars
 ```
 
-**⚠️ IMPORTANTE:** Per `MONGODB_CERT_CONTENT`, copia l'intero contenuto del file PEM:
-- Include sia `-----BEGIN CERTIFICATE-----` che `-----BEGIN PRIVATE KEY-----`
-- Mantieni i newlines originali
+**⚠️ IMPORTANTE:** Se usi X.509, aggiungi anche `MONGODB_CERT_CONTENT` oppure monta il file PEM e usa `MONGODB_CERT_PATH`.
+
+### 2b. Setup Coolify
+
+1. Crea un nuovo servizio dal repository GitHub.
+2. Assicurati che Coolify rilevi il `Dockerfile` nella root del progetto.
+3. Imposta le variabili d'ambiente minime:
+
+```bash
+MONGODB_URI=mongodb+srv://user:password@cluster0.XXXXX.mongodb.net/qr-menu?retryWrites=true&w=majority
+MONGODB_DB_NAME=qr-menu
+SESSION_SECRET=change_me_in_production_min_32_chars
+ENVIRONMENT=production
+LOG_LEVEL=info
+PORT=8080
+```
+
+4. Se vuoi usare X.509, monta il certificato nel container e imposta `MONGODB_CERT_PATH` oppure `MONGODB_CERT_CONTENT`.
 
 ### 3. Deploy Automatico
 
@@ -62,7 +77,7 @@ Push su GitHub → Railway rileva automaticamente Dockerfile → Build & Deploy!
 ### Prerequisiti
 - Go 1.24+
 - MongoDB Atlas account
-- Certificato X.509 (`.pem`)
+- Certificato X.509 (`.pem`) solo se usi autenticazione X.509
 
 ### Setup
 
@@ -73,8 +88,11 @@ cd qr-menu
 
 # 2. Configura variabili d'ambiente
 $env:MONGODB_URI="mongodb+srv://..."
-$env:MONGODB_CERT_PATH="C:\path\to\cert.pem"  # Per dev locale
 $env:MONGODB_DB_NAME="qr-menu"
+$env:SESSION_SECRET="..."
+
+# Solo se usi X.509
+$env:MONGODB_CERT_PATH="C:\path\to\cert.pem"  # Per dev locale
 
 # 3. Build & Run
 go build -o qr-menu .

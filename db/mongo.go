@@ -30,53 +30,33 @@ var (
 	MongoInstance *MongoClient
 )
 
-// Connect crea connessione a MongoDB Atlas con certificato X.509
+// Connect crea connessione a MongoDB Atlas.
 func Connect() error {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
-
-	// Leggi certificato X.509 - supporta sia env var che file
-	var certData []byte
-	var err error
-
-	// Opzione 1: Certificato come contenuto in variabile d'ambiente (per Railway/Cloud)
-	certContent := os.Getenv("MONGODB_CERT_CONTENT")
-	if certContent != "" {
-		// Fix newlines: converte \n letterali in newlines reali
-		certContent = strings.ReplaceAll(certContent, "\\n", "\n")
-		certData = []byte(certContent)
-		log.Println("✓ Certificato MongoDB caricato da MONGODB_CERT_CONTENT")
-	} else {
-		// Opzione 2: Certificato da file (per sviluppo locale)
-		certPath := os.Getenv("MONGODB_CERT_PATH")
-		if certPath == "" {
-			return fmt.Errorf("nessun certificato MongoDB configurato: imposta MONGODB_CERT_CONTENT (contenuto) o MONGODB_CERT_PATH (path file)")
-		}
-
-		certData, err = ioutil.ReadFile(certPath)
-		if err != nil {
-			return fmt.Errorf("errore lettura certificato da %s: %v", certPath, err)
-		}
-		log.Printf("✓ Certificato MongoDB caricato da file: %s\n", certPath)
-	}
-
-	// Carica certificato per autenticazione X.509
-	tlsConfig := &tls.Config{}
-
-	// Parse certificato per client certificate authentication
-	cert, err := tls.X509KeyPair(certData, certData)
-	if err != nil {
-		return fmt.Errorf("errore nel parsing del certificato: %v", err)
-	}
-
-	tlsConfig.Certificates = []tls.Certificate{cert}
-	// Disabilita la verifica del server per MongoDB Atlas (usa il certificato self-signed)
-	tlsConfig.InsecureSkipVerify = false
 
 	// Connection string MongoDB Atlas
 	mongoURI := os.Getenv("MONGODB_URI")
 	if mongoURI == "" {
 		return fmt.Errorf("MONGODB_URI non configurato - imposta la connection string completa")
+	}
+
+	tlsConfig := &tls.Config{MinVersion: tls.VersionTLS12}
+	if usesX509Auth(mongoURI) {
+		certData, source, err := loadMongoClientCert()
+		if err != nil {
+			return err
+		}
+
+		cert, err := tls.X509KeyPair(certData, certData)
+		if err != nil {
+			return fmt.Errorf("errore nel parsing del certificato MongoDB da %s: %v", source, err)
+		}
+
+		tlsConfig.Certificates = []tls.Certificate{cert}
+		log.Printf("✓ MongoDB X.509 abilitato usando certificato da %s", source)
+	} else {
+		log.Println("✓ MongoDB configurato con autenticazione standard, nessun certificato client richiesto")
 	}
 
 	// Opzioni di connessione
@@ -121,6 +101,31 @@ func Connect() error {
 
 	log.Println("✓ Connesso a MongoDB Atlas")
 	return nil
+}
+
+func usesX509Auth(mongoURI string) bool {
+	uri := strings.ToLower(mongoURI)
+	return strings.Contains(uri, "authmechanism=mongodb-x509")
+}
+
+func loadMongoClientCert() ([]byte, string, error) {
+	certContent := os.Getenv("MONGODB_CERT_CONTENT")
+	if certContent != "" {
+		certContent = strings.ReplaceAll(certContent, "\\n", "\n")
+		return []byte(certContent), "MONGODB_CERT_CONTENT", nil
+	}
+
+	certPath := os.Getenv("MONGODB_CERT_PATH")
+	if certPath == "" {
+		return nil, "", fmt.Errorf("MONGODB_URI usa X.509 ma manca il certificato: imposta MONGODB_CERT_CONTENT o MONGODB_CERT_PATH")
+	}
+
+	certData, err := ioutil.ReadFile(certPath)
+	if err != nil {
+		return nil, certPath, fmt.Errorf("errore lettura certificato da %s: %v", certPath, err)
+	}
+
+	return certData, certPath, nil
 }
 
 // Disconnect chiude la connessione
