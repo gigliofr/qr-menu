@@ -58,6 +58,17 @@ func registerProtectedRoutes(r *mux.Router, routes []RouteDefinition) {
 }
 
 func setupPublicRoutes(r *mux.Router) {
+	// PWA/public app shell files
+	r.HandleFunc("/manifest.json", func(w http.ResponseWriter, req *http.Request) {
+		http.ServeFile(w, req, "./static/manifest.json")
+	}).Methods("GET")
+	r.HandleFunc("/service-worker.js", func(w http.ResponseWriter, req *http.Request) {
+		http.ServeFile(w, req, "./static/service-worker.js")
+	}).Methods("GET")
+	r.HandleFunc("/offline.html", func(w http.ResponseWriter, req *http.Request) {
+		http.ServeFile(w, req, "./static/offline.html")
+	}).Methods("GET")
+
 	// Pagine pubbliche
 	r.HandleFunc("/", handlers.HomeHandler).Methods("GET")
 	r.HandleFunc("/login", handlers.LoginHandler).Methods("GET", "POST")

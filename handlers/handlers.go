@@ -80,6 +80,19 @@ func validateCSRFToken(token string) bool {
 	return true
 }
 
+func requireValidCSRF(w http.ResponseWriter, r *http.Request) bool {
+	token := strings.TrimSpace(r.FormValue("csrf_token"))
+	if token == "" {
+		http.Error(w, "CSRF token mancante", http.StatusForbidden)
+		return false
+	}
+	if !validateCSRFToken(token) {
+		http.Error(w, "CSRF token non valido o scaduto", http.StatusForbidden)
+		return false
+	}
+	return true
+}
+
 // cleanupCSRFTokens pulisce i token scaduti
 func cleanupCSRFTokens() {
 	ticker := time.NewTicker(30 * time.Minute)
@@ -277,6 +290,7 @@ func AdminHandler(w http.ResponseWriter, r *http.Request) {
 		Stats        interface{}
 		ActiveMenuID string
 		BaseURL      string
+		CSRFToken    string
 	}{
 		Restaurant:   restaurant,
 		Menus:        restaurantMenus,
@@ -285,6 +299,7 @@ func AdminHandler(w http.ResponseWriter, r *http.Request) {
 		Stats:        stats,
 		ActiveMenuID: activeMenuID,
 		BaseURL:      getBaseURL(r),
+		CSRFToken:    generateCSRFToken(),
 	}
 	
 	log.Printf("✅ AdminHandler: Rendering template 'admin' con %d menu, ActiveMenuID=%s", len(data.Menus), data.ActiveMenuID)
@@ -598,12 +613,15 @@ func updateSessionInMemory(session *models.Session) {
 // CreateMenuHandler mostra il form per creare un nuovo menu
 func CreateMenuHandler(w http.ResponseWriter, r *http.Request) {
 	setSecurityHeaders(w)
-	renderTemplate(w, "create_menu", nil)
+	renderTemplate(w, "create_menu", struct{ CSRFToken string }{CSRFToken: generateCSRFToken()})
 }
 
 // CreateMenuPostHandler gestisce la creazione di un nuovo menu
 func CreateMenuPostHandler(w http.ResponseWriter, r *http.Request) {
 	setSecurityHeaders(w)
+	if !requireValidCSRF(w, r) {
+		return
+	}
 	// Verifica autenticazione
 	restaurant, err := getCurrentRestaurant(r)
 	if handleAuthError(w, r, err) {
@@ -736,9 +754,11 @@ func EditMenuHandler(w http.ResponseWriter, r *http.Request) {
 	data := struct {
 		Menu       *models.Menu
 		Restaurant *models.Restaurant
+		CSRFToken  string
 	}{
 		Menu:       menu,
 		Restaurant: restaurant,
+		CSRFToken:  generateCSRFToken(),
 	}
 
 	renderTemplate(w, "edit_menu", data)
@@ -746,6 +766,9 @@ func EditMenuHandler(w http.ResponseWriter, r *http.Request) {
 
 // UpdateMenuHandler aggiorna un menu esistente
 func UpdateMenuHandler(w http.ResponseWriter, r *http.Request) {
+	if !requireValidCSRF(w, r) {
+		return
+	}
 	// Verifica autenticazione
 	restaurant, err := getCurrentRestaurant(r)
 	if handleAuthError(w, r, err) {
@@ -786,6 +809,9 @@ func UpdateMenuHandler(w http.ResponseWriter, r *http.Request) {
 
 // CompleteMenuHandler marca un menu come completato e genera il QR code
 func CompleteMenuHandler(w http.ResponseWriter, r *http.Request) {
+	if !requireValidCSRF(w, r) {
+		return
+	}
 	// Verifica autenticazione
 	restaurant, err := getCurrentRestaurant(r)
 	if handleAuthError(w, r, err) {
@@ -843,6 +869,9 @@ func CompleteMenuHandler(w http.ResponseWriter, r *http.Request) {
 
 // DeleteMenuHandler elimina un menu
 func DeleteMenuHandler(w http.ResponseWriter, r *http.Request) {
+	if !requireValidCSRF(w, r) {
+		return
+	}
 	// Verifica autenticazione
 	restaurant, err := getCurrentRestaurant(r)
 	if handleAuthError(w, r, err) {
@@ -886,6 +915,9 @@ func DeleteMenuHandler(w http.ResponseWriter, r *http.Request) {
 
 // SetActiveMenuHandler imposta un menu come attivo
 func SetActiveMenuHandler(w http.ResponseWriter, r *http.Request) {
+	if !requireValidCSRF(w, r) {
+		return
+	}
 	// Verifica autenticazione
 	restaurant, err := getCurrentRestaurant(r)
 	if handleAuthError(w, r, err) {
@@ -1374,6 +1406,9 @@ func DuplicateItemHandler(w http.ResponseWriter, r *http.Request) {
 
 // DuplicateMenuHandler duplica un menu completo
 func DuplicateMenuHandler(w http.ResponseWriter, r *http.Request) {
+	if !requireValidCSRF(w, r) {
+		return
+	}
 	// Verifica autenticazione
 	restaurant, err := getCurrentRestaurant(r)
 	if err != nil {
@@ -1446,6 +1481,9 @@ func DuplicateMenuHandler(w http.ResponseWriter, r *http.Request) {
 
 // EditItemHandler modifica un piatto esistente
 func EditItemHandler(w http.ResponseWriter, r *http.Request) {
+	if !requireValidCSRF(w, r) {
+		return
+	}
 	// Verifica autenticazione
 	restaurant, err := getCurrentRestaurant(r)
 	if err != nil {
@@ -1472,6 +1510,8 @@ func EditItemHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	available := r.FormValue("available") == "on"
+
 	// Trova e modifica il piatto
 	for i, category := range menu.Categories {
 		if category.ID == categoryID {
@@ -1480,6 +1520,7 @@ func EditItemHandler(w http.ResponseWriter, r *http.Request) {
 					// Aggiorna i dati del piatto
 					menu.Categories[i].Items[j].Name = r.FormValue("name")
 					menu.Categories[i].Items[j].Description = r.FormValue("description")
+					menu.Categories[i].Items[j].Available = available
 
 					if priceStr := r.FormValue("price"); priceStr != "" {
 						if price, err := strconv.ParseFloat(priceStr, 64); err == nil {
@@ -1511,6 +1552,9 @@ func EditItemHandler(w http.ResponseWriter, r *http.Request) {
 
 // DeleteItemHandler elimina un piatto
 func DeleteItemHandler(w http.ResponseWriter, r *http.Request) {
+	if !requireValidCSRF(w, r) {
+		return
+	}
 	// Verifica autenticazione
 	restaurant, err := getCurrentRestaurant(r)
 	if err != nil {
@@ -1566,6 +1610,9 @@ func DeleteItemHandler(w http.ResponseWriter, r *http.Request) {
 
 // AddItemHandler aggiunge un nuovo piatto a una categoria esistente
 func AddItemHandler(w http.ResponseWriter, r *http.Request) {
+	if !requireValidCSRF(w, r) {
+		return
+	}
 	// Verifica autenticazione
 	restaurant, err := getCurrentRestaurant(r)
 	if err != nil {
@@ -1738,6 +1785,10 @@ func UploadItemImageHandler(w http.ResponseWriter, r *http.Request) {
 	err = r.ParseMultipartForm(maxFileSize)
 	if err != nil {
 		http.Error(w, "Errore nel parsing del form", http.StatusBadRequest)
+		return
+	}
+
+	if !requireValidCSRF(w, r) {
 		return
 	}
 

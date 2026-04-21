@@ -44,7 +44,7 @@ type Menu struct {
 func main() {
 	fmt.Println("\n================================================")
 	fmt.Println("🔧 FIX MENU - Correzione Struttura Menu")
-	fmt.Println("================================================\n")
+	fmt.Println("================================================")
 
 	// Connetti a MongoDB usando il package db
 	fmt.Println("🔌 Connessione a MongoDB...")
@@ -53,7 +53,7 @@ func main() {
 	}
 	defer db.MongoInstance.Disconnect()
 	
-	fmt.Println("✅ Connesso a MongoDB\n")
+	fmt.Println("✅ Connesso a MongoDB")
 
 	menusColl := db.MongoInstance.DB.Collection("menus")
 	restaurantsColl := db.MongoInstance.DB.Collection("restaurants")
@@ -104,7 +104,7 @@ func main() {
 		}
 	}
 
-	fmt.Println("✅ Menu attivati per ogni ristorante\n")
+	fmt.Println("✅ Menu attivati per ogni ristorante")
 
 	// Stampa riepilogo
 	for _, menu := range menus {
@@ -117,7 +117,7 @@ func main() {
 	}
 
 	fmt.Println("\n✅ Fix completato!")
-	fmt.Println("================================================\n")
+	fmt.Println("================================================")
 }
 
 func createMenus() []Menu {

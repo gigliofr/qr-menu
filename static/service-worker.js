@@ -1,14 +1,14 @@
 // Service Worker per QR Menu PWA
-const CACHE_VERSION = 'v1.0.0';
+const CACHE_VERSION = 'v1.1.0';
 const CACHE_NAME = 'qr-menu-' + CACHE_VERSION;
 const urlsToCache = [
   '/',
   '/login',
-  '/admin',
-  '/static/style.css',
-  '/static/script.js',
-  '/static/offline.html',
-  '/manifest.json'
+  '/manifest.json',
+  '/offline.html',
+  '/static/css/style.css',
+  '/static/css/platform.css',
+  '/static/js/script.js'
 ];
 
 // Install event

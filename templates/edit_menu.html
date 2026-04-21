@@ -226,6 +226,7 @@
     {{end}}
 
     <form method="POST" action="/admin/menu/{{.Menu.ID}}/update">
+        <input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
         <div class="form-group">
             <label for="name">Nome del Menu:</label>
             <input type="text" id="name" name="name" value="{{.Menu.Name}}" required>
@@ -262,6 +263,7 @@
             <div style="background: #f8f9fa; padding: 15px; margin: 10px 0; border-radius: 5px; border-left: 4px solid #27ae60;">
                 <h5 style="color: #27ae60; margin-bottom: 10px;">➕ Aggiungi Nuovo Piatto</h5>
                 <form method="POST" action="/admin/menu/{{$.Menu.ID}}/add-item">
+                    <input type="hidden" name="csrf_token" value="{{$.CSRFToken}}">
                     <input type="hidden" name="category_id" value="{{$category.ID}}">
                     <div style="display: flex; gap: 10px; margin-bottom: 10px; flex-wrap: wrap;">
                         <input type="text" name="name" placeholder="Nome piatto" required style="flex: 2; min-width: 200px; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
@@ -279,14 +281,20 @@
                         <div style="flex: 1;" class="item-display">
                             <strong>{{.Name}}</strong> - €{{printf "%.2f" .Price}}
                             {{if .Description}}<br><em style="color: #666;">{{.Description}}</em>{{end}}
+                            {{if not .Available}}<br><span style="display:inline-block; margin-top:6px; font-size:0.78em; font-weight:700; color:#b54708; background:#ffedd5; border:1px solid #fed7aa; border-radius:999px; padding:2px 8px;">NON DISPONIBILE</span>{{end}}
                         </div>
                         
                         <!-- Form di editing nascosto -->
                         <div style="flex: 1; display: none;" class="item-edit-form">
                             <form method="POST" action="/admin/menu/{{$.Menu.ID}}/category/{{$category.ID}}/item/{{.ID}}/edit" style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                                <input type="hidden" name="csrf_token" value="{{$.CSRFToken}}">
                                 <input type="text" name="name" value="{{.Name}}" required style="flex: 2; min-width: 150px; padding: 6px; border: 1px solid #ddd; border-radius: 4px; font-size: 0.9em;">
                                 <input type="text" name="description" value="{{.Description}}" style="flex: 3; min-width: 200px; padding: 6px; border: 1px solid #ddd; border-radius: 4px; font-size: 0.9em;">
                                 <input type="number" step="0.01" name="price" value="{{.Price}}" required style="flex: 1; min-width: 80px; padding: 6px; border: 1px solid #ddd; border-radius: 4px; font-size: 0.9em;">
+                                <label style="display:flex; align-items:center; gap:6px; font-size:0.85em; font-weight:600; color:#374151;">
+                                    <input type="checkbox" name="available" {{if .Available}}checked{{end}}>
+                                    Disponibile
+                                </label>
                                 <button type="submit" class="btn" style="background: #27ae60; color: white; padding: 6px 10px; font-size: 0.8em;">💾 Salva</button>
                                 <button type="button" onclick="cancelEdit('{{.ID}}')" class="btn" style="background: #95a5a6; color: white; padding: 6px 10px; font-size: 0.8em;">❌ Annulla</button>
                             </form>
@@ -301,9 +309,11 @@
                             <button onclick="editItem('{{.ID}}')" class="btn" style="background: #3498db; color: white; font-size: 0.8em; padding: 5px 8px;" title="Modifica piatto">✏️ Modifica</button>
                             <button onclick="uploadImage('{{$.Menu.ID}}', '{{$category.ID}}', '{{.ID}}')" class="btn" style="background: #9b59b6; color: white; font-size: 0.8em; padding: 5px 8px;" title="Carica immagine">📷 Foto</button>
                             <form method="POST" action="/admin/menu/{{$.Menu.ID}}/category/{{$category.ID}}/item/{{.ID}}/duplicate" style="display: inline;">
+                                <input type="hidden" name="csrf_token" value="{{$.CSRFToken}}">
                                 <button type="submit" class="btn" style="background: #f39c12; color: white; font-size: 0.8em; padding: 5px 8px;" title="Duplica questo piatto">📋 Duplica</button>
                             </form>
                             <form method="POST" action="/admin/menu/{{$.Menu.ID}}/category/{{$category.ID}}/item/{{.ID}}/delete" style="display: inline;" onsubmit="return confirm('Sicuro di voler eliminare questo piatto?');">
+                                <input type="hidden" name="csrf_token" value="{{$.CSRFToken}}">
                                 <button type="submit" class="btn" style="background: #e74c3c; color: white; font-size: 0.8em; padding: 5px 8px;" title="Elimina piatto">🗑️ Elimina</button>
                             </form>
                         </div>
@@ -341,6 +351,7 @@
     }
     
     function uploadImage(menuId, categoryId, itemId) {
+        const csrfToken = '{{.CSRFToken}}';
         const input = document.createElement('input');
         input.type = 'file';
         input.accept = 'image/*';
@@ -364,6 +375,7 @@
             // Crea form per upload
             const formData = new FormData();
             formData.append('image', file);
+            formData.append('csrf_token', csrfToken);
             
             const uploadUrl = `/admin/menu/${menuId}/category/${categoryId}/item/${itemId}/upload-image`;
             
@@ -448,6 +460,7 @@
         <h3>🎯 Finalizza Menu</h3>
         <p>Una volta soddisfatto del menu, completalo per generare il QR code e renderlo accessibile ai clienti.</p>
         <form method="POST" action="/admin/menu/{{.Menu.ID}}/complete">
+            <input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
             <button type="submit" class="btn btn-warning" onclick="return confirm('Sicuro di voler completare questo menu? Verrà generato il QR code e il menu diventerà pubblico.')">🎯 Completa Menu e Genera QR Code</button>
         </form>
     </div>

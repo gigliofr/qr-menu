@@ -3,7 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#0f172a">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <title>{{.Restaurant.Name}} - Dashboard Pro | QR Menu</title>
+    <link rel="manifest" href="/manifest.json">
+    <link rel="stylesheet" href="/static/css/platform.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
@@ -527,9 +532,24 @@
 
         <h2 style="font-size: 2rem; font-weight: 700; margin-bottom: 25px; background: var(--primary-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">📋 I tuoi Menu</h2>
 
+        <div class="menu-tools" style="display:grid; grid-template-columns: 1.5fr 1fr; gap: 14px; margin-bottom: 22px;">
+            <input id="menuSearch" type="search" placeholder="Cerca menu per nome o descrizione..." aria-label="Cerca menu" style="width: 100%; border: 1px solid #e9ecef; border-radius: 12px; padding: 14px 16px; font-size: 15px;">
+            <select id="menuStatusFilter" aria-label="Filtra per stato" style="width: 100%; border: 1px solid #e9ecef; border-radius: 12px; padding: 14px 16px; font-size: 15px; background: #fff;">
+                <option value="all">Tutti gli stati</option>
+                <option value="active">Solo attivi</option>
+                <option value="completed">Solo completati</option>
+                <option value="draft">Solo bozze</option>
+            </select>
+        </div>
+
+        <p id="menuFilterMeta" style="margin-bottom: 20px; color: var(--text-secondary); font-size: 0.95rem;"></p>
+
         {{if .Menus}}
             {{range $id, $menu := .Menus}}
-            <div class="menu-card {{if $menu.IsActive}}active{{else if $menu.IsCompleted}}completed{{else}}draft{{end}}">
+              <div class="menu-card {{if $menu.IsActive}}active{{else if $menu.IsCompleted}}completed{{else}}draft{{end}}"
+                  data-menu-status="{{if $menu.IsActive}}active{{else if $menu.IsCompleted}}completed{{else}}draft{{end}}"
+                  data-menu-name="{{$menu.Name}}"
+                  data-menu-description="{{$menu.Description}}">
                 
                 <div style="display: grid; grid-template-columns: 1fr auto; gap: 20px; align-items: start; margin-bottom: 20px;">
                     <div>
@@ -567,20 +587,24 @@
                     {{end}}
                     
                     <form method="POST" action="/admin/menu/{{$id}}/duplicate" style="display: inline;" onsubmit="return confirm('Duplicare questo menu? Verrà creata una copia con tutti i piatti.');">
+                        <input type="hidden" name="csrf_token" value="{{$.CSRFToken}}">
                         <button type="submit" class="btn" style="background: linear-gradient(135deg, #9b59b6 0%, #8e44ad 100%); color: white;">📋 Duplica</button>
                     </form>
                     
                     {{if not $menu.IsCompleted}}
                         <form method="POST" action="/admin/menu/{{$id}}/complete" style="display: inline;">
+                            <input type="hidden" name="csrf_token" value="{{$.CSRFToken}}">
                             <button type="submit" class="btn btn-success" onclick="return confirm('Sicuro di voler completare questo menu? Verrà generato il QR code.')">🎯 Completa</button>
                         </form>
                     {{else if not $menu.IsActive}}
                         <form method="POST" action="/admin/menu/{{$id}}/activate" style="display: inline;">
+                            <input type="hidden" name="csrf_token" value="{{$.CSRFToken}}">
                             <button type="submit" class="btn btn-primary" onclick="return confirm('Impostare questo menu come attivo? Il QR code punterà a questo menu.')">🎯 Imposta Attivo</button>
                         </form>
                     {{end}}
                     
                     <form method="POST" action="/admin/menu/{{$id}}/delete" style="display: inline;">
+                        <input type="hidden" name="csrf_token" value="{{$.CSRFToken}}">
                         <button type="submit" class="btn btn-danger" onclick="return confirm('Sicuro di voler eliminare questo menu? Questa azione non può essere annullata.')">🗑️ Elimina</button>
                     </form>
                 </div>
@@ -678,8 +702,8 @@
         // Effetti di caricamento
         document.addEventListener('DOMContentLoaded', function() {
             // Animazione delle card dei menu
-            const menuCards = document.querySelectorAll('.menu-card');
-            menuCards.forEach((card, index) => {
+            const animatedMenuCards = document.querySelectorAll('.menu-card');
+            animatedMenuCards.forEach((card, index) => {
                 card.style.opacity = '0';
                 card.style.transform = 'translateY(20px)';
                 setTimeout(() => {
@@ -707,6 +731,58 @@
                 }, 50);
             });
 
+            const menuCards = Array.from(document.querySelectorAll('.menu-card[data-menu-status]'));
+            const menuSearch = document.getElementById('menuSearch');
+            const menuStatusFilter = document.getElementById('menuStatusFilter');
+            const menuFilterMeta = document.getElementById('menuFilterMeta');
+            const csrfToken = '{{.CSRFToken}}';
+
+            document.querySelectorAll('form[method="POST"]').forEach((form) => {
+                if (!form.querySelector('input[name="csrf_token"]')) {
+                    const input = document.createElement('input');
+                    input.type = 'hidden';
+                    input.name = 'csrf_token';
+                    input.value = csrfToken;
+                    form.appendChild(input);
+                }
+            });
+
+            function normalize(value) {
+                return (value || '').toLowerCase().trim();
+            }
+
+            function updateMenuFilters() {
+                const searchTerm = normalize(menuSearch ? menuSearch.value : '');
+                const status = menuStatusFilter ? menuStatusFilter.value : 'all';
+                let visibleCount = 0;
+
+                menuCards.forEach(card => {
+                    const cardStatus = card.getAttribute('data-menu-status');
+                    const text = normalize(card.getAttribute('data-menu-name') + ' ' + card.getAttribute('data-menu-description'));
+
+                    const statusMatch = status === 'all' || cardStatus === status;
+                    const searchMatch = !searchTerm || text.includes(searchTerm);
+                    const isVisible = statusMatch && searchMatch;
+
+                    card.style.display = isVisible ? '' : 'none';
+                    if (isVisible) {
+                        visibleCount++;
+                    }
+                });
+
+                if (menuFilterMeta) {
+                    menuFilterMeta.textContent = 'Menu visibili: ' + visibleCount + ' / ' + menuCards.length;
+                }
+            }
+
+            if (menuSearch) {
+                menuSearch.addEventListener('input', updateMenuFilters);
+            }
+            if (menuStatusFilter) {
+                menuStatusFilter.addEventListener('change', updateMenuFilters);
+            }
+            updateMenuFilters();
+
             console.log('QR Menu Pro Dashboard caricata per: {{.Restaurant.Name}}');
         });
     </script>
@@ -725,5 +801,6 @@
             </p>
         </div>
     </footer>
+    <script src="/static/js/pwa-install.js" defer></script>
 </body>
 </html>

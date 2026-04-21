@@ -57,6 +57,9 @@ type User struct {
 type Restaurant struct {
 	ID           string    `json:"id" bson:"_id"`
 	Username     string    `json:"username" bson:"username"`     // ⭐ Username univoco per URL pubblico (/r/{username})
+	Email        string    `json:"email,omitempty" bson:"email,omitempty"` // Legacy API compatibility
+	PasswordHash string    `json:"-" bson:"password_hash,omitempty"`        // Legacy API compatibility
+	Role         string    `json:"role,omitempty" bson:"role,omitempty"`    // Legacy API compatibility
 	OwnerID      string    `json:"owner_id" bson:"owner_id"`     // ⭐ Link a User.ID - un utente può avere più ristoranti
 	Name         string    `json:"name" bson:"name"`             // Nome del ristorante
 	Description  string    `json:"description" bson:"description"`
@@ -65,6 +68,7 @@ type Restaurant struct {
 	Logo         string    `json:"logo,omitempty" bson:"logo,omitempty"`
 	ActiveMenuID string    `json:"active_menu_id,omitempty" bson:"active_menu_id,omitempty"` // ID del menu attivo per QR code
 	CreatedAt    time.Time `json:"created_at" bson:"created_at"`
+	LastLogin    time.Time `json:"last_login,omitempty" bson:"last_login,omitempty"` // Legacy API compatibility
 	IsActive     bool      `json:"is_active" bson:"is_active"` // Ristorante attivo
 }
 

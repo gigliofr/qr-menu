@@ -204,6 +204,7 @@
 
         <div class="form-container">
             <form method="POST" id="menuForm">
+        <input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
         <div class="form-group">
             <label for="name">Nome del Menu:</label>
             <input type="text" id="name" name="name" required placeholder="es: Menu della Casa">

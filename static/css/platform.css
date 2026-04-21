@@ -1,0 +1,106 @@
+/* Cross-platform design layer for mobile, tablet, desktop and PWA shells */
+
+:root {
+    --platform-max-content: 1280px;
+    --platform-space-sm: 10px;
+    --platform-space-md: 16px;
+    --platform-space-lg: 24px;
+    --platform-space-xl: 32px;
+    --platform-focus: #0ea5e9;
+}
+
+html {
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+}
+
+body {
+    padding-left: max(env(safe-area-inset-left), 0px);
+    padding-right: max(env(safe-area-inset-right), 0px);
+    padding-top: max(env(safe-area-inset-top), 0px);
+    padding-bottom: max(env(safe-area-inset-bottom), 0px);
+}
+
+a,
+button,
+input,
+select,
+textarea {
+    touch-action: manipulation;
+}
+
+button,
+.btn,
+input[type="button"],
+input[type="submit"],
+input[type="reset"],
+a.btn {
+    min-height: 44px;
+}
+
+:focus-visible {
+    outline: 3px solid var(--platform-focus);
+    outline-offset: 2px;
+}
+
+@media (hover: hover) and (pointer: fine) {
+    .hover-lift {
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .hover-lift:hover {
+        transform: translateY(-2px);
+    }
+}
+
+@media (max-width: 1024px) {
+    h1 {
+        line-height: 1.1;
+    }
+}
+
+@media (max-width: 768px) {
+    body {
+        overflow-x: hidden;
+    }
+
+    .container,
+    .dashboard-container,
+    .login-container,
+    .share-container {
+        width: 100%;
+        max-width: 100%;
+    }
+}
+
+@media (max-width: 480px) {
+    h1 {
+        font-size: clamp(2rem, 9vw, 2.6rem) !important;
+        letter-spacing: -0.02em;
+    }
+
+    .btn,
+    button,
+    input,
+    select,
+    textarea {
+        font-size: 16px;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+}
+
+@media (prefers-contrast: more) {
+    :focus-visible {
+        outline-width: 4px;
+    }
+}
