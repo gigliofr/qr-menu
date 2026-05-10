@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#ffffff">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>{{.Menu.Name}} - Menu Digitale</title>
+    <link rel="manifest" href="/manifest.json">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- CSS: New Design System -->
+    <link rel="stylesheet" href="/static/css/design-system.css">
+    <link rel="stylesheet" href="/static/css/components.css">
+    <link rel="stylesheet" href="/static/css/icons.css">
+    <link rel="stylesheet" href="/static/css/platform.css">
+    
+    <style>
+        /* Public Menu Page Styles */
+        
+        .menu-container {
+            max-width: 1080px;
+            margin: 0 auto;
+            background: var(--color-bg-primary);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        /* Sticky Header */
+        .menu-header {
+            background: var(--color-bg-primary);
+            border-bottom: 1px solid var(--color-border-light);
+            position: sticky;
+            top: 0;
+            z-index: var(--z-sticky);
+            padding: var(--spacing-lg) var(--spacing-md);
+            transition: all var(--transition-fast);
+        }
+        
+        .menu-header.scrolled {
+            padding: var(--spacing-md);
+            box-shadow: var(--shadow-sm);
+        }
+        
+        .menu-header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 1080px;
+            margin: 0 auto;
+        }
+        
+        .restaurant-badge {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-sm);
+            font-weight: var(--font-weight-semibold);
+            color: var(--color-text-primary);
+        }
+        
+        .restaurant-badge .icon {
+            font-size: 20px;
+        }
+        
+        .menu-actions {
+            display: flex;
+            gap: var(--spacing-sm);
+            align-items: center;
+        }
+        
+        .menu-actions .btn-icon {
+            background: var(--color-bg-secondary);
+            border-radius: var(--radius-md);
+        }
+        
+        /* Hero Section */
+        .menu-hero {
+            background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+            padding: var(--spacing-2xl) var(--spacing-lg);
+            text-align: center;
+            border-bottom: 1px solid var(--color-border-light);
+        }
+        
+        .menu-hero h1 {
+            font-size: clamp(32px, 8vw, 48px);
+            margin-bottom: var(--spacing-md);
+            color: var(--color-text-primary);
+        }
+        
+        .menu-hero-subtitle {
+            color: var(--color-text-secondary);
+            font-size: var(--font-size-lg);
+            margin-bottom: var(--spacing-lg);
+        }
+        
+        .menu-info {
+            display: flex;
+            justify-content: center;
+            gap: var(--spacing-xl);
+            flex-wrap: wrap;
+            padding: var(--spacing-lg) 0 0;
+        }
+        
+        .info-item {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-sm);
+            font-size: var(--font-size-sm);
+            color: var(--color-text-secondary);
+        }
+        
+        .info-item .icon {
+            font-size: 20px;
+            color: var(--color-primary);
+        }
+        
+        /* Menu Sections Navigation */
+        .menu-sections {
+            display: flex;
+            gap: var(--spacing-md);
+            padding: var(--spacing-md);
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            max-width: 100%;
+            scrollbar-width: none;
+        }
+        
+        .menu-sections::-webkit-scrollbar {
+            display: none;
+        }
+        
+        .section-tab {
+            padding: var(--spacing-md) var(--spacing-lg);
+            border: 1px solid var(--color-border-light);
+            border-radius: var(--radius-full);
+            background: var(--color-bg-primary);
+            white-space: nowrap;
+            cursor: pointer;
+            transition: all var(--transition-fast);
+            font-weight: var(--font-weight-medium);
+            color: var(--color-text-secondary);
+        }
+        
+        .section-tab:hover {
+            border-color: var(--color-primary);
+            color: var(--color-primary);
+        }
+        
+        .section-tab.active {
+            background: var(--color-primary);
+            color: white;
+            border-color: var(--color-primary);
+        }
+        
+        /* Menu Items Grid */
+        .menu-content {
+            flex: 1;
+            padding: var(--spacing-xl) var(--spacing-md);
+            max-width: 1080px;
+            margin: 0 auto;
+            width: 100%;
+        }
+        
+        .menu-section {
+            margin-bottom: var(--spacing-2xl);
+        }
+        
+        .menu-section h2 {
+            font-size: var(--font-size-2xl);
+            margin-bottom: var(--spacing-lg);
+            color: var(--color-text-primary);
+            padding-left: var(--spacing-md);
+        }
+        
+        .menu-items {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: var(--spacing-lg);
+        }
+        
+        @media (min-width: 640px) {
+            .menu-items {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        
+        @media (min-width: 1024px) {
+            .menu-items {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+        
+        /* Menu Item Card */
+        .menu-item {
+            background: var(--color-bg-primary);
+            border: 1px solid var(--color-border-light);
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+            cursor: pointer;
+            transition: all var(--transition-base);
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .menu-item:hover {
+            box-shadow: var(--shadow-lg);
+            transform: translateY(-4px);
+            border-color: var(--color-border-medium);
+        }
+        
+        .menu-item-image {
+            width: 100%;
+            height: 200px;
+            background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3em;
+            overflow: hidden;
+        }
+        
+        .menu-item-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .menu-item-content {
+            padding: var(--spacing-lg);
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .menu-item-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: var(--spacing-sm);
+        }
+        
+        .menu-item-title {
+            font-size: var(--font-size-lg);
+            font-weight: var(--font-weight-semibold);
+            color: var(--color-text-primary);
+        }
+        
+        .menu-item-price {
+            font-size: var(--font-size-lg);
+            font-weight: var(--font-weight-bold);
+            color: var(--color-info);
+        }
+        
+        .menu-item-description {
+            font-size: var(--font-size-sm);
+            color: var(--color-text-secondary);
+            margin-bottom: var(--spacing-md);
+            line-height: var(--line-height-relaxed);
+            flex: 1;
+        }
+        
+        .menu-item-tags {
+            display: flex;
+            gap: var(--spacing-xs);
+            margin-bottom: var(--spacing-md);
+            flex-wrap: wrap;
+        }
+        
+        .menu-tag {
+            font-size: var(--font-size-xs);
+            background: var(--color-bg-secondary);
+            color: var(--color-text-secondary);
+            padding: 4px 8px;
+            border-radius: var(--radius-full);
+            display: inline-block;
+        }
+        
+        .menu-tag.vegetarian {
+            background: rgba(52, 199, 89, 0.1);
+            color: var(--color-success);
+        }
+        
+        .menu-tag.spicy {
+            background: rgba(255, 149, 0, 0.1);
+            color: var(--color-warning);
+        }
+        
+        .menu-item-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .menu-item-actions {
+            display: flex;
+            gap: var(--spacing-sm);
+        }
+        
+        .menu-item-actions .btn-icon {
+            background: transparent;
+            border: 1px solid var(--color-border-light);
+        }
+        
+        .menu-item-actions .btn-icon:hover {
+            background: var(--color-bg-secondary);
+            color: var(--color-primary);
+        }
+        
+        /* Unavailable Item */
+        .menu-item.unavailable {
+            opacity: 0.6;
+            pointer-events: none;
+        }
+        
+        .menu-item.unavailable::after {
+            content: 'Non disponibile';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: var(--spacing-md) var(--spacing-lg);
+            border-radius: var(--radius-md);
+            font-weight: var(--font-weight-semibold);
+            z-index: 10;
+        }
+        
+        /* Modal Details */
+        .item-detail-modal {
+            display: none;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            max-height: 90vh;
+            background: var(--color-bg-primary);
+            border-radius: var(--radius-2xl) var(--radius-2xl) 0 0;
+            z-index: var(--z-modal);
+            animation: slideUpFull var(--transition-base);
+            padding-bottom: max(env(safe-area-inset-bottom), 0px);
+        }
+        
+        .item-detail-modal.show {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        @keyframes slideUpFull {
+            from {
+                transform: translateY(100%);
+            }
+            to {
+                transform: translateY(0);
+            }
+        }
+        
+        /* Mobile Optimizations */
+        @media (max-width: 768px) {
+            .menu-hero {
+                padding: var(--spacing-xl) var(--spacing-md);
+            }
+            
+            .menu-info {
+                gap: var(--spacing-md);
+            }
+            
+            .menu-content {
+                padding: var(--spacing-lg) var(--spacing-md);
+            }
+            
+            .menu-section h2 {
+                font-size: var(--font-size-xl);
+                padding-left: var(--spacing-sm);
+            }
+            
+            .menu-items {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        /* Reduced Motion */
+        @media (prefers-reduced-motion: reduce) {
+            .menu-item,
+            .section-tab,
+            .menu-hero {
+                transition: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="menu-container">
+        <!-- Sticky Header -->
+        <div class="menu-header" id="menuHeader">
+            <div class="menu-header-content">
+                <div class="restaurant-badge">
+                    <span>🍽️</span>
+                    <span>{{.Restaurant.Name}}</span>
+                </div>
+                <div class="menu-actions">
+                    <button class="btn-icon icon-md" title="Condividi" onclick="shareMenu()">
+                        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <circle cx="18" cy="5" r="3"/>
+                            <circle cx="6" cy="12" r="3"/>
+                            <circle cx="18" cy="19" r="3"/>
+                            <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/>
+                            <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Hero Section -->
+        <div class="menu-hero">
+            <h1>{{.Menu.Name}}</h1>
+            <p class="menu-hero-subtitle">{{.Restaurant.Description}}</p>
+            
+            <div class="menu-info">
+                {{if .Restaurant.Phone}}
+                <div class="info-item">
+                    <span class="icon">📞</span>
+                    <span>{{.Restaurant.Phone}}</span>
+                </div>
+                {{end}}
+                
+                {{if .Restaurant.OpeningHours}}
+                <div class="info-item">
+                    <span class="icon">🕐</span>
+                    <span>Aperto ora</span>
+                </div>
+                {{end}}
+                
+                {{if .Restaurant.Location}}
+                <div class="info-item">
+                    <span class="icon">📍</span>
+                    <span>{{.Restaurant.Location}}</span>
+                </div>
+                {{end}}
+            </div>
+        </div>
+        
+        <!-- Section Tabs -->
+        <div class="menu-sections">
+            {{range .Sections}}
+            <button class="section-tab {{if eq .ID .Active}}active{{end}}" 
+                    onclick="filterBySection('{{.ID}}')">
+                {{.Name}}
+            </button>
+            {{end}}
+        </div>
+        
+        <!-- Menu Content -->
+        <div class="menu-content">
+            {{range .Sections}}
+            <div class="menu-section" id="section-{{.ID}}">
+                <h2>{{.Name}}</h2>
+                <div class="menu-items">
+                    {{range .Items}}
+                    <div class="menu-item {{if not .Available}}unavailable{{end}}" 
+                         onclick="showItemDetail('{{.ID}}')">
+                        
+                        <!-- Item Image -->
+                        <div class="menu-item-image">
+                            {{if .Image}}
+                                <img src="{{.Image}}" alt="{{.Name}}"/>
+                            {{else}}
+                                🍴
+                            {{end}}
+                        </div>
+                        
+                        <!-- Item Content -->
+                        <div class="menu-item-content">
+                            <div class="menu-item-header">
+                                <h3 class="menu-item-title">{{.Name}}</h3>
+                                <div class="menu-item-price">€{{.Price}}</div>
+                            </div>
+                            
+                            {{if .Description}}
+                            <p class="menu-item-description">{{.Description}}</p>
+                            {{end}}
+                            
+                            {{if .Tags}}
+                            <div class="menu-item-tags">
+                                {{range .Tags}}
+                                <span class="menu-tag {{.Class}}">{{.Name}}</span>
+                                {{end}}
+                            </div>
+                            {{end}}
+                            
+                            <div class="menu-item-footer">
+                                <span></span>
+                                <div class="menu-item-actions">
+                                    <button class="btn-icon icon-md" title="Aggiungi ai preferiti">
+                                        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+                                        </svg>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {{end}}
+                </div>
+            </div>
+            {{end}}
+        </div>
+    </div>
+    
+    <!-- Mobile Bottom Tab Bar -->
+    <div class="tab-bar" style="display: none;">
+        <a href="#" class="tab-item active">Menu</a>
+        <a href="#" class="tab-item">Preferiti</a>
+        <a href="#" class="tab-item">Info</a>
+    </div>
+    
+    <!-- Scripts -->
+    <script>
+        // Sticky header effect
+        let lastScrollTop = 0;
+        const menuHeader = document.getElementById('menuHeader');
+        
+        document.addEventListener('scroll', () => {
+            const st = window.pageYOffset;
+            if (st > 100) {
+                menuHeader.classList.add('scrolled');
+            } else {
+                menuHeader.classList.remove('scrolled');
+            }
+            lastScrollTop = st;
+        });
+        
+        // Section filtering
+        function filterBySection(sectionId) {
+            document.querySelectorAll('.section-tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            document.getElementById('section-' + sectionId).scrollIntoView({ behavior: 'smooth' });
+        }
+        
+        // Show item detail
+        function showItemDetail(itemId) {
+            console.log('Show details for item:', itemId);
+            // TODO: Implement modal
+        }
+        
+        // Share menu
+        function shareMenu() {
+            if (navigator.share) {
+                navigator.share({
+                    title: '{{.Menu.Name}}',
+                    text: 'Guarda il nostro menu digitale!',
+                    url: window.location.href
+                });
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,187 @@
+/* ============================================
+   QR Menu - Icons CSS
+   Apple-style Minimal Icons
+   ============================================ */
+
+/* SVG Icon Styling */
+.icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.icon svg {
+  width: 1em;
+  height: 1em;
+  stroke-width: 2;
+  stroke: currentColor;
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* Icon Sizes */
+.icon-xs {
+  font-size: 16px;
+  width: 16px;
+  height: 16px;
+}
+
+.icon-sm {
+  font-size: 20px;
+  width: 20px;
+  height: 20px;
+}
+
+.icon-md {
+  font-size: 24px;
+  width: 24px;
+  height: 24px;
+}
+
+.icon-lg {
+  font-size: 32px;
+  width: 32px;
+  height: 32px;
+}
+
+.icon-xl {
+  font-size: 48px;
+  width: 48px;
+  height: 48px;
+}
+
+/* Icon Colors */
+.icon-primary {
+  color: var(--color-primary);
+}
+
+.icon-success {
+  color: var(--color-success);
+}
+
+.icon-danger {
+  color: var(--color-danger);
+}
+
+.icon-warning {
+  color: var(--color-warning);
+}
+
+.icon-muted {
+  color: var(--color-text-tertiary);
+}
+
+.icon-light {
+  opacity: 0.5;
+}
+
+/* Icon Filled */
+.icon-filled svg {
+  fill: currentColor;
+}
+
+/* Icon Disabled */
+.icon-disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* Icon Animations */
+@keyframes icon-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.icon-spin {
+  animation: icon-spin 1s linear infinite;
+}
+
+@keyframes icon-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+.icon-pulse {
+  animation: icon-pulse 2s ease-in-out infinite;
+}
+
+/* Icon Button Container */
+.icon-btn {
+  background: none;
+  border: none;
+  padding: 8px;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-text-secondary);
+}
+
+.icon-btn:hover {
+  background-color: var(--color-bg-secondary);
+  color: var(--color-primary);
+}
+
+.icon-btn:active {
+  background-color: var(--color-bg-tertiary);
+}
+
+/* Icon Badge (notification dot) */
+.icon-badge {
+  position: relative;
+  display: inline-block;
+}
+
+.icon-badge::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 10px;
+  height: 10px;
+  background-color: var(--color-danger);
+  border: 2px solid white;
+  border-radius: 50%;
+}
+
+/* Icon with Text */
+.icon-text {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Responsive Icon Sizing */
+@media (max-width: 640px) {
+  .icon-responsive {
+    font-size: 20px;
+  }
+}
+
+/* Icon List */
+.icon-list {
+  list-style: none;
+  padding: 0;
+}
+
+.icon-list-item {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+  padding: var(--spacing-md) 0;
+  border-bottom: 1px solid var(--color-border-light);
+}
+
+.icon-list-item:last-child {
+  border-bottom: none;
+}
+
+.icon-list-item .icon {
+  flex-shrink: 0;
+  font-size: 24px;
+  color: var(--color-primary);
+}

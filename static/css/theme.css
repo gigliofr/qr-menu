@@ -1,0 +1,436 @@
+/* ============================================
+   QR Menu - Theme Configuration
+   Apple + Bootstrap Inspired Design System
+   ============================================ */
+
+/* Color Palette Export (for Go templates) */
+:root {
+  /* Brand Colors */
+  --brand-primary: #007AFF;
+  --brand-secondary: #F5F5F5;
+  
+  /* Status Colors */
+  --status-success: #34C759;
+  --status-danger: #FF3B30;
+  --status-warning: #FF9500;
+  --status-info: #55B3FF;
+  
+  /* Light Mode (Default) */
+  [data-theme="light"] {
+    --text-primary: #1F2937;
+    --text-secondary: #6B7280;
+    --bg-primary: #FFFFFF;
+    --bg-secondary: #F9FAFB;
+    --border: #E5E7EB;
+  }
+  
+  /* Dark Mode */
+  [data-theme="dark"] {
+    --text-primary: #F3F4F6;
+    --text-secondary: #D1D5DB;
+    --bg-primary: #111827;
+    --bg-secondary: #1F2937;
+    --border: #4B5563;
+  }
+}
+
+/* ============================================
+   INTEGRATION WITH EXISTING STYLES
+   ============================================ */
+
+/* Map old style.css classes to new system */
+
+/* Header mapping */
+.header {
+  background: var(--color-bg-primary) !important;
+  border-bottom: 1px solid var(--color-border-light) !important;
+  padding: var(--spacing-lg) !important;
+  margin-bottom: 0 !important;
+  border-radius: 0 !important;
+  text-shadow: none !important;
+  box-shadow: var(--shadow-xs) !important;
+}
+
+.header h1 {
+  color: var(--color-text-primary) !important;
+  font-size: var(--font-size-3xl) !important;
+  text-shadow: none !important;
+}
+
+.header p {
+  color: var(--color-text-secondary) !important;
+}
+
+/* Button mapping */
+.btn-primary {
+  background: var(--color-primary) !important;
+  background-image: none !important;
+  border-color: var(--color-primary) !important;
+}
+
+.btn-success {
+  background: var(--color-success) !important;
+  background-image: none !important;
+  border-color: var(--color-success) !important;
+}
+
+.btn-danger {
+  background: var(--color-danger) !important;
+  background-image: none !important;
+  border-color: var(--color-danger) !important;
+}
+
+.btn-warning {
+  background: var(--color-warning) !important;
+  background-image: none !important;
+  border-color: var(--color-warning) !important;
+}
+
+/* Card mapping */
+.card {
+  box-shadow: var(--shadow-sm) !important;
+  border: 1px solid var(--color-border-light) !important;
+  border-radius: var(--radius-lg) !important;
+  padding: var(--spacing-lg) !important;
+}
+
+.card:hover {
+  box-shadow: var(--shadow-md) !important;
+  border-color: var(--color-border-medium) !important;
+}
+
+.card.completed {
+  border-left-color: var(--color-success) !important;
+  border-left-width: 4px !important;
+}
+
+.card.draft {
+  border-left-color: var(--color-warning) !important;
+  border-left-width: 4px !important;
+}
+
+/* ============================================
+   COLOR SCHEME SWITCHER
+   ============================================ */
+
+/* For future dark mode toggle implementation */
+.theme-switcher {
+  position: fixed;
+  bottom: var(--spacing-lg);
+  right: var(--spacing-lg);
+  z-index: 100;
+  display: none;
+}
+
+.theme-switcher.enabled {
+  display: flex;
+}
+
+.theme-toggle {
+  background: var(--color-primary);
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 50px;
+  height: 50px;
+  cursor: pointer;
+  font-size: 24px;
+  box-shadow: var(--shadow-lg);
+  transition: all var(--transition-fast);
+}
+
+.theme-toggle:hover {
+  transform: scale(1.1);
+}
+
+/* ============================================
+   RESPONSIVE CONTAINER OVERRIDE
+   ============================================ */
+
+@media (max-width: 1024px) {
+  .container,
+  .dashboard-container,
+  .login-container,
+  .share-container {
+    width: 100%;
+    max-width: 100%;
+    padding: 0 var(--spacing-md);
+  }
+}
+
+@media (max-width: 768px) {
+  .container,
+  .dashboard-container,
+  .login-container,
+  .share-container {
+    padding: 0 var(--spacing-sm);
+  }
+}
+
+/* ============================================
+   FORM STYLING OVERRIDE
+   ============================================ */
+
+/* Consolidate form styles */
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="number"],
+textarea,
+select {
+  border-radius: var(--radius-md) !important;
+  border: 1px solid var(--color-border-light) !important;
+}
+
+input:focus,
+textarea:focus,
+select:focus {
+  border-color: var(--color-primary) !important;
+  box-shadow: 0 0 0 3px var(--color-primary-light) !important;
+}
+
+/* ============================================
+   HOVER EFFECTS CONSOLIDATION
+   ============================================ */
+
+@media (hover: hover) and (pointer: fine) {
+  .btn:hover,
+  .card:hover,
+  .section-tab:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+  }
+  
+  a:hover {
+    color: var(--color-primary-hover);
+  }
+}
+
+/* ============================================
+   PRINT STYLES
+   ============================================ */
+
+@media print {
+  .navbar,
+  .tab-bar,
+  .btn-print,
+  .theme-switcher {
+    display: none !important;
+  }
+  
+  body {
+    background: white;
+  }
+  
+  .menu-item,
+  .card {
+    page-break-inside: avoid;
+  }
+}
+
+/* ============================================
+   ANIMATION PRESETS
+   ============================================ */
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(-30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.animate-fade-in-up {
+  animation: fadeInUp var(--transition-base);
+}
+
+.animate-slide-in-right {
+  animation: slideInRight var(--transition-base);
+}
+
+/* ============================================
+   DEBUGGING & DEVELOPMENT UTILITIES
+   ============================================ */
+
+.debug-colors {
+  background: linear-gradient(90deg,
+    var(--color-primary) 0%,
+    var(--color-success) 25%,
+    var(--color-warning) 50%,
+    var(--color-danger) 75%,
+    var(--color-info) 100%
+  );
+  height: 40px;
+  margin: var(--spacing-md) 0;
+  border-radius: var(--radius-md);
+}
+
+.debug-spacing {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+  gap: var(--spacing-md);
+  margin: var(--spacing-lg) 0;
+}
+
+.debug-spacing > div {
+  background: var(--color-bg-tertiary);
+  padding: var(--spacing-lg);
+  border-radius: var(--radius-md);
+  text-align: center;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+}
+
+.debug-typography {
+  background: var(--color-bg-secondary);
+  padding: var(--spacing-lg);
+  border-radius: var(--radius-md);
+  margin: var(--spacing-lg) 0;
+}
+
+.debug-typography h1,
+.debug-typography h2,
+.debug-typography h3,
+.debug-typography p {
+  margin-bottom: var(--spacing-md);
+}
+
+/* ============================================
+   LEGACY SUPPORT
+   ============================================ */
+
+/* Fallback for browsers without CSS custom properties */
+@supports not (--css: variables) {
+  :root {
+    --color-primary: #007AFF;
+    --color-success: #34C759;
+    --color-danger: #FF3B30;
+    --color-warning: #FF9500;
+    --font-size-md: 16px;
+  }
+}
+
+/* ============================================
+   WCAG 2.1 COMPLIANCE
+   ============================================ */
+
+/* Ensure sufficient color contrast */
+.low-contrast {
+  color: var(--color-text-secondary) !important;
+}
+
+/* Skip to main content link (for accessibility) */
+.skip-to-main {
+  position: absolute;
+  top: -40px;
+  left: 0;
+  background: var(--color-primary);
+  color: white;
+  padding: var(--spacing-md);
+  text-decoration: none;
+  z-index: 100;
+}
+
+.skip-to-main:focus {
+  top: 0;
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: more) {
+  :root {
+    --color-border-light: #000;
+    --color-text-primary: #F3F4F6;
+    --color-text-secondary: #D1D5DB;
+  }
+}
+
+/* Focus visible for keyboard navigation */
+:focus-visible {
+  outline: 3px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+/* ============================================
+   RTLSUPPORT (Right-to-Left)
+   ============================================ */
+
+[dir="rtl"] {
+  text-align: right;
+}
+
+[dir="rtl"] .flex-between {
+  flex-direction: row-reverse;
+}
+
+[dir="rtl"] .navbar-nav {
+  flex-direction: row-reverse;
+}
+
+/* ============================================
+   PERFORMANCE OPTIMIZATIONS
+   ============================================ */
+
+/* Reduce repaints */
+.will-animate {
+  will-change: transform, opacity;
+}
+
+/* GPU acceleration */
+.gpu-accelerate {
+  transform: translateZ(0);
+  backface-visibility: hidden;
+}
+
+/* Optimize images */
+img {
+  max-width: 100%;
+  height: auto;
+}
+
+/* ============================================
+   MODERN CSS GRID SUPPORT
+   ============================================ */
+
+.responsive-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: var(--spacing-lg);
+}
+
+@supports (display: grid) {
+  .legacy-table {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  }
+}
+
+/* ============================================
+   FINAL NOTES
+   ============================================ */
+
+/* This configuration file serves as:
+   1. Bridge between old and new CSS
+   2. Theme configuration hub
+   3. Utility classes collection
+   4. Development helpers
+   
+   Keep this file updated when:
+   - Adding new color schemes
+   - Implementing new features
+   - Updating design tokens
+   - Adding accessibility improvements
+*/

@@ -1,203 +1,66 @@
 <!DOCTYPE html>
 <html lang="it">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Crea Nuovo Menu - QR Menu</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { 
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-            background: #f8f9fa;
-            min-height: 100vh;
-            padding: 40px 20px;
-        }
-        
-        .container {
-            max-width: 900px;
-            margin: 0 auto;
-        }
-        .header { 
-            background: #ffffff;
-            color: #2c3e50;
-            padding: 50px 40px;
-            margin-bottom: 30px;
-            border-radius: 24px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
-            position: relative;
-            border: 1px solid #e9ecef;
-            text-align: center;
-        }
-        .header h1 {
-            font-size: 2.8em;
-            font-weight: 800;
-            margin-bottom: 14px;
-            letter-spacing: -0.02em;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-        .header p {
-            font-size: 1.15em;
-            color: #7f8c8d;
-            font-weight: 500;
-        }
-        .back-btn {
-            position: absolute;
-            top: 20px;
-            left: 20px;
-            background: rgba(255,255,255,0.2);
-            border: 2px solid rgba(255,255,255,0.3);
-            color: white;
-            padding: 8px 15px;
-            border-radius: 25px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            font-size: 1em;
-            font-weight: bold;
-            text-decoration: none;
-            display: inline-flex;
-            align-items: center;
-            gap: 5px;
-        }
-        .back-btn:hover {
-            background: rgba(255,255,255,0.3);
-            transform: translateX(-3px);
-        }
-        .form-container {
-            background: #ffffff;
-            padding: 45px 40px;
-            border-radius: 24px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
-            border: 1px solid #e9ecef;
-        }
-        .form-group { margin-bottom: 28px; }
-        label { 
-            display: block;
-            margin-bottom: 10px;
-            font-weight: 700;
-            color: #2c3e50;
-            font-size: 16px;
-            letter-spacing: 0.01em;
-        }
-        input, textarea, select { 
-            width: 100%;
-            min-height: 60px;
-            padding: 20px;
-            border: 1px solid #e9ecef;
-            border-radius: 14px;
-            box-sizing: border-box;
-            font-family: 'Inter', sans-serif;
-            font-size: 16px;
-            transition: all 0.2s ease;
-            background: white;
-        }
-        input:focus, textarea:focus, select:focus {
-            outline: none;
-            border-color: #667eea;
-            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.08);
-        }
-        textarea { min-height: 140px; resize: vertical; }
-        .btn { 
-            padding: 16px 32px;
-            margin: 8px;
-            text-decoration: none;
-            color: white;
-            border: none;
-            border-radius: 14px;
-            cursor: pointer;
-            font-weight: 700;
-            font-size: 1rem;
-            font-family: 'Inter', sans-serif;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            letter-spacing: 0.01em;
-        }
-        .btn:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
-        }
-        .btn-primary { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
-        .btn-success { background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); }
-        .btn-secondary { background: linear-gradient(135deg, #95a5a6 0%, #7f8c8d 100%); }
-        .category-section { 
-            border: 2px solid #e9ecef;
-            padding: 30px;
-            margin: 30px 0;
-            border-radius: 20px;
-            background: rgba(248, 249, 250, 0.5);
-            backdrop-filter: blur(10px);
-        }
-        .category-header { 
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 20px;
-            margin: -30px -30px 25px -30px;
-            border-radius: 20px 20px 0 0;
-        }
-        .category-header h4 {
-            font-size: 1.4em;
-            font-weight: 700;
-        }
-        .item-row { display: flex; gap: 14px; margin-bottom: 14px; }
-        .item-row input { flex: 1; }
-        .remove-btn { 
-            background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
-            color: white;
-            border: none;
-            padding: 10px 18px;
-            border-radius: 10px;
-            cursor: pointer;
-            font-weight: 700;
-            transition: all 0.3s ease;
-        }
-        .remove-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(250, 112, 154, 0.4);
-        }
-        h3 {
-            font-size: 1.8em;
-            margin: 40px 0 24px 0;
-            color: #2c3e50;
-            font-weight: 700;
-            letter-spacing: -0.01em;
-        }
-        h5 {
-            font-size: 1.2em;
-            margin: 24px 0 16px 0;
-            color: #2c3e50;
-            font-weight: 600;
-        }
-
-        @media (max-width: 768px) {
-            .header,
-            .form-container {
-                padding: 30px 20px;
-            }
-
-            .header h1 {
-                font-size: 42px;
-                line-height: 1.1;
-            }
-
-            .btn {
-                width: 100%;
-                margin: 8px 0;
-                font-size: 16px;
-            }
-
-            .item-row {
-                flex-direction: column;
-            }
-        }
-    </style>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Crea Menu - QR Menu</title>
+    <link rel="stylesheet" href="/static/css/design-system.css">
+    <link rel="stylesheet" href="/static/css/components.css">
+    <link rel="stylesheet" href="/static/css/icons.css">
+    <link rel="stylesheet" href="/static/css/theme.css">
+    <link rel="stylesheet" href="/static/css/platform.css">
 </head>
 <body>
     <div class="container">
-        <div class="header">
-            <a href="/admin" class="back-btn">← Indietro</a>
+        <header class="navbar mb-md">
+            <div class="container flex-between">
+                <a class="navbar-brand" href="/admin">🍽️ QR Menu</a>
+                <div>
+                    <a class="nav-link" href="/admin/menus">Torna ai Menù</a>
+                </div>
+            </div>
+        </header>
+
+        <main>
+            <section class="card">
+                <div class="card-header">
+                    <h2 class="h2">Crea nuovo Menu</h2>
+                </div>
+                <form class="card-body" method="POST" action="/admin/menus/create" enctype="multipart/form-data">
+                    <div class="form-group">
+                        <label for="name">Nome del Menu <span class="required">*</span></label>
+                        <input id="name" name="name" type="text" placeholder="Esempio: Menu di stagione" required />
+                    </div>
+
+                    <div class="form-group">
+                        <label for="description">Descrizione</label>
+                        <textarea id="description" name="description" placeholder="Breve descrizione..."></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="image">Immagine di copertina</label>
+                        <input id="image" name="image" type="file" accept="image/*" />
+                        <small class="form-text">Consigliato 1200x800px</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="visibility">Visibilità</label>
+                        <select id="visibility" name="visibility">
+                            <option value="public">Pubblico</option>
+                            <option value="private">Privato</option>
+                        </select>
+                    </div>
+
+                    <div class="card-footer">
+                        <button type="submit" class="btn btn-primary">Crea Menu</button>
+                        <a href="/admin/menus" class="btn btn-secondary">Annulla</a>
+                    </div>
+                </form>
+            </section>
+        </main>
+    </div>
+</body>
+</html>
             <h1>➕ Crea Nuovo Menu</h1>
             <p>Compila i dettagli del tuo menu digitale</p>
         </div>

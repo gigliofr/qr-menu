@@ -1,58 +1,138 @@
 <!DOCTYPE html>
 <html lang="it">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="theme-color" content="#0f172a">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="default">
-    <title>{{.Restaurant.Name}} - Dashboard Pro | QR Menu</title>
-    <link rel="manifest" href="/manifest.json">
-    <link rel="stylesheet" href="/static/css/platform.css">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            --secondary-gradient: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-            --success-gradient: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-            --warning-gradient: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
-            --danger-gradient: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
-            --dark-gradient: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
-            --surface-white: #ffffff;
-            --surface-glass: rgba(255, 255, 255, 0.1);
-            --text-primary: #2c3e50;
-            --text-secondary: #7f8c8d;
-            --shadow-soft: 0 2px 8px rgba(0, 0, 0, 0.04);
-            --shadow-hover: 0 4px 12px rgba(0, 0, 0, 0.08);
-            --border-radius: 20px;
-            --transition: all 0.2s ease;
-        }
-        
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
-        body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-            background: #f8f9fa;
-            min-height: 100vh;
-            color: var(--text-primary);
-            line-height: 1.6;
-        }
-        
-        .container {
-            max-width: 1400px;
-            margin: 0 auto;
-            padding: 20px;
-        }
-        
-        .header {
-            background: var(--surface-white);
-            border-radius: var(--border-radius);
+    <!DOCTYPE html>
+    <html lang="it">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta name="theme-color" content="#0f172a">
+        <meta name="apple-mobile-web-app-capable" content="yes">
+        <meta name="apple-mobile-web-app-status-bar-style" content="default">
+        <title>{{.Restaurant.Name}} - Dashboard | QR Menu</title>
+        <link rel="manifest" href="/manifest.json">
+        <link rel="stylesheet" href="/static/css/design-system.css">
+        <link rel="stylesheet" href="/static/css/components.css">
+        <link rel="stylesheet" href="/static/css/icons.css">
+        <link rel="stylesheet" href="/static/css/theme.css">
+        <link rel="stylesheet" href="/static/css/platform.css">
+    </head>
+    <body>
+        <a class="skip-to-main" href="#main">Vai al contenuto principale</a>
+        <header class="navbar">
+            <div class="container flex-between">
+                <a class="navbar-brand" href="/admin">🍽️ QR Menu</a>
+                <div class="flex items-center gap-md">
+                    <button class="icon-btn" id="sidebarToggle" aria-label="Toggle sidebar">
+                        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+                    </button>
+                    <div class="nav-user">
+                        <span class="text-sm text-muted">{{.User.Email}}</span>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <div class="container" style="display: grid; grid-template-columns: 260px 1fr; gap: var(--spacing-lg);">
+            <!-- Sidebar -->
+            <aside id="sidebar" class="card card-compact" style="height: calc(100vh - 96px); position: sticky; top: 80px;">
+                <nav class="nav-list">
+                    <ul style="list-style:none; padding:0;">
+                        <li style="margin-bottom: var(--spacing-sm);"><a class="nav-link" href="/admin">Dashboard</a></li>
+                        <li style="margin-bottom: var(--spacing-sm);"><a class="nav-link" href="/admin/menus">Menu</a></li>
+                        <li style="margin-bottom: var(--spacing-sm);"><a class="nav-link" href="/admin/orders">Ordini</a></li>
+                        <li style="margin-bottom: var(--spacing-sm);"><a class="nav-link" href="/admin/settings">Impostazioni</a></li>
+                    </ul>
+                </nav>
+            </aside>
+
+            <!-- Main -->
+            <main id="main">
+                <section class="card card-flat mb-md">
+                    <div class="card-body">
+                        <div class="flex-between">
+                            <div>
+                                <h1 class="h2">Dashboard</h1>
+                                <p class="text-muted">Panoramica rapida delle metriche</p>
+                            </div>
+                            <div class="flex gap-md">
+                                <button class="btn btn-secondary">Esporta</button>
+                                <button class="btn btn-primary">Nuovo Menu</button>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="grid grid-3 mb-"
+                         style="grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: var(--spacing-md); margin-bottom: var(--spacing-lg);">
+                    <div class="card">
+                        <div class="card-body">
+                            <h3 class="h3">Visite Oggi</h3>
+                            <div class="h1">1,234</div>
+                            <div class="text-muted">+5% rispetto a ieri</div>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-body">
+                            <h3 class="h3">Ordini</h3>
+                            <div class="h1">42</div>
+                            <div class="text-muted">Nuovi ordini oggi</div>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-body">
+                            <h3 class="h3">Entrate</h3>
+                            <div class="h1">€1,230</div>
+                            <div class="text-muted">Entrate stimate</div>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="card">
+                    <div class="card-header">
+                        <h3 class="h3">Menu Recenti</h3>
+                    </div>
+                    <div class="card-body">
+                        <!-- Placeholder table -->
+                        <div style="overflow:auto;">
+                            <table style="width:100%; border-collapse: collapse;">
+                                <thead style="text-align:left; color:var(--color-text-secondary); font-weight:600;">
+                                    <tr>
+                                        <th style="padding:12px; border-bottom:1px solid var(--color-border-light);">Nome</th>
+                                        <th style="padding:12px; border-bottom:1px solid var(--color-border-light);">Creato</th>
+                                        <th style="padding:12px; border-bottom:1px solid var(--color-border-light);">Visite</th>
+                                        <th style="padding:12px; border-bottom:1px solid var(--color-border-light);">Azioni</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {{range .Menus}}
+                                    <tr>
+                                        <td style="padding:12px; border-bottom:1px solid var(--color-border-light);">{{.Name}}</td>
+                                        <td style="padding:12px; border-bottom:1px solid var(--color-border-light);">{{.CreatedAt}}</td>
+                                        <td style="padding:12px; border-bottom:1px solid var(--color-border-light);">{{.Visits}}</td>
+                                        <td style="padding:12px; border-bottom:1px solid var(--color-border-light);">
+                                            <a class="btn btn-secondary btn-sm" href="/admin/menus/edit/{{.ID}}">Modifica</a>
+                                        </td>
+                                    </tr>
+                                    {{end}}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+            </main>
+        </div>
+
+        <script>
+            // Sidebar toggle for small screens
+            const sidebar = document.getElementById('sidebar');
+            const toggle = document.getElementById('sidebarToggle');
+            toggle.addEventListener('click', () => {
+                sidebar.style.display = (sidebar.style.display === 'none' || getComputedStyle(sidebar).display === 'none') ? 'block' : 'none';
+            });
+        </script>
+    </body>
+    </html>
             padding: 50px;
             margin-bottom: 80px;
             box-shadow: var(--shadow-soft);

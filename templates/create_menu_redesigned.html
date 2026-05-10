@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Crea Menu - QR Menu</title>
+  <link rel="stylesheet" href="/static/css/design-system.css">
+  <link rel="stylesheet" href="/static/css/components.css">
+  <link rel="stylesheet" href="/static/css/icons.css">
+  <link rel="stylesheet" href="/static/css/theme.css">
+  <link rel="stylesheet" href="/static/css/platform.css">
+</head>
+<body>
+  <div class="container">
+    <header class="navbar mb-md">
+      <div class="container flex-between">
+        <a class="navbar-brand" href="/admin">🍽️ QR Menu</a>
+        <div>
+          <a class="nav-link" href="/admin/menus">Torna ai Menù</a>
+        </div>
+      </div>
+    </header>
+
+    <main>
+      <section class="card">
+        <div class="card-header">
+          <h2 class="h2">Crea nuovo Menu</h2>
+        </div>
+        <form class="card-body" method="POST" action="/admin/menus/create" enctype="multipart/form-data">
+          <div class="form-group">
+            <label for="name">Nome del Menu <span class="required">*</span></label>
+            <input id="name" name="name" type="text" placeholder="Esempio: Menu di stagione" required />
+          </div>
+
+          <div class="form-group">
+            <label for="description">Descrizione</label>
+            <textarea id="description" name="description" placeholder="Breve descrizione..."></textarea>
+          </div>
+
+          <div class="form-group">
+            <label for="image">Immagine di copertina</label>
+            <input id="image" name="image" type="file" accept="image/*" />
+            <small class="form-text">Consigliato 1200x800px</small>
+          </div>
+
+          <div class="form-group">
+            <label for="visibility">Visibilità</label>
+            <select id="visibility" name="visibility">
+              <option value="public">Pubblico</option>
+              <option value="private">Privato</option>
+            </select>
+          </div>
+
+          <div class="card-footer">
+            <button type="submit" class="btn btn-primary">Crea Menu</button>
+            <a href="/admin/menus" class="btn btn-secondary">Annulla</a>
+          </div>
+        </form>
+      </section>
+    </main>
+  </div>
+</body>
+</html>
