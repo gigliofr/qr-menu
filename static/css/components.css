@@ -48,14 +48,15 @@
 
 /* Button Variants */
 .btn-primary {
-  background-color: var(--color-primary);
-  color: white;
-  border-color: var(--color-primary);
+  background-color: var(--color-primary-light);
+  color: var(--color-primary);
+  border-color: var(--color-primary-light);
 }
 
 .btn-primary:hover {
-  background-color: var(--color-primary-hover);
-  border-color: var(--color-primary-hover);
+  background-color: var(--color-primary-contrast);
+  color: white;
+  border-color: var(--color-primary-contrast);
   box-shadow: var(--shadow-md);
   transform: translateY(-2px);
 }
@@ -138,6 +139,23 @@
 .btn-ghost:hover {
   background-color: var(--color-primary-light);
   border-color: transparent;
+}
+
+/* Strong link utility */
+.link-strong {
+  color: #00162f;
+  font-weight: var(--font-weight-semibold);
+}
+
+/* Strong high-contrast button variant */
+.btn-strong {
+  background-color: #00325A;
+  color: #ffffff;
+  border-color: #00325A;
+}
+.btn-strong:hover {
+  background-color: #002645;
+  border-color: #002645;
 }
 
 /* Icon Button */
