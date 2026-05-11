@@ -75,7 +75,7 @@
         
         .login-header p {
             font-size: var(--font-size-sm);
-            color: #E5E7EB; /* light text for dark card background */
+            color: var(--color-text-secondary);
             line-height: var(--line-height-normal);
             font-weight: var(--font-weight-medium);
         }
@@ -136,7 +136,7 @@
             cursor: pointer;
             margin: 0;
             font-weight: var(--font-weight-medium);
-            color: #E5E7EB; /* readable on dark background */
+            color: var(--color-text-secondary);
         }
         
         /* Buttons */
@@ -185,7 +185,7 @@
             align-items: center;
             gap: var(--spacing-md);
             margin: var(--spacing-lg) 0;
-            color: #E5E7EB; /* readable on dark background */
+            color: var(--color-text-secondary);
             font-size: var(--font-size-sm);
             font-weight: var(--font-weight-semibold);
         }
@@ -207,14 +207,14 @@
         
         .login-footer p {
             font-size: var(--font-size-sm);
-            color: #E5E7EB;
+            color: var(--color-text-secondary);
             margin-bottom: var(--spacing-sm);
             line-height: var(--line-height-normal);
             font-weight: var(--font-weight-medium);
         }
 
         .login-footer a {
-            color: #7FB3FF; /* lighter blue for visibility on dark card */
+            color: var(--color-primary);
             text-decoration: underline;
             text-decoration-thickness: 2px;
             font-weight: var(--font-weight-semibold);
@@ -222,7 +222,25 @@
         }
 
         .login-footer a:hover {
-            color: #5AA0FF;
+            color: var(--color-primary-hover);
+        }
+
+        /* Dark-mode overrides for the login card elements */
+        @media (prefers-color-scheme: dark) {
+            .login-header p,
+            .form-check label,
+            .divider,
+            .login-footer p {
+                color: #E5E7EB;
+            }
+
+            .login-footer a {
+                color: #7FB3FF;
+            }
+
+            .login-footer a:hover {
+                color: #5AA0FF;
+            }
         }
         
         /* Error Message */
