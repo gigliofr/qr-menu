@@ -447,65 +447,75 @@
         
         <!-- Section Tabs -->
         <div class="menu-sections">
-            {{range .Sections}}
-            <button class="section-tab {{if eq .ID .Active}}active{{end}}" 
-                    onclick="filterBySection('{{.ID}}')">
-                {{.Name}}
-            </button>
+            {{if .Menu.Categories}}
+                {{range .Menu.Categories}}
+                <button class="section-tab" onclick="filterBySection('{{.ID}}')">{{.Name}}</button>
+                {{end}}
             {{end}}
         </div>
-        
+
         <!-- Menu Content -->
         <div class="menu-content">
-            {{range .Sections}}
-            <div class="menu-section" id="section-{{.ID}}">
-                <h2>{{.Name}}</h2>
-                <div class="menu-items">
-                    {{range .Items}}
-                    <div class="menu-item {{if not .Available}}unavailable{{end}}" 
-                         onclick="showItemDetail('{{.ID}}')">
-                        
-                        <!-- Item Image -->
-                        <div class="menu-item-image">
-                            {{if .Image}}
-                                <img src="{{.Image}}" alt="{{.Name}}"/>
-                            {{else}}
-                                🍴
-                            {{end}}
-                        </div>
-                        
-                        <!-- Item Content -->
-                        <div class="menu-item-content">
-                            <div class="menu-item-header">
-                                <h3 class="menu-item-title">{{.Name}}</h3>
-                                <div class="menu-item-price">€{{.Price}}</div>
-                            </div>
-                            
-                            {{if .Description}}
-                            <p class="menu-item-description">{{.Description}}</p>
-                            {{end}}
-                            
-                            {{if .Tags}}
-                            <div class="menu-item-tags">
-                                {{range .Tags}}
-                                <span class="menu-tag {{.Class}}">{{.Name}}</span>
-                                {{end}}
-                            </div>
-                            {{end}}
-                            
-                            <div class="menu-item-footer">
-                                <span></span>
-                                <div class="menu-item-actions">
-                                    <button class="btn-icon icon-md" title="Aggiungi ai preferiti">
-                                        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
-                                        </svg>
-                                    </button>
+            {{if .Menu.Categories}}
+                {{range $categoryIndex, $category := .Menu.Categories}}
+                <div class="menu-section" id="section-{{$category.ID}}">
+                    <h2>{{$category.Name}}</h2>
+                    <div class="menu-items">
+                        {{if $category.Items}}
+                            {{range $category.Items}}
+                            <div class="menu-item {{if not .Available}}unavailable{{end}}" onclick="showItemDetail('{{.ID}}')">
+                                <div class="menu-item-image">
+                                    {{if .ImageURL}}
+                                        <img src="/{{.ImageURL}}" alt="{{.Name}}"/>
+                                    {{else}}
+                                        🍴
+                                    {{end}}
+                                </div>
+
+                                <div class="menu-item-content">
+                                    <div class="menu-item-header">
+                                        <h3 class="menu-item-title">{{.Name}}</h3>
+                                        <div class="menu-item-price">€{{printf "%.2f" .Price}}</div>
+                                    </div>
+
+                                    {{if .Description}}
+                                    <p class="menu-item-description">{{.Description}}</p>
+                                    {{end}}
+
+                                    {{if .Tags}}
+                                    <div class="menu-item-tags">
+                                        {{range .Tags}}
+                                        <span class="menu-tag {{.Class}}">{{.Name}}</span>
+                                        {{end}}
+                                    </div>
+                                    {{end}}
+
+                                    <div class="menu-item-footer">
+                                        <span></span>
+                                        <div class="menu-item-actions">
+                                            <button class="btn-icon icon-md" title="Aggiungi ai preferiti">
+                                                <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                                    <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+                                                </svg>
+                                            </button>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
+                            {{end}}
+                        {{else}}
+                        <div class="no-items">
+                            <p>Nessun piatto disponibile in questa categoria al momento.</p>
                         </div>
+                        {{end}}
                     </div>
-                    {{end}}
+                </div>
+                {{end}}
+            {{else}}
+            <div class="category">
+                <div class="no-items">
+                    <h3>Menu in preparazione</h3>
+                    <p>Il menu è attualmente in fase di aggiornamento. Riprovare più tardi.</p>
                 </div>
             </div>
             {{end}}
