@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#111827">
+    <title>Menu Pubblico - QR Menu</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0f172a;
+            --panel: #111827;
+            --surface: rgba(255, 255, 255, 0.05);
+            --border: rgba(148, 163, 184, 0.18);
+            --text: #f8fafc;
+            --muted: #cbd5e1;
+            --muted-strong: #94a3b8;
+            --accent: #38bdf8;
+            --accent-strong: #0ea5e9;
+            --success: #34d399;
+            --warning: #f59e0b;
+            --danger: #fb7185;
+        }
+
+        * { box-sizing: border-box; }
+
+        html, body { min-height: 100%; }
+
+        body {
+            margin: 0;
+            font-family: 'Inter', system-ui, sans-serif;
+            color: var(--text);
+            background:
+                radial-gradient(circle at top, rgba(56, 189, 248, 0.18), transparent 35%),
+                linear-gradient(160deg, var(--bg), var(--panel));
+        }
+
+        .page {
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .shell {
+            max-width: 1080px;
+            margin: 0 auto;
+        }
+
+        .hero {
+            background: linear-gradient(135deg, rgba(56, 189, 248, 0.12), rgba(15, 23, 42, 0.12));
+            border: 1px solid var(--border);
+            border-radius: 28px;
+            padding: 28px;
+            margin-bottom: 18px;
+            box-shadow: 0 24px 70px rgba(15, 23, 42, 0.35);
+            backdrop-filter: blur(10px);
+        }
+
+        .eyebrow {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 14px;
+            border-radius: 999px;
+            background: rgba(56, 189, 248, 0.12);
+            color: var(--muted);
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 18px;
+        }
+
+        h1 {
+            margin: 0 0 10px;
+            font-size: clamp(32px, 5vw, 54px);
+            line-height: 1.02;
+        }
+
+        .subtitle {
+            margin: 0;
+            color: var(--muted);
+            font-size: 17px;
+            line-height: 1.6;
+            max-width: 62ch;
+        }
+
+        .meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-top: 20px;
+        }
+
+        .pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 14px;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(148, 163, 184, 0.14);
+            color: var(--text);
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .toolbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 18px;
+            flex-wrap: wrap;
+        }
+
+        .search {
+            flex: 1 1 260px;
+            min-width: 240px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            color: var(--text);
+            padding: 14px 16px;
+            font: inherit;
+        }
+
+        .actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 46px;
+            padding: 12px 16px;
+            border-radius: 14px;
+            border: 1px solid var(--border);
+            color: var(--text);
+            background: transparent;
+            text-decoration: none;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--accent), var(--accent-strong));
+            border-color: transparent;
+            box-shadow: 0 12px 24px rgba(14, 165, 233, 0.22);
+        }
+
+        .sections {
+            display: grid;
+            gap: 18px;
+            margin-top: 18px;
+        }
+
+        .section {
+            background: rgba(15, 23, 42, 0.88);
+            border: 1px solid var(--border);
+            border-radius: 24px;
+            padding: 18px;
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            gap: 12px;
+            margin-bottom: 14px;
+        }
+
+        .section-header h2 {
+            margin: 0;
+            font-size: 22px;
+        }
+
+        .section-header span {
+            color: var(--muted-strong);
+            font-size: 14px;
+        }
+
+        .cards {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 14px;
+        }
+
+        .card {
+            background: var(--surface);
+            border: 1px solid rgba(148, 163, 184, 0.16);
+            border-radius: 20px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            min-height: 100%;
+        }
+
+        .image {
+            aspect-ratio: 4 / 3;
+            background: linear-gradient(135deg, rgba(56, 189, 248, 0.18), rgba(52, 211, 153, 0.15));
+            display: grid;
+            place-items: center;
+            font-size: 40px;
+        }
+
+        .card-body {
+            padding: 16px;
+            display: grid;
+            gap: 10px;
+        }
+
+        .card-title-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            gap: 10px;
+        }
+
+        .card h3 {
+            margin: 0;
+            font-size: 18px;
+            line-height: 1.2;
+        }
+
+        .price {
+            color: #7dd3fc;
+            font-weight: 800;
+        }
+
+        .desc {
+            margin: 0;
+            color: var(--muted);
+            line-height: 1.5;
+            font-size: 14px;
+        }
+
+        .tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .tag {
+            display: inline-flex;
+            align-items: center;
+            padding: 6px 10px;
+            border-radius: 999px;
+            font-size: 12px;
+            font-weight: 700;
+            background: rgba(255, 255, 255, 0.06);
+            color: var(--muted);
+        }
+
+        .tag.green { color: var(--success); background: rgba(52, 211, 153, 0.1); }
+        .tag.orange { color: var(--warning); background: rgba(245, 158, 11, 0.1); }
+        .tag.red { color: var(--danger); background: rgba(251, 113, 133, 0.1); }
+
+        .footer {
+            margin-top: 20px;
+            color: var(--muted-strong);
+            font-size: 13px;
+            text-align: center;
+        }
+
+        @media (max-width: 900px) {
+            .cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        }
+
+        @media (max-width: 640px) {
+            .page { padding: 14px; }
+            .hero, .section { border-radius: 22px; }
+            .cards { grid-template-columns: 1fr; }
+            .toolbar { align-items: stretch; }
+            .actions { width: 100%; }
+            .btn { flex: 1 1 160px; }
+        }
+    </style>
+</head>
+<body>
+    <main class="page">
+        <div class="shell">
+            <section class="hero">
+                <div class="eyebrow">🍽️ Menu digitale pubblico</div>
+                <h1>Ristorante Aurora</h1>
+                <p class="subtitle">Anteprima statica del menu pubblico, utile per il flusso ospite e per test visivi quando il template dinamico non dispone ancora di dati dal backend.</p>
+                <div class="meta">
+                    <div class="pill">📍 Centro città</div>
+                    <div class="pill">🕐 Aperto ora</div>
+                    <div class="pill">📞 +39 02 1234 5678</div>
+                </div>
+            </section>
+
+            <div class="toolbar">
+                <input class="search" type="search" placeholder="Cerca un piatto o un ingrediente" aria-label="Cerca nel menu" />
+                <div class="actions">
+                    <a class="btn btn-primary" href="/templates/guest_access.html">Torna all'accesso ospite</a>
+                    <button class="btn" type="button">Condividi</button>
+                </div>
+            </div>
+
+            <section class="sections" aria-label="Categorie menu">
+                <article class="section">
+                    <div class="section-header">
+                        <h2>Antipasti</h2>
+                        <span>4 piatti</span>
+                    </div>
+                    <div class="cards">
+                        <div class="card">
+                            <div class="image">🥗</div>
+                            <div class="card-body">
+                                <div class="card-title-row">
+                                    <h3>Insalata Mediterranea</h3>
+                                    <div class="price">€9.50</div>
+                                </div>
+                                <p class="desc">Verdure fresche, feta, olive e vinaigrette agli agrumi.</p>
+                                <div class="tags">
+                                    <span class="tag green">Vegetariano</span>
+                                    <span class="tag">Fresh</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card">
+                            <div class="image">🦐</div>
+                            <div class="card-body">
+                                <div class="card-title-row">
+                                    <h3>Gamberi al Limone</h3>
+                                    <div class="price">€12.00</div>
+                                </div>
+                                <p class="desc">Gamberi scottati con burro aromatizzato e scorza di limone.</p>
+                                <div class="tags">
+                                    <span class="tag orange">Speciale</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card">
+                            <div class="image">🧀</div>
+                            <div class="card-body">
+                                <div class="card-title-row">
+                                    <h3>Selezione Formaggi</h3>
+                                    <div class="price">€11.00</div>
+                                </div>
+                                <p class="desc">Tre formaggi locali serviti con miele e confettura.</p>
+                                <div class="tags">
+                                    <span class="tag red">Gluten free</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </article>
+
+                <article class="section">
+                    <div class="section-header">
+                        <h2>Primi</h2>
+                        <span>3 piatti</span>
+                    </div>
+                    <div class="cards">
+                        <div class="card">
+                            <div class="image">🍝</div>
+                            <div class="card-body">
+                                <div class="card-title-row">
+                                    <h3>Tagliatelle al Tartufo</h3>
+                                    <div class="price">€15.00</div>
+                                </div>
+                                <p class="desc">Pasta fresca con crema di parmigiano e tartufo nero.</p>
+                            </div>
+                        </div>
+                        <div class="card">
+                            <div class="image">🍅</div>
+                            <div class="card-body">
+                                <div class="card-title-row">
+                                    <h3>Risotto al Pomodoro</h3>
+                                    <div class="price">€13.50</div>
+                                </div>
+                                <p class="desc">Mantecato lentamente con basilico fresco e burrata.</p>
+                                <div class="tags">
+                                    <span class="tag green">Vegetariano</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card">
+                            <div class="image">🍲</div>
+                            <div class="card-body">
+                                <div class="card-title-row">
+                                    <h3>Zuppa del Giorno</h3>
+                                    <div class="price">€8.00</div>
+                                </div>
+                                <p class="desc">Ricetta del giorno con ingredienti di stagione.</p>
+                            </div>
+                        </div>
+                    </div>
+                </article>
+            </section>
+
+            <div class="footer">Anteprima statica. Il menu reale viene renderizzato dal backend con i dati del ristorante selezionato.</div>
+        </div>
+    </main>
+</body>
+</html>
