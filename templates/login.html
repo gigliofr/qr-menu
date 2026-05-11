@@ -48,11 +48,12 @@
         .login-container {
             width: 100%;
             max-width: 400px;
-            background: var(--color-bg-primary);
+            /* force dark card styling so login is always readable */
+            background: var(--color-dark-bg-primary);
             border-radius: var(--radius-xl);
             padding: var(--spacing-xl);
             box-shadow: 0 12px 32px rgba(15, 23, 42, 0.12);
-            border: 1px solid var(--color-border-light);
+            border: 1px solid var(--color-dark-border);
         }
         
         /* Header */
@@ -70,7 +71,7 @@
             font-size: var(--font-size-3xl);
             font-weight: var(--font-weight-bold);
             margin-bottom: var(--spacing-sm);
-            color: var(--color-text-primary);
+            color: var(--color-dark-text-primary);
         }
         
         .login-header p {
@@ -96,12 +97,14 @@
         .form-group label {
             font-size: var(--font-size-sm);
             font-weight: var(--font-weight-semibold);
-            color: var(--color-text-primary);
+            color: var(--color-dark-text-secondary);
         }
         
         .form-group input {
             padding: var(--spacing-md);
-            border: 1px solid var(--color-border-medium);
+            border: 1px solid var(--color-dark-border);
+            background-color: var(--color-dark-bg-secondary);
+            color: var(--color-dark-text-primary);
             border-radius: var(--radius-md);
             font-size: var(--font-size-md);
             font-family: var(--font-family-base);
@@ -115,7 +118,7 @@
         }
         
         .form-group input::placeholder {
-            color: #9CA3AF;
+            color: var(--color-dark-text-secondary);
         }
         
         /* Remember Me */
@@ -164,8 +167,8 @@
         .btn-secondary {
             padding: var(--spacing-md) var(--spacing-lg);
             background-color: transparent;
-            color: var(--color-text-primary);
-            border: 1px solid var(--color-border-medium);
+            color: var(--color-dark-text-primary);
+            border: 1px solid var(--color-dark-border);
             border-radius: var(--radius-md);
             font-size: var(--font-size-md);
             font-weight: var(--font-weight-semibold);
@@ -195,7 +198,7 @@
             content: '';
             flex: 1;
             height: 1px;
-            background-color: var(--color-border-light);
+            background-color: var(--color-dark-border);
         }
         
         /* Footer */
