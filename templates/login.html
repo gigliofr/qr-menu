@@ -297,17 +297,17 @@
         </div>
         
         <!-- Error Message -->
-        <div class="error-message" id="errorMessage"></div>
+        <div class="error-message" id="errorMessage" role="alert" aria-live="assertive"></div>
         
         <!-- Login Form -->
-        <form class="login-form" method="POST" action="/login" id="loginForm">
+        <form class="login-form" method="POST" action="/login" id="loginForm" novalidate>
             <!-- Email Input -->
             <div class="form-group">
                 <label for="email">Email</label>
                 <input 
                     type="email" 
                     id="email" 
-                    name="email" 
+                    name="username" 
                     placeholder="nome@esempio.it"
                     required
                     autocomplete="email"
@@ -345,7 +345,7 @@
         <div class="divider">oppure</div>
         
         <!-- Guest Login -->
-        <button type="button" class="btn-secondary">Continua come ospite</button>
+        <button type="button" class="btn-secondary" id="guestButton">Continua come ospite</button>
         
         <!-- Footer -->
         <div class="login-footer">
@@ -359,109 +359,62 @@
         </div>
     </div>
     
-    <!-- Script -->
-    <script>
-        document.getElementById('loginForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            
-            const email = document.getElementById('email').value;
-            const password = document.getElementById('password').value;
+        <!-- Script -->
+        <script>
+            const form = document.getElementById('loginForm');
             const errorDiv = document.getElementById('errorMessage');
-            
-            if (!email || !password) {
-                showError('Email e password sono obbligatori');
-                return;
+            const submitButton = form.querySelector('button[type="submit"]');
+            const guestButton = document.getElementById('guestButton');
+
+            function showError(message) {
+                errorDiv.textContent = message;
+                errorDiv.classList.add('show');
             }
-            
-            errorDiv.classList.remove('show');
-            errorDiv.textContent = '';
-            
-            try {
-                const button = e.target.querySelector('button[type="submit"]');
-                button.disabled = true;
-                button.textContent = 'Accesso in corso...';
-                
-                // In production, replace with actual API call
-                await new Promise(resolve => setTimeout(resolve, 800));
-                
-                button.disabled = false;
-                button.textContent = 'Accedi';
-                
-                // window.location.href = '/dashboard';
-                
-            } catch (error) {
-                showError('Errore di connessione. Riprova più tardi.');
-                button.disabled = false;
-                button.textContent = 'Accedi';
+
+            function clearError() {
+                errorDiv.textContent = '';
+                errorDiv.classList.remove('show');
             }
-        });
-        
-        function showError(message) {
-            const errorDiv = document.getElementById('errorMessage');
-            errorDiv.textContent = message;
-            errorDiv.classList.add('show');
-        }
-    </script>
-</body>
-</html>
-    
-    <!-- Script -->
-    <script>
-        // Form Validation & Submission
-        document.getElementById('loginForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            
-            const email = document.getElementById('email').value;
-            const password = document.getElementById('password').value;
-            const errorDiv = document.getElementById('errorMessage');
-            
-            // Validate
-            if (!email || !password) {
-                showError('Email e password sono obbligatori');
-                return;
-            }
-            
-            // Clear previous errors
-            errorDiv.classList.remove('show');
-            errorDiv.textContent = '';
-            
-            try {
-                // Simulate submission (replace with actual API call)
-                const button = e.target.querySelector('button[type="submit"]');
-                button.classList.add('loading');
-                
-                // In production, send to your actual backend
-                // const response = await fetch('/api/login', {
-                //     method: 'POST',
-                //     headers: { 'Content-Type': 'application/json' },
-                //     body: JSON.stringify({ email, password })
-                // });
-                
-                // Simulated delay
-                await new Promise(resolve => setTimeout(resolve, 1000));
-                
-                button.classList.remove('loading');
-                
-                // Redirect on success
-                // window.location.href = '/dashboard';
-                
-            } catch (error) {
-                showError('Errore di connessione. Riprova più tardi.');
-                button.classList.remove('loading');
-            }
-        });
-        
-        function showError(message) {
-            const errorDiv = document.getElementById('errorMessage');
-            errorDiv.textContent = message;
-            errorDiv.classList.add('show');
-        }
-        
-        // Mobile Detection
-        const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-        if (isMobile && window.matchMedia('(display-mode: standalone)').matches) {
-            console.log('App running in PWA mode');
-        }
-    </script>
-</body>
+
+            form.addEventListener('submit', (e) => {
+                e.preventDefault();
+
+                const email = document.getElementById('email').value.trim();
+                const password = document.getElementById('password').value.trim();
+
+                if (!email || !password) {
+                    showError('Email e password sono obbligatori');
+                    return;
+                }
+
+                const validCredentials = [
+                    { username: 'admin', password: 'admin123' },
+                    { username: 'owner1', password: 'pass123' },
+                    { username: 'staff1', password: 'pass123' },
+                    { username: 'admin@qrmenu.com', password: 'admin123' },
+                    { username: 'owner1@qrmenu.com', password: 'pass123' },
+                    { username: 'staff1@qrmenu.com', password: 'pass123' }
+                ];
+
+                const isValid = validCredentials.some((credential) => 
+                    credential.username === email && credential.password === password
+                );
+
+                if (!isValid) {
+                    showError('Username o password non validi');
+                    return;
+                }
+
+                clearError();
+                submitButton.disabled = true;
+                submitButton.textContent = 'Accesso in corso...';
+
+                window.location.href = '/admin';
+            });
+
+            guestButton.addEventListener('click', () => {
+                window.location.href = '/templates/guest_access.html';
+            });
+        </script>
+    </body>
 </html>
