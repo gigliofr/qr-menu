@@ -2,11 +2,13 @@ package db
 
 import (
 	"context"
+	"encoding/json"
 	"crypto/tls"
 	"fmt"
 	"io/ioutil"
 	"log"
 	"os"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -38,7 +40,9 @@ func Connect() error {
 	// Connection string MongoDB Atlas
 	mongoURI := os.Getenv("MONGODB_URI")
 	if mongoURI == "" {
-		return fmt.Errorf("MONGODB_URI non configurato - imposta la connection string completa")
+		log.Println("⚠️  MONGODB_URI non configurato - uso storage JSON locale per sviluppo")
+		MongoInstance = &MongoClient{}
+		return nil
 	}
 
 	tlsConfig := &tls.Config{MinVersion: tls.VersionTLS12}
@@ -162,6 +166,9 @@ func (m *MongoClient) CreateRestaurant(ctx context.Context, restaurant *models.R
 
 // GetRestaurantByID recupera un ristorante per ID
 func (m *MongoClient) GetRestaurantByID(ctx context.Context, id string) (*models.Restaurant, error) {
+	if m == nil || m.DB == nil {
+		return loadRestaurantFromFile(id)
+	}
 	coll := m.DB.Collection("restaurants")
 	var restaurant models.Restaurant
 	err := coll.FindOne(ctx, bson.M{"_id": id}).Decode(&restaurant)
@@ -176,6 +183,9 @@ func (m *MongoClient) GetRestaurantByID(ctx context.Context, id string) (*models
 
 // GetRestaurantByUsername recupera un ristorante per username
 func (m *MongoClient) GetRestaurantByUsername(ctx context.Context, username string) (*models.Restaurant, error) {
+	if m == nil || m.DB == nil {
+		return loadRestaurantByField("username", username)
+	}
 	coll := m.DB.Collection("restaurants")
 	var restaurant models.Restaurant
 	err := coll.FindOne(ctx, bson.M{"username": username}).Decode(&restaurant)
@@ -190,6 +200,9 @@ func (m *MongoClient) GetRestaurantByUsername(ctx context.Context, username stri
 
 // GetRestaurantByEmail recupera un ristorante per email
 func (m *MongoClient) GetRestaurantByEmail(ctx context.Context, email string) (*models.Restaurant, error) {
+	if m == nil || m.DB == nil {
+		return loadRestaurantByField("email", email)
+	}
 	coll := m.DB.Collection("restaurants")
 	var restaurant models.Restaurant
 	err := coll.FindOne(ctx, bson.M{"email": email}).Decode(&restaurant)
@@ -218,6 +231,9 @@ func (m *MongoClient) UpdateRestaurant(ctx context.Context, restaurant *models.R
 
 // GetAllRestaurants recupera tutti i ristoranti
 func (m *MongoClient) GetAllRestaurants(ctx context.Context) ([]*models.Restaurant, error) {
+	if m == nil || m.DB == nil {
+		return loadAllRestaurantsFromFiles()
+	}
 	coll := m.DB.Collection("restaurants")
 	cursor, err := coll.Find(ctx, bson.M{})
 	if err != nil {
@@ -245,6 +261,9 @@ func (m *MongoClient) CreateUser(ctx context.Context, user *models.User) error {
 
 // GetUserByID recupera un utente per ID
 func (m *MongoClient) GetUserByID(ctx context.Context, id string) (*models.User, error) {
+	if m == nil || m.DB == nil {
+		return nil, nil
+	}
 	coll := m.DB.Collection("users")
 	var user models.User
 	err := coll.FindOne(ctx, bson.M{"_id": id}).Decode(&user)
@@ -259,6 +278,9 @@ func (m *MongoClient) GetUserByID(ctx context.Context, id string) (*models.User,
 
 // GetUserByUsername recupera un utente per username
 func (m *MongoClient) GetUserByUsername(ctx context.Context, username string) (*models.User, error) {
+	if m == nil || m.DB == nil {
+		return nil, nil
+	}
 	coll := m.DB.Collection("users")
 	var user models.User
 	err := coll.FindOne(ctx, bson.M{"username": username}).Decode(&user)
@@ -273,6 +295,9 @@ func (m *MongoClient) GetUserByUsername(ctx context.Context, username string) (*
 
 // GetUserByEmail recupera un utente per email
 func (m *MongoClient) GetUserByEmail(ctx context.Context, email string) (*models.User, error) {
+	if m == nil || m.DB == nil {
+		return nil, nil
+	}
 	coll := m.DB.Collection("users")
 	var user models.User
 	err := coll.FindOne(ctx, bson.M{"email": email}).Decode(&user)
@@ -287,6 +312,9 @@ func (m *MongoClient) GetUserByEmail(ctx context.Context, email string) (*models
 
 // GetRestaurantsByOwnerID recupera tutti i ristoranti di un utente
 func (m *MongoClient) GetRestaurantsByOwnerID(ctx context.Context, ownerID string) ([]models.Restaurant, error) {
+	if m == nil || m.DB == nil {
+		return loadRestaurantsByOwnerFromFiles(ownerID)
+	}
 	coll := m.DB.Collection("restaurants")
 	cursor, err := coll.Find(ctx, bson.M{"owner_id": ownerID, "is_active": true})
 	if err != nil {
@@ -325,6 +353,9 @@ func (m *MongoClient) CreateMenu(ctx context.Context, menu *models.Menu) error {
 
 // GetMenuByID recupera un menu per ID
 func (m *MongoClient) GetMenuByID(ctx context.Context, id string) (*models.Menu, error) {
+	if m == nil || m.DB == nil {
+		return loadMenuFromFile(id)
+	}
 	coll := m.DB.Collection("menus")
 	var menu models.Menu
 	err := coll.FindOne(ctx, bson.M{"id": id}).Decode(&menu)
@@ -339,6 +370,9 @@ func (m *MongoClient) GetMenuByID(ctx context.Context, id string) (*models.Menu,
 
 // GetMenusByRestaurantID recupera tutti i menu di un ristorante
 func (m *MongoClient) GetMenusByRestaurantID(ctx context.Context, restaurantID string) ([]*models.Menu, error) {
+	if m == nil || m.DB == nil {
+		return loadMenusByRestaurantFromFiles(restaurantID)
+	}
 	coll := m.DB.Collection("menus")
 	
 	// DEBUG: Log per capire cosa sta cercando
@@ -386,6 +420,113 @@ func (m *MongoClient) DeleteMenu(ctx context.Context, id string) error {
 		return fmt.Errorf("menu non trovato")
 	}
 	return nil
+}
+
+func loadRestaurantFromFile(id string) (*models.Restaurant, error) {
+	data, err := os.ReadFile(filepath.Join("storage", "restaurant_"+id+".json"))
+	if err != nil {
+		return nil, nil
+	}
+
+	var restaurant models.Restaurant
+	if err := json.Unmarshal(data, &restaurant); err != nil {
+		return nil, fmt.Errorf("errore decode restaurant file: %v", err)
+	}
+	return &restaurant, nil
+}
+
+func loadRestaurantByField(field, value string) (*models.Restaurant, error) {
+	restaurants, err := loadAllRestaurantsFromFiles()
+	if err != nil {
+		return nil, err
+	}
+	for _, restaurant := range restaurants {
+		switch field {
+		case "username":
+			if restaurant.Username == value {
+				return restaurant, nil
+			}
+		case "email":
+			if strings.EqualFold(restaurant.Email, value) {
+				return restaurant, nil
+			}
+		}
+	}
+	return nil, nil
+}
+
+func loadAllRestaurantsFromFiles() ([]*models.Restaurant, error) {
+	files, err := filepath.Glob(filepath.Join("storage", "restaurant_*.json"))
+	if err != nil {
+		return nil, err
+	}
+
+	var restaurants []*models.Restaurant
+	for _, filename := range files {
+		data, err := os.ReadFile(filename)
+		if err != nil {
+			continue
+		}
+
+		var restaurant models.Restaurant
+		if err := json.Unmarshal(data, &restaurant); err != nil {
+			continue
+		}
+		restaurants = append(restaurants, &restaurant)
+	}
+	return restaurants, nil
+}
+
+func loadRestaurantsByOwnerFromFiles(ownerID string) ([]models.Restaurant, error) {
+	restaurants, err := loadAllRestaurantsFromFiles()
+	if err != nil {
+		return nil, err
+	}
+
+	result := make([]models.Restaurant, 0, len(restaurants))
+	for _, restaurant := range restaurants {
+		if restaurant.OwnerID == ownerID && restaurant.IsActive {
+			result = append(result, *restaurant)
+		}
+	}
+	return result, nil
+}
+
+func loadMenuFromFile(id string) (*models.Menu, error) {
+	data, err := os.ReadFile(filepath.Join("storage", "menu_"+id+".json"))
+	if err != nil {
+		return nil, nil
+	}
+
+	var menu models.Menu
+	if err := json.Unmarshal(data, &menu); err != nil {
+		return nil, fmt.Errorf("errore decode menu file: %v", err)
+	}
+	return &menu, nil
+}
+
+func loadMenusByRestaurantFromFiles(restaurantID string) ([]*models.Menu, error) {
+	files, err := filepath.Glob(filepath.Join("storage", "menu_*.json"))
+	if err != nil {
+		return nil, err
+	}
+
+	var menus []*models.Menu
+	for _, filename := range files {
+		data, err := os.ReadFile(filename)
+		if err != nil {
+			continue
+		}
+
+		var menu models.Menu
+		if err := json.Unmarshal(data, &menu); err != nil {
+			continue
+		}
+		if menu.RestaurantID == restaurantID {
+			menus = append(menus, &menu)
+		}
+	}
+	return menus, nil
 }
 
 // GetAllMenus recupera tutti i menu

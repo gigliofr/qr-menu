@@ -21,7 +21,7 @@
         body { 
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
             line-height: 1.6;
-            color: #2c3e50;
+            color: #111827;
             background: #ffffff;
             min-height: 100vh;
         }
@@ -30,19 +30,96 @@
             margin: 0 auto;
             background: #ffffff;
             min-height: 100vh;
-            *** Begin Patch Replacement
-            *** End Patch Replacement
-            background: #ffffff;
-            color: #111827;
             padding: 28px 24px;
             text-align: center;
             border-bottom: 1px solid #eef0f2;
+        }
+        .header,
+        .restaurant-info,
+        .category,
+        .generated-info,
+        .footer {
+            color: #111827;
+        }
+        .header h1,
+        .restaurant-info h2,
+        .category-header h3,
+        .item-name,
+        .item-price,
+        .footer strong {
+            color: #111827;
+        }
+        .header p,
+        .restaurant-info p,
+        .category-header p,
+        .item-description,
+        .footer p,
+        .generated-info {
+            color: #4b5563;
+        }
+        .meal-type-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            margin-top: 12px;
+            padding: 6px 14px;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #1e293b;
+            border: 1px solid #c7d2fe;
+            font-size: 0.85rem;
+            font-weight: 700;
+        }
+        .restaurant-info {
+            background: #ffffff;
+            padding: 22px 24px;
+            border-bottom: 1px solid #eef0f2;
+        }
+        .restaurant-info h2 {
+            font-size: 2rem;
+            margin-bottom: 8px;
+            font-weight: 800;
+            letter-spacing: -0.02em;
+        }
+        .restaurant-info p {
+            font-size: 1rem;
+        }
+        .category-nav {
+            display: flex;
+            gap: 10px;
+            padding: 18px 0 10px;
+            overflow-x: auto;
+            scrollbar-width: none;
+        }
+        .category-nav::-webkit-scrollbar {
+            display: none;
+        }
+        .category-link {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 10px 14px;
+            border-radius: 999px;
+            border: 1px solid #cbd5e1;
+            background: #f8fafc;
+            color: #0b4ea2;
+            font-weight: 700;
+            text-decoration: none;
+            white-space: nowrap;
+        }
+        .category-link:hover {
+            color: #083b7a;
+            border-color: #93c5fd;
+            background: #eff6ff;
         }
         .category-header h3 {
             font-size: 2em;
             margin-bottom: 6px;
             font-weight: 800;
             letter-spacing: -0.02em;
+        }
+        .category-header p {
+            margin-top: 8px;
         }
         .category-items {
             background: white;
@@ -113,7 +190,7 @@
             letter-spacing: -0.01em;
         }
         .item-description {
-            color: #7f8c8d;
+            color: #4b5563;
             font-style: normal;
             line-height: 1.6;
             font-size: 16px;
@@ -121,7 +198,7 @@
         .item-price {
             font-size: 24px;
             font-weight: 800;
-            color: #667eea;
+            color: #0b4ea2;
             white-space: nowrap;
         }
         .no-items {
@@ -134,11 +211,23 @@
         }
         .footer {
             background: #ffffff;
-            color: #4b5563;
+            color: #111827;
             padding: 40px 20px;
             text-align: center;
             margin-top: 0;
             border-top: 1px solid #e9ecef;
+        }
+        .footer,
+        .footer p,
+        .footer strong,
+        .generated-info,
+        .generated-info p,
+        .generated-info strong {
+            color: #111827 !important;
+        }
+        .generated-info {
+            background: #ffffff !important;
+            border: 1px solid #dbe3ea !important;
         }
         .footer p {
             margin-bottom: 12px;
@@ -146,15 +235,12 @@
             font-size: 0.95em;
         }
         .generated-info {
-            background: #f8f9fa;
             padding: 20px;
             margin: 30px;
             border-radius: 16px;
             text-align: center;
             font-size: 0.95em;
-            color: #4b5563;
             font-weight: 500;
-            border: 1px solid #e9ecef;
         }
         
         /* Mobile responsiveness */
