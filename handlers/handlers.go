@@ -106,6 +106,29 @@ func cleanupCSRFTokens() {
 	}
 }
 
+// HealthHandler restituisce lo stato di salute dell'applicazione
+func HealthHandler(w http.ResponseWriter, r *http.Request) {
+	health := map[string]interface{}{
+		"status":  "healthy",
+		"version": "1.0.0",
+		"time":    time.Now().UTC().Format(time.RFC3339),
+	}
+
+	// DB / Mongo health (supporta file-fallback)
+	mongoHealth := db.GetHealthStatus()
+	health["database"] = mongoHealth
+
+	if connected, ok := mongoHealth["connected"].(bool); ok && !connected {
+		health["status"] = "unhealthy"
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	if health["status"] == "unhealthy" {
+		w.WriteHeader(http.StatusServiceUnavailable)
+	}
+	json.NewEncoder(w).Encode(health)
+}
+
 // sanitizeInput pulisce e valida l'input utente
 func sanitizeInput(input string) string {
 	// Rimuove tag HTML pericolosi

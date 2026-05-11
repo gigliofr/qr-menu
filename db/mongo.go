@@ -804,3 +804,40 @@ func (m *MongoClient) createIndexes() error {
 func (m *MongoClient) Ping(ctx context.Context) error {
 	return m.client.Ping(ctx, nil)
 }
+
+// GetHealthStatus restituisce lo stato di salute di Mongo (o file-fallback)
+func GetHealthStatus() map[string]interface{} {
+	status := map[string]interface{}{
+		"mongodb": "unknown",
+		"mode":    "unknown",
+	}
+
+	if MongoInstance == nil {
+		status["mongodb"] = "disabled"
+		status["mode"] = "file-fallback"
+		status["connected"] = false
+		return status
+	}
+
+	if MongoInstance.client == nil || MongoInstance.DB == nil {
+		status["mongodb"] = "not-configured"
+		status["mode"] = "file-fallback"
+		status["connected"] = false
+		return status
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+	defer cancel()
+	if err := MongoInstance.client.Ping(ctx, nil); err != nil {
+		status["mongodb"] = "disconnected"
+		status["mode"] = "mongodb"
+		status["connected"] = false
+		status["error"] = err.Error()
+		return status
+	}
+
+	status["mongodb"] = "connected"
+	status["mode"] = "mongodb"
+	status["connected"] = true
+	return status
+}

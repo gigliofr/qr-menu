@@ -87,6 +87,9 @@ func setupPublicRoutes(r *mux.Router) {
 	r.HandleFunc("/menu/{id}/qr-download", handlers.DownloadQRHandler).Methods("GET")
 
 	// Analytics tracking
+	// Health check (used by platforms like Railway)
+	r.HandleFunc("/api/v1/health", handlers.HealthHandler).Methods("GET")
+
 	r.HandleFunc("/api/track/share", handlers.TrackShareHandler).Methods("POST")
 }
 
