@@ -1,0 +1,54 @@
+name: pa11y Accessibility Check
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  pa11y-check:
+    name: Run pa11y against key pages
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Setup Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.20'
+
+      - name: Install pa11y and http-server
+        run: |
+          npm install -g pa11y http-server
+
+      - name: Start static server (templates)
+        run: |
+          npx http-server ./ -p 8000 &
+          sleep 2
+
+      - name: Start Go app (file-fallback mode)
+        run: |
+          nohup bash -c 'PORT=8080 go run .' >/tmp/qrmenu.log 2>&1 &
+          for i in {1..30}; do
+            if curl -sSf http://localhost:8080/ >/dev/null; then
+              echo "Go app started"; break
+            fi
+            sleep 1
+          done
+
+      - name: Run pa11y - static templates
+        run: |
+          pa11y http://localhost:8000/templates/login.html --reporter cli
+          pa11y http://localhost:8000/templates/guest_access.html --reporter cli
+          pa11y http://localhost:8000/templates/public_menu_preview.html --reporter cli
+
+      - name: Run pa11y - live menu (app)
+        run: |
+          pa11y http://localhost:8080/menu/ba07044b-cd7b-4dca-8890-890b2eaa1aa3 --reporter cli
