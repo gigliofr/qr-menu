@@ -90,7 +90,7 @@ func setupPublicRoutes(r *mux.Router) {
 	r.HandleFunc("/menu/{id}/qr-download", handlers.DownloadQRHandler).Methods("GET")
 
 	// Prometheus metrics endpoint
-	r.Handle("/metrics", prometheusHandler()).Methods("GET")
+	r.Handle("/metrics", prometheusHandler())
 
 	// Analytics tracking
 	// Health check (used by platforms like Railway)
