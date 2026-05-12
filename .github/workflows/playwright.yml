@@ -1,0 +1,31 @@
+name: Playwright E2E
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+      - name: Install Playwright deps
+        run: npx playwright install --with-deps
+      - name: Start Go app
+        run: |
+          go build -o qr-menu .
+          ./qr-menu &
+        env:
+          PORT: 8080
+      - name: Wait for app
+        run: sleep 5
+      - name: Run Playwright tests
+        run: npx playwright test --config=tests/e2e/playwright.config.js
+        env:
+          BASE_URL: http://localhost:8080

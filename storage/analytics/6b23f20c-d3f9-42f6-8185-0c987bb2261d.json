@@ -1,27 +1,30 @@
 {
   "restaurant_id": "6b23f20c-d3f9-42f6-8185-0c987bb2261d",
-  "total_views": 2,
+  "total_views": 8,
   "unique_views": 0,
   "daily_views": {
-    "2026-02-24": 2
+    "2026-02-24": 2,
+    "2026-05-11": 6
   },
   "hourly_views": {
-    "15": 2
+    "14": 4,
+    "15": 2,
+    "17": 2
   },
   "device_types": {
-    "": 2
+    "": 8
   },
   "operating_systems": {
-    "": 2
+    "": 8
   },
   "browsers": {
-    "": 2
+    "": 8
   },
   "countries": {
-    "": 2
+    "": 8
   },
   "menu_views": {
-    "ba07044b-cd7b-4dca-8890-890b2eaa1aa3": 2
+    "ba07044b-cd7b-4dca-8890-890b2eaa1aa3": 8
   },
   "popular_items": null,
   "share_stats": {
@@ -33,5 +36,5 @@
     "total": 0
   },
   "qr_code_scans": {},
-  "last_updated": "2026-02-24T15:04:08.9979671+01:00"
+  "last_updated": "2026-05-11T17:52:35.3224654+02:00"
 }

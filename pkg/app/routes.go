@@ -6,6 +6,7 @@ import (
 	"qr-menu/handlers"
 	"qr-menu/middleware"
 	"qr-menu/security"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 
 	"github.com/gorilla/mux"
 )
@@ -30,6 +31,8 @@ func SetupRouter(services *Services) *mux.Router {
 	r.Use(services.SecurityHeaders.Middleware)
 	r.Use(services.RateLimiter.RateLimitMiddleware)
 	r.Use(security.NewAuditMiddleware(services.AuditLogger).Middleware)
+	// Metrics middleware (Prometheus)
+	r.Use(middleware.MetricsMiddleware)
 	r.Use(middleware.LoggingMiddleware)
 	r.Use(middleware.SecurityMiddleware)
 	r.Use(middleware.AuthMiddleware)
@@ -86,11 +89,19 @@ func setupPublicRoutes(r *mux.Router) {
 	r.HandleFunc("/menu/{id}/share", handlers.ShareMenuHandler).Methods("GET")
 	r.HandleFunc("/menu/{id}/qr-download", handlers.DownloadQRHandler).Methods("GET")
 
+	// Prometheus metrics endpoint
+	r.Handle("/metrics", prometheusHandler()).Methods("GET")
+
 	// Analytics tracking
 	// Health check (used by platforms like Railway)
 	r.HandleFunc("/api/v1/health", handlers.HealthHandler).Methods("GET")
 
 	r.HandleFunc("/api/track/share", handlers.TrackShareHandler).Methods("POST")
+}
+
+// prometheusHandler returns a promhttp handler
+func prometheusHandler() http.Handler {
+	return promhttp.Handler()
 }
 
 func setupProtectedRoutes(r *mux.Router) {
