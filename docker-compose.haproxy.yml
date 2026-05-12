@@ -1,0 +1,139 @@
+version: '3.9'
+
+services:
+  # HAProxy load balancer
+  haproxy:
+    image: haproxy:2.8-alpine
+    container_name: qr-menu-haproxy
+    ports:
+      - "80:80"
+      - "443:443"
+      - "8404:8404"
+    volumes:
+      - ./config/haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg:ro
+      - ./certs:/etc/ssl/certs:ro
+    depends_on:
+      - app1
+      - app2
+      - app3
+    networks:
+      - qr-menu-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:8404/stats"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # App instance 1
+  app1:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: qr-menu-app1
+    ports:
+      - "8081:8080"
+    environment:
+      - PORT=8080
+      - MONGODB_URI=${MONGODB_URI}
+      - MONGODB_DB_NAME=qr-menu
+      - LOG_LEVEL=info
+      - REDIS_URL=redis://redis:6379/0
+    depends_on:
+      - mongodb
+      - redis
+    networks:
+      - qr-menu-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/api/v1/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # App instance 2
+  app2:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: qr-menu-app2
+    ports:
+      - "8082:8080"
+    environment:
+      - PORT=8080
+      - MONGODB_URI=${MONGODB_URI}
+      - MONGODB_DB_NAME=qr-menu
+      - LOG_LEVEL=info
+      - REDIS_URL=redis://redis:6379/0
+    depends_on:
+      - mongodb
+      - redis
+    networks:
+      - qr-menu-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/api/v1/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # App instance 3
+  app3:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: qr-menu-app3
+    ports:
+      - "8083:8080"
+    environment:
+      - PORT=8080
+      - MONGODB_URI=${MONGODB_URI}
+      - MONGODB_DB_NAME=qr-menu
+      - LOG_LEVEL=info
+      - REDIS_URL=redis://redis:6379/0
+    depends_on:
+      - mongodb
+      - redis
+    networks:
+      - qr-menu-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/api/v1/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # MongoDB
+  mongodb:
+    image: mongo:7.0-alpine
+    container_name: qr-menu-mongodb
+    environment:
+      - MONGO_INITDB_DATABASE=qr-menu
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+    networks:
+      - qr-menu-network
+    restart: unless-stopped
+
+  # Redis cache
+  redis:
+    image: redis:7-alpine
+    container_name: qr-menu-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - qr-menu-network
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+
+volumes:
+  mongodb_data:
+  redis_data:
+
+networks:
+  qr-menu-network:
+    driver: bridge
