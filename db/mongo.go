@@ -435,6 +435,32 @@ func (m *MongoClient) DeleteMenu(ctx context.Context, id string) error {
 	return nil
 }
 
+// DeleteUser elimina un utente
+func (m *MongoClient) DeleteUser(ctx context.Context, id string) error {
+	coll := m.DB.Collection("users")
+	result, err := coll.DeleteOne(ctx, bson.M{"_id": id})
+	if err != nil {
+		return fmt.Errorf("errore delete user: %v", err)
+	}
+	if result.DeletedCount == 0 {
+		return fmt.Errorf("user non trovato")
+	}
+	return nil
+}
+
+// DeleteRestaurant elimina un ristorante
+func (m *MongoClient) DeleteRestaurant(ctx context.Context, id string) error {
+	coll := m.DB.Collection("restaurants")
+	result, err := coll.DeleteOne(ctx, bson.M{"_id": id})
+	if err != nil {
+		return fmt.Errorf("errore delete restaurant: %v", err)
+	}
+	if result.DeletedCount == 0 {
+		return fmt.Errorf("restaurant non trovato")
+	}
+	return nil
+}
+
 func loadRestaurantFromFile(id string) (*models.Restaurant, error) {
 	data, err := os.ReadFile(filepath.Join("storage", "restaurant_"+id+".json"))
 	if err != nil {
