@@ -92,6 +92,9 @@ func setupPublicRoutes(r *mux.Router) {
 	// Prometheus metrics endpoint
 	r.Handle("/metrics", prometheusHandler())
 
+	// Cache endpoint (public stats endpoint)
+	r.HandleFunc("/cache/stats", handlers.CacheStatsHandler).Methods("GET")
+
 	// Analytics tracking
 	// Health check (used by platforms like Railway)
 	r.HandleFunc("/api/v1/health", handlers.HealthHandler).Methods("GET")

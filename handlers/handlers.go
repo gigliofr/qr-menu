@@ -2138,3 +2138,17 @@ func DownloadQRHandler(w http.ResponseWriter, r *http.Request) {
 	// Scrivi il file
 	w.Write(fileData)
 }
+
+// CacheStatsHandler ritorna statistiche del cache
+func CacheStatsHandler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	stats := map[string]interface{}{
+		"hits":      0, // TODO: implementare stats tracking
+		"misses":    0,
+		"size":      0,
+		"status":    "ok",
+	}
+
+	json.NewEncoder(w).Encode(stats)
+}

@@ -231,3 +231,10 @@ func (c *CacheWithTTL) Delete(key string) {
 func (c *CacheWithTTL) Clear() {
 	c.cache.Clear()
 }
+
+// DefaultInMemoryCache is the global in-memory cache instance
+var DefaultInMemoryCache *InMemoryCache
+
+func init() {
+	DefaultInMemoryCache = NewInMemoryCache()
+}
