@@ -32,14 +32,17 @@ type ServerConfig struct {
 
 // DatabaseConfig holds database configuration
 type DatabaseConfig struct {
-	DSN             string
-	MaxOpenConns    int
-	MaxIdleConns    int
-	ConnMaxLifetime time.Duration
-	ConnMaxIdleTime time.Duration
-	Engine          string // postgres, mysql, sqlite
-	MigrationPath   string
-	AutoMigrate     bool
+	DSN                    string
+	MaxOpenConns           int
+	MaxIdleConns           int
+	ConnMaxLifetime        time.Duration
+	ConnMaxIdleTime        time.Duration
+	Engine                 string // postgres, mysql, sqlite
+	MigrationPath          string
+	AutoMigrate            bool
+	MongoOperationTimeout  time.Duration // MongoDB operation timeout
+	MongoConnectTimeout    time.Duration // MongoDB connection timeout
+	MongoQueryTimeout      time.Duration // MongoDB query timeout
 }
 
 // BackupConfig holds backup service configuration
@@ -135,14 +138,17 @@ func Load() *Config {
 			Environment:  getEnv("ENVIRONMENT", "dev"),
 		},
 		Database: DatabaseConfig{
-			DSN:             getEnv("DATABASE_DSN", "host=localhost port=5432 user=postgres password=password dbname=qrmenu sslmode=disable"),
-			MaxOpenConns:    getEnvInt("DATABASE_MAX_OPEN_CONNS", 25),
-			MaxIdleConns:    getEnvInt("DATABASE_MAX_IDLE_CONNS", 5),
-			ConnMaxLifetime: getEnvDuration("DATABASE_CONN_MAX_LIFETIME", 5*time.Minute),
-			ConnMaxIdleTime: getEnvDuration("DATABASE_CONN_MAX_IDLE_TIME", 10*time.Minute),
-			Engine:          getEnv("DATABASE_ENGINE", "postgres"),
-			MigrationPath:   getEnv("DATABASE_MIGRATION_PATH", "./migrations"),
-			AutoMigrate:     getEnvBool("DATABASE_AUTO_MIGRATE", true),
+			DSN:                   getEnv("DATABASE_DSN", "host=localhost port=5432 user=postgres password=password dbname=qrmenu sslmode=disable"),
+			MaxOpenConns:          getEnvInt("DATABASE_MAX_OPEN_CONNS", 25),
+			MaxIdleConns:          getEnvInt("DATABASE_MAX_IDLE_CONNS", 5),
+			ConnMaxLifetime:       getEnvDuration("DATABASE_CONN_MAX_LIFETIME", 5*time.Minute),
+			ConnMaxIdleTime:       getEnvDuration("DATABASE_CONN_MAX_IDLE_TIME", 10*time.Minute),
+			Engine:                getEnv("DATABASE_ENGINE", "postgres"),
+			MigrationPath:         getEnv("DATABASE_MIGRATION_PATH", "./migrations"),
+			AutoMigrate:           getEnvBool("DATABASE_AUTO_MIGRATE", true),
+			MongoOperationTimeout: getEnvDuration("MONGO_OPERATION_TIMEOUT", 5*time.Second),
+			MongoConnectTimeout:   getEnvDuration("MONGO_CONNECT_TIMEOUT", 10*time.Second),
+			MongoQueryTimeout:     getEnvDuration("MONGO_QUERY_TIMEOUT", 30*time.Second),
 		},
 		Backup: BackupConfig{
 			QueueSize:        getEnvInt("BACKUP_QUEUE_SIZE", 100),

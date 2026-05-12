@@ -19,6 +19,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"qr-menu/analytics"
@@ -29,12 +30,13 @@ import (
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 	"github.com/skip2/go-qrcode"
+	"go.mongodb.org/mongo-driver/bson"
 	"golang.org/x/image/draw"
 )
 
 var (
-	templates         *template.Template
-	menus             = make(map[string]*models.Menu) // Storage in memoria (temporaneo)
+	templateCache     *template.Template
+	templateInitOnce  sync.Once
 	csrfTokens        = make(map[string]time.Time)    // CSRF protection
 	maxFileSize       = int64(5 << 20)                // 5MB max file size
 	allowedImageTypes = map[string]bool{
@@ -45,10 +47,17 @@ var (
 	}
 )
 
-// SetTemplates imposta i template dall'esterno (chiamato da main)
+// SetTemplates imposta i template dall'esterno (called once)
 func SetTemplates(t *template.Template) {
-	templates = t
-	log.Printf("✅ Templates impostati in handlers package")
+	templateInitOnce.Do(func() {
+		templateCache = t
+		log.Printf("✅ Templates cached with sync.Once")
+	})
+}
+
+// GetTemplates recupera i template (cached)
+func GetTemplates() *template.Template {
+	return templateCache
 }
 
 func init() {
@@ -233,7 +242,8 @@ func loadTemplates() {
 }
 
 func createFallbackTemplates() {
-	templates = template.New("fallback")
+	fallbackTmpl := template.New("fallback")
+	SetTemplates(fallbackTmpl)
 }
 
 // HomeHandler gestisce la homepage - redirect al login se non autenticato
@@ -959,21 +969,15 @@ func SetActiveMenuHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Disattiva tutti i menu del ristorante
-	allMenus, err := db.MongoInstance.GetMenusByRestaurantID(ctx, restaurant.ID)
+	// Disattiva tutti i menu del ristorante con una singola batch operation (risolve N+1 query)
+	err = db.MongoInstance.UpdateManyMenus(ctx, 
+		bson.M{"restaurant_id": restaurant.ID, "is_active": true},
+		bson.M{"is_active": false},
+	)
 	if err != nil {
-		log.Printf("Errore nel recupero menu: %v", err)
+		log.Printf("Errore nel disattivare menu: %v", err)
 		http.Error(w, "Errore nell'operazione", http.StatusInternalServerError)
 		return
-	}
-
-	for _, m := range allMenus {
-		if m.IsActive {
-			m.IsActive = false
-			if err := db.MongoInstance.UpdateMenu(ctx, m); err != nil {
-				log.Printf("Errore nell'aggiornamento menu: %v", err)
-			}
-		}
 	}
 
 	// Attiva il menu selezionato
@@ -1089,8 +1093,23 @@ func PublicMenuHandler(w http.ResponseWriter, r *http.Request) {
 
 // API Handlers
 
-// GetMenusHandler restituisce tutti i menu in formato JSON
+// GetMenusHandler restituisce tutti i menu del ristorante corrente in formato JSON
 func GetMenusHandler(w http.ResponseWriter, r *http.Request) {
+	restaurant, err := getCurrentRestaurant(r)
+	if err != nil {
+		http.Error(w, "Ristorante non trovato", http.StatusUnauthorized)
+		return
+	}
+
+	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
+	defer cancel()
+
+	menus, err := db.MongoInstance.GetMenusByRestaurantID(ctx, restaurant.ID)
+	if err != nil {
+		http.Error(w, "Errore nel recupero dei menu", http.StatusInternalServerError)
+		return
+	}
+
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(menus)
 }
@@ -1254,12 +1273,13 @@ func GenerateQRHandler(w http.ResponseWriter, r *http.Request) {
 // Utility functions
 
 func renderTemplate(w http.ResponseWriter, tmpl string, data interface{}) {
-	if templates == nil {
+	tmplObj := GetTemplates()
+	if tmplObj == nil {
 		renderFallbackTemplate(w, tmpl, data)
 		return
 	}
 
-	err := templates.ExecuteTemplate(w, tmpl+".html", data)
+	err := tmplObj.ExecuteTemplate(w, tmpl+".html", data)
 	if err != nil {
 		log.Printf("Errore nel rendering del template %s: %v", tmpl, err)
 		renderFallbackTemplate(w, tmpl, data)
@@ -1325,32 +1345,6 @@ func saveMenuToStorage(menu *models.Menu) {
 func deleteMenuFromStorage(menuID string) {
 	filename := filepath.Join("storage", fmt.Sprintf("menu_%s.json", menuID))
 	os.Remove(filename)
-}
-
-func loadMenusFromStorage() {
-	files, err := filepath.Glob("storage/menu_*.json")
-	if err != nil {
-		log.Printf("Errore nella lettura dei file di storage: %v", err)
-		return
-	}
-
-	for _, filename := range files {
-		file, err := os.Open(filename)
-		if err != nil {
-			log.Printf("Errore nell'apertura del file %s: %v", filename, err)
-			continue
-		}
-
-		var menu models.Menu
-		if err := json.NewDecoder(file).Decode(&menu); err != nil {
-			log.Printf("Errore nel decode del menu da %s: %v", filename, err)
-			file.Close()
-			continue
-		}
-
-		menus[menu.ID] = &menu
-		file.Close()
-	}
 }
 
 // DuplicateItemHandler duplica un piatto esistente

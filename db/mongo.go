@@ -409,6 +409,19 @@ func (m *MongoClient) UpdateMenu(ctx context.Context, menu *models.Menu) error {
 	return nil
 }
 
+// UpdateManyMenus aggiorna più menu in una singola query (batch operation - risolve N+1)
+func (m *MongoClient) UpdateManyMenus(ctx context.Context, filter bson.M, update bson.M) error {
+	coll := m.DB.Collection("menus")
+	result, err := coll.UpdateMany(ctx, filter, bson.M{"$set": update})
+	if err != nil {
+		return fmt.Errorf("errore update many menus: %v", err)
+	}
+	if result.MatchedCount == 0 {
+		return nil // Nessun documento matchato (non è un errore)
+	}
+	return nil
+}
+
 // DeleteMenu elimina un menu
 func (m *MongoClient) DeleteMenu(ctx context.Context, id string) error {
 	coll := m.DB.Collection("menus")
