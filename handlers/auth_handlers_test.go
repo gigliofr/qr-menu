@@ -3,7 +3,6 @@ package handlers
 import (
 	"bytes"
 	"context"
-	"encoding/json"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -51,23 +50,26 @@ func TestLoginHandlerValidCredentials(t *testing.T) {
 		t.Fatalf("Failed to create test user: %v", err)
 	}
 
-	// Prepare login request
-	loginPayload := map[string]string{
-		"username": testUsername,
-		"password": testPassword,
-	}
-	payloadBytes, _ := json.Marshal(loginPayload)
-
-	req, err := http.NewRequest("POST", "/login", bytes.NewReader(payloadBytes))
+	// Prepare login request as form data (LoginHandler expects form values)
+	form := "username=" + testUsername + "&password=" + testPassword
+	req, err := http.NewRequest("POST", "/login", bytes.NewReader([]byte(form)))
 	if err != nil {
 		t.Fatalf("Failed to create request: %v", err)
 	}
-	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 
-	// Execute request
+	// Execute request via LoginHandler
 	w := httptest.NewRecorder()
-	// Note: This would need proper routing setup in actual test
-	// Just verifying structure is testable
+	LoginHandler(w, req)
+
+	// Expect a redirect (user has no restaurants in this test) to /add-restaurant
+	if w.Result().StatusCode != http.StatusFound {
+		t.Fatalf("Expected redirect after login, got status %d", w.Result().StatusCode)
+	}
+	loc, _ := w.Result().Location()
+	if loc.Path != "/add-restaurant" {
+		t.Fatalf("Expected redirect to /add-restaurant, got %s", loc.Path)
+	}
 
 	// Cleanup
 	db.MongoInstance.DeleteUser(ctx, testUser.ID)
