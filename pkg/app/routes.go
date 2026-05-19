@@ -24,6 +24,8 @@ func SetupRouter(services *Services) *mux.Router {
 
 	// File statici
 	r.PathPrefix("/static/").Handler(http.StripPrefix("/static/", http.FileServer(http.Dir("./static/"))))
+	// Serve template preview files (used by pa11y / preview links)
+	r.PathPrefix("/templates/").Handler(http.StripPrefix("/templates/", http.FileServer(http.Dir("./templates/"))))
 	r.PathPrefix("/qr/").Handler(http.StripPrefix("/qr/", http.FileServer(http.Dir("./static/qrcodes/"))))
 
 	// Middleware stack (ordine importante!)
