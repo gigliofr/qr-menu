@@ -10,6 +10,8 @@ jobs:
   pa11y-check:
     name: Run pa11y against key pages
     runs-on: ubuntu-latest
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
