@@ -12,7 +12,7 @@ import (
 // HomeHandler pagina principale
 func HomeHandler(w http.ResponseWriter, r *http.Request) {
     setSecurityHeaders(w)
-    renderTemplate(w, "home", nil)
+    renderTemplate(w, "guest_access", nil)
 }
 
 // ShareMenuHandler mostra la pagina di condivisione per un menu

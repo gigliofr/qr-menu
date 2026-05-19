@@ -35,8 +35,10 @@ func renderTemplate(w http.ResponseWriter, name string, data interface{}) {
         return
     }
     if err := t.ExecuteTemplate(w, name+".html", data); err != nil {
-        log.Printf("renderTemplate execute cached error: %v", err)
-        http.Error(w, "Template render error", http.StatusInternalServerError)
+        // Log template name + error to help debugging which template failed
+        log.Printf("renderTemplate execute cached error for template %s: %v", name+".html", err)
+        // Return a minimal error with template name to aid diagnosis (no sensitive data)
+        http.Error(w, "Template render error: "+name+"", http.StatusInternalServerError)
     }
 }
 
