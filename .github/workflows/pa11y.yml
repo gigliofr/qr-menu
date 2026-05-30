@@ -19,7 +19,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '18'
+          node-version: '24'
 
       - name: Setup Go
         uses: actions/setup-go@v4
@@ -34,6 +34,13 @@ jobs:
         run: |
           npx http-server ./ -p 8000 &
           sleep 2
+
+      - name: Templates diagnostic
+        run: |
+          echo "Listing templates/ contents";
+          ls -la templates || true;
+          echo "Check static preview headers";
+          curl -I --max-time 5 http://localhost:8000/templates/public_menu_preview.html || true
 
       - name: Start Go app (file-fallback mode)
         run: |
