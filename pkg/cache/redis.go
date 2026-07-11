@@ -10,7 +10,6 @@ import (
 // RedisCache wraps Redis client for caching
 type RedisCache struct {
 	client *redis.Client
-	ctx    context.Context
 }
 
 // NewRedisCache creates a new Redis cache client
@@ -32,18 +31,25 @@ func NewRedisCache(redisURL string) (*RedisCache, error) {
 
 	return &RedisCache{
 		client: client,
-		ctx:    context.Background(),
 	}, nil
+}
+
+func (rc *RedisCache) operationContext() (context.Context, context.CancelFunc) {
+	return context.WithTimeout(context.Background(), 3*time.Second)
 }
 
 // Get retrieves a value from Redis cache
 func (rc *RedisCache) Get(key string) (string, error) {
-	return rc.client.Get(rc.ctx, key).Result()
+	ctx, cancel := rc.operationContext()
+	defer cancel()
+	return rc.client.Get(ctx, key).Result()
 }
 
 // Set stores a value in Redis cache with TTL
 func (rc *RedisCache) Set(key string, value interface{}, ttl time.Duration) error {
-	return rc.client.Set(rc.ctx, key, value, ttl).Err()
+	ctx, cancel := rc.operationContext()
+	defer cancel()
+	return rc.client.Set(ctx, key, value, ttl).Err()
 }
 
 // Delete removes a value from Redis cache
@@ -51,17 +57,23 @@ func (rc *RedisCache) Delete(keys ...string) error {
 	if len(keys) == 0 {
 		return nil
 	}
-	return rc.client.Del(rc.ctx, keys...).Err()
+	ctx, cancel := rc.operationContext()
+	defer cancel()
+	return rc.client.Del(ctx, keys...).Err()
 }
 
 // Exists checks if a key exists in Redis
 func (rc *RedisCache) Exists(key string) bool {
-	return rc.client.Exists(rc.ctx, key).Val() > 0
+	ctx, cancel := rc.operationContext()
+	defer cancel()
+	return rc.client.Exists(ctx, key).Val() > 0
 }
 
 // FlushAll deletes all keys from Redis
 func (rc *RedisCache) FlushAll() error {
-	return rc.client.FlushAll(rc.ctx).Err()
+	ctx, cancel := rc.operationContext()
+	defer cancel()
+	return rc.client.FlushAll(ctx).Err()
 }
 
 // Close closes the Redis connection
@@ -71,10 +83,14 @@ func (rc *RedisCache) Close() error {
 
 // Ping tests Redis connectivity
 func (rc *RedisCache) Ping() error {
-	return rc.client.Ping(rc.ctx).Err()
+	ctx, cancel := rc.operationContext()
+	defer cancel()
+	return rc.client.Ping(ctx).Err()
 }
 
 // Info returns Redis server info (useful for health checks)
 func (rc *RedisCache) Info() (string, error) {
-	return rc.client.Info(rc.ctx).Val(), nil
+	ctx, cancel := rc.operationContext()
+	defer cancel()
+	return rc.client.Info(ctx).Val(), nil
 }

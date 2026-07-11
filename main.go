@@ -8,6 +8,7 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"time"
 
 	"qr-menu/db"
 	"qr-menu/logger"
@@ -20,28 +21,28 @@ func main() {
 	if lvl := os.Getenv("LOG_LEVEL"); lvl == "DEBUG" {
 		logLevel = logger.DEBUG
 	}
-	
+
 	// Su Railway/Cloud usa directory temporanea, in locale usa ./logs
 	logDir := "./logs"
 	if os.Getenv("PORT") != "" {
 		// In produzione (Railway) usa /tmp per i log
 		logDir = "/tmp/logs"
 	}
-	
+
 	if err := logger.Init(logLevel, logDir); err != nil {
 		log.Printf("⚠️ Errore nell'inizializzazione del logger: %v (continuo con log.Println)", err)
 	}
 	defer logger.Close()
-	
+
 	logger.Info("🚀 QR Menu System starting...", map[string]interface{}{
 		"version": "1.0.0",
 		"env":     os.Getenv("PORT") != "",
 	})
-	
+
 	// Connetti a MongoDB Atlas (OBBLIGATORIO)
 	log.Println("🔄 Connessione a MongoDB Atlas...")
 	logger.Info("Connessione a MongoDB Atlas", nil)
-	
+
 	if err := db.Connect(); err != nil {
 		errMsg := fmt.Sprintf("❌ Errore connessione MongoDB: %v\n\n"+
 			"Configura le variabili d'ambiente:\n"+
@@ -56,11 +57,11 @@ func main() {
 	}
 	log.Println("✓ MongoDB connesso con successo")
 	logger.Info("✅ MongoDB connesso con successo", nil)
-	
+
 	// Carica i template HTML (con embed per Railway)
 	log.Println("🔄 Caricamento template HTML...")
 	InitTemplates()
-	
+
 	defer func() {
 		if db.MongoInstance != nil {
 			db.MongoInstance.Disconnect()
@@ -116,7 +117,15 @@ func main() {
 	})
 
 	// Avvia server
-	if err := http.ListenAndServe(":"+port, router); err != nil {
+	httpServer := &http.Server{
+		Addr:              ":" + port,
+		Handler:           router,
+		ReadHeaderTimeout: 5 * time.Second,
+		ReadTimeout:       10 * time.Second,
+		WriteTimeout:      15 * time.Second,
+		IdleTimeout:       120 * time.Second,
+	}
+	if err := httpServer.ListenAndServe(); err != nil {
 		logger.Fatal("Server failed", map[string]interface{}{"error": err.Error()})
 	}
 }
@@ -134,13 +143,13 @@ func httpsRedirectMiddleware(next http.Handler) http.Handler {
 			return
 		}
 
-			target := "https://" + r.Host + r.URL.Path
-			if r.URL.RawQuery != "" {
-				target += "?" + r.URL.RawQuery
-			}
-			http.Redirect(w, r, target, http.StatusMovedPermanently)
-			return
-		
+		target := "https://" + r.Host + r.URL.Path
+		if r.URL.RawQuery != "" {
+			target += "?" + r.URL.RawQuery
+		}
+		http.Redirect(w, r, target, http.StatusMovedPermanently)
+		return
+
 	})
 }
 

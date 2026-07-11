@@ -2,10 +2,9 @@ package db
 
 import (
 	"context"
-	"encoding/json"
 	"crypto/tls"
+	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"os"
 	"path/filepath"
@@ -124,7 +123,7 @@ func loadMongoClientCert() ([]byte, string, error) {
 		return nil, "", fmt.Errorf("MONGODB_URI usa X.509 ma manca il certificato: imposta MONGODB_CERT_CONTENT o MONGODB_CERT_PATH")
 	}
 
-	certData, err := ioutil.ReadFile(certPath)
+	certData, err := os.ReadFile(certPath)
 	if err != nil {
 		return nil, certPath, fmt.Errorf("errore lettura certificato da %s: %v", certPath, err)
 	}
@@ -247,6 +246,7 @@ func (m *MongoClient) GetAllRestaurants(ctx context.Context) ([]*models.Restaura
 	}
 	return restaurants, nil
 }
+
 // ==================== USERS ====================
 
 // CreateUser salva un nuovo utente
@@ -339,6 +339,7 @@ func (m *MongoClient) UpdateUserLastLogin(ctx context.Context, userID string) er
 	)
 	return err
 }
+
 // ==================== MENUS ====================
 
 // CreateMenu salva un menu
@@ -374,10 +375,10 @@ func (m *MongoClient) GetMenusByRestaurantID(ctx context.Context, restaurantID s
 		return loadMenusByRestaurantFromFiles(restaurantID)
 	}
 	coll := m.DB.Collection("menus")
-	
+
 	// DEBUG: Log per capire cosa sta cercando
 	log.Printf("🔍 GetMenusByRestaurantID - Cercando menu per restaurant_id: %s", restaurantID)
-	
+
 	cursor, err := coll.Find(ctx, bson.M{"restaurant_id": restaurantID})
 	if err != nil {
 		log.Printf("❌ Errore Find: %v", err)
@@ -390,7 +391,7 @@ func (m *MongoClient) GetMenusByRestaurantID(ctx context.Context, restaurantID s
 		log.Printf("❌ Errore Decode: %v", err)
 		return nil, fmt.Errorf("errore decode menus: %v", err)
 	}
-	
+
 	log.Printf("✅ Trovati %d menu per restaurant_id: %s", len(menus), restaurantID)
 	return menus, nil
 }
@@ -772,7 +773,7 @@ func (m *MongoClient) createIndexes() error {
 	}
 
 	// ==================== INDICI MULTI-RISTORANTE ==================== ⭐
-	
+
 	// Indici per users (nuovo)
 	usersColl := m.DB.Collection("users")
 	usersIndexModel := []mongo.IndexModel{
@@ -796,7 +797,7 @@ func (m *MongoClient) createIndexes() error {
 	if _, err := usersColl.Indexes().CreateMany(ctx, usersIndexModel); err != nil {
 		return fmt.Errorf("errore creazione indici users: %v", err)
 	}
-	
+
 	// Indici aggiuntivi per restaurants (owner_id)
 	restaurantsColl := m.DB.Collection("restaurants")
 	restaurantsNewIndexModel := []mongo.IndexModel{
@@ -813,7 +814,7 @@ func (m *MongoClient) createIndexes() error {
 		// Non è fatale se esistono già
 		log.Printf("⚠️ Attenzione: alcuni indici restaurants potrebbero esistere già: %v", err)
 	}
-	
+
 	// Indici per sessions (user_id + TTL)
 	sessionsColl := m.DB.Collection("sessions")
 	sessionsIndexModel := []mongo.IndexModel{
@@ -833,7 +834,7 @@ func (m *MongoClient) createIndexes() error {
 	if _, err := sessionsColl.Indexes().CreateMany(ctx, sessionsIndexModel); err != nil {
 		log.Printf("⚠️ Attenzione: alcuni indici sessions potrebbero esistere già: %v", err)
 	}
-	
+
 	log.Println("✅ Indici multi-ristorante creati con successo")
 
 	return nil

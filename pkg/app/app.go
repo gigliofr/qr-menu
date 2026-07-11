@@ -3,6 +3,7 @@ package app
 import (
 	"context"
 	"net/http"
+	"strconv"
 	"time"
 
 	"qr-menu/logger"
@@ -42,7 +43,7 @@ func NewApplication(cfg *config.Config) (*Application, error) {
 	rtr.SetupErrorHandlers()
 
 	// Create HTTP server
-	addr := cfg.Server.Host + ":" + string(rune(cfg.Server.Port))
+	addr := cfg.Server.Host + ":" + strconv.Itoa(cfg.Server.Port)
 	srv := &http.Server{
 		Addr:         addr,
 		Handler:      rtr.GetMux(),
