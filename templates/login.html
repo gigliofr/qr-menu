@@ -92,6 +92,7 @@
             display: flex;
             flex-direction: column;
             gap: var(--spacing-sm);
+            margin-bottom: 0;
         }
         
         .form-group label {
@@ -126,6 +127,7 @@
             display: flex;
             align-items: center;
             gap: var(--spacing-sm);
+            margin-bottom: 0;
         }
         
         .form-check input[type="checkbox"] {
@@ -272,6 +274,60 @@
             
             .login-form {
                 gap: var(--spacing-md);
+            }
+        }
+
+        @media (max-height: 850px) {
+            body {
+                padding-top: 4px;
+                padding-bottom: 4px;
+            }
+
+            .login-container {
+                padding: 16px;
+            }
+
+            .login-header {
+                margin-bottom: 16px;
+            }
+
+            .login-header-icon {
+                font-size: 2rem;
+                margin-bottom: 8px;
+            }
+
+            .login-header h1 {
+                font-size: var(--font-size-2xl);
+                margin-bottom: 4px;
+            }
+
+            .login-form {
+                gap: 16px;
+            }
+
+            .form-group {
+                gap: 6px;
+            }
+
+            .form-group input {
+                padding: 12px;
+            }
+
+            .btn-submit,
+            .btn-secondary {
+                padding: 13px var(--spacing-lg);
+            }
+
+            .divider {
+                margin: 16px 0;
+            }
+
+            .login-footer {
+                padding-top: 16px;
+            }
+
+            .login-footer p {
+                margin-bottom: 4px;
             }
         }
     </style>
