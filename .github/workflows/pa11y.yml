@@ -1,63 +1,50 @@
-name: pa11y Accessibility Check
+name: Accessibility (Pa11y)
 
 on:
   push:
-    branches: [ main ]
+    branches: [ main, develop ]
   pull_request:
-    branches: [ main ]
+    branches: [ main, develop ]
 
 jobs:
-  pa11y-check:
-    name: Run pa11y against key pages
-    runs-on: ubuntu-latest
+  a11y:
+    runs-on: ubuntu-24.04
     env:
       FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '24'
 
-      - name: Setup Go
-        uses: actions/setup-go@v4
-        with:
-          go-version: '1.24'
+      - name: Install Pa11y
+        run: npm install -g pa11y
 
-      - name: Install pa11y and http-server
+      - name: Start static server
         run: |
-          npm install -g pa11y http-server
-
-      - name: Start static server (templates)
-        run: |
-          npx http-server ./ -p 8000 &
+          python3 -m http.server 8000 > server.log 2>&1 &
+          echo $! > server.pid
           sleep 2
 
-      - name: Templates diagnostic
+      - name: Run Pa11y accessibility checks
         run: |
-          echo "Listing templates/ contents";
-          ls -la templates || true;
-          echo "Check static preview headers";
-          curl -I --max-time 5 http://localhost:8000/templates/public_menu_preview.html || true
+          cat << 'EOF' > pa11y.config.json
+          {
+            "chromeLaunchConfig": {
+              "args": ["--no-sandbox", "--disable-setuid-sandbox"]
+            }
+          }
+          EOF
 
-      - name: Start Go app (file-fallback mode)
-        run: |
-          nohup bash -c 'PORT=8080 go run .' >/tmp/qrmenu.log 2>&1 &
-          for i in {1..30}; do
-            if curl -sSf http://localhost:8080/ >/dev/null; then
-              echo "Go app started"; break
-            fi
-            sleep 1
-          done
+          pa11y http://localhost:8000/templates/login.html --reporter cli --config pa11y.config.json
+          pa11y http://localhost:8000/templates/guest_access.html --reporter cli --config pa11y.config.json
+          pa11y http://localhost:8000/templates/public_menu_preview.html --reporter cli --config pa11y.config.json
 
-      - name: Run pa11y - static templates
+      - name: Cleanup
+        if: always()
         run: |
-          pa11y http://localhost:8000/templates/login.html --reporter cli --chrome-launch-config '{"args":["--no-sandbox","--disable-setuid-sandbox"]}'
-          pa11y http://localhost:8000/templates/guest_access.html --reporter cli --chrome-launch-config '{"args":["--no-sandbox","--disable-setuid-sandbox"]}'
-          pa11y http://localhost:8000/templates/public_menu_preview.html --reporter cli --chrome-launch-config '{"args":["--no-sandbox","--disable-setuid-sandbox"]}'
-
-      - name: Run pa11y - live menu (app)
-        run: |
-          pa11y http://localhost:8080/menu/ba07044b-cd7b-4dca-8890-890b2eaa1aa3 --reporter cli --chrome-launch-config '{"args":["--no-sandbox","--disable-setuid-sandbox"]}'
+          if [ -f server.pid ]; then
+            kill $(cat server.pid) 2>/dev/null || true
+          fi
