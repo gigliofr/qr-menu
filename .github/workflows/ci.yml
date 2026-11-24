@@ -1,4 +1,4 @@
-name: Playwright E2E
+name: CI
 
 on:
   push:
@@ -6,8 +6,56 @@ on:
   pull_request:
     branches: [ main, develop ]
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
-  test:
+  a11y:
+    name: Accessibility (Pa11y)
+    runs-on: ubuntu-24.04
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+
+      - name: Install Pa11y
+        run: npm install -g pa11y
+
+      - name: Start static server
+        run: |
+          python3 -m http.server 8000 > server.log 2>&1 &
+          echo $! > server.pid
+          sleep 2
+
+      - name: Run Pa11y accessibility checks
+        run: |
+          cat << 'EOF' > pa11y.config.json
+          {
+            "chromeLaunchConfig": {
+              "args": ["--no-sandbox", "--disable-setuid-sandbox"]
+            }
+          }
+          EOF
+
+          pa11y http://localhost:8000/templates/login.html --reporter cli --config pa11y.config.json
+          pa11y http://localhost:8000/templates/guest_access.html --reporter cli --config pa11y.config.json
+          pa11y http://localhost:8000/templates/public_menu_preview.html --reporter cli --config pa11y.config.json
+
+      - name: Cleanup
+        if: always()
+        run: |
+          if [ -f server.pid ]; then
+            kill $(cat server.pid) 2>/dev/null || true
+          fi
+
+  e2e:
+    name: Playwright E2E
     runs-on: ubuntu-24.04
     env:
       FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
