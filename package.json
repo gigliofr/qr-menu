@@ -6,6 +6,6 @@
     "@playwright/test": "^1.65.1"
   },
   "scripts": {
-    "test:e2e": "npx playwright test --config=tests/e2e/playwright.config.js"
+    "test:e2e": "node ./node_modules/@playwright/test/cli.js test --config=tests/e2e/playwright.config.js"
   }
 }

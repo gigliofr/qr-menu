@@ -76,7 +76,7 @@ jobs:
         run: npm install
 
       - name: Install Playwright deps
-        run: npx playwright install --with-deps chromium
+        run: node ./node_modules/playwright/cli.js install --with-deps chromium
 
       - name: Build Go app
         run: go build -o qr-menu .
