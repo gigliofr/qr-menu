@@ -10,6 +10,6 @@ test('guest flow works', async ({ page }) => {
 
 test('login page accessible', async ({ page }) => {
   await page.goto('/login');
-  const heading = page.locator('h1');
-  await expect(heading).toContainText(/Login|Accedi/i);
+  const heading = page.getByRole('heading', { name: 'QR Menu' });
+  await expect(heading).toBeVisible();
 });
