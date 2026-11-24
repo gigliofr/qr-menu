@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "devDependencies": {
-    "@playwright/test": "1.37.0"
+    "@playwright/test": "^1.65.1"
   },
   "scripts": {
     "test:e2e": "npx playwright test --config=tests/e2e/playwright.config.js"
