@@ -65,6 +65,7 @@
         .login-header-icon {
             font-size: 3rem;
             margin-bottom: var(--spacing-md);
+            color: #ffffff;
         }
         
         .login-header h1 {
@@ -217,7 +218,7 @@
         }
 
         .login-footer a {
-            color: var(--color-primary);
+            color: #7FB3FF;
             text-decoration: underline;
             text-decoration-thickness: 2px;
             font-weight: var(--font-weight-semibold);
@@ -225,25 +226,14 @@
         }
 
         .login-footer a:hover {
-            color: var(--color-primary-hover);
+            color: #A3C9FF;
         }
 
-        /* Dark-mode overrides for the login card elements */
-        @media (prefers-color-scheme: dark) {
-            .login-header p,
-            .form-check label,
-            .divider,
-            .login-footer p {
-                color: #E5E7EB;
-            }
-
-            .login-footer a {
-                color: #7FB3FF;
-            }
-
-            .login-footer a:hover {
-                color: #5AA0FF;
-            }
+        .login-header p,
+        .form-check label,
+        .divider,
+        .login-footer p {
+            color: #CBD5E1;
         }
         
         /* Error Message */
@@ -291,7 +281,7 @@
     <div class="login-container">
         <!-- Header -->
         <div class="login-header">
-            <div class="login-header-icon">🍽️</div>
+            <div class="login-header-icon" aria-hidden="true">🍽️</div>
             <h1>QR Menu</h1>
             <p>Gestisci i tuoi menu digitali con eleganza</p>
         </div>
