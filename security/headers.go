@@ -33,21 +33,29 @@ type SecurityHeadersConfig struct {
 	PermissionsPolicy string
 }
 
+// DefaultContentSecurityPolicy returns the application-wide CSP.
+// It allows the existing inline styles/scripts and the Google Fonts resources used by templates.
+func DefaultContentSecurityPolicy() string {
+	return "default-src 'self'; " +
+		"script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.stripe.com; " +
+		"style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; " +
+		"style-src-elem 'self' 'unsafe-inline' https://fonts.googleapis.com; " +
+		"style-src-attr 'unsafe-inline'; " +
+		"img-src 'self' data: https:; " +
+		"font-src 'self' data: https://fonts.gstatic.com; " +
+		"connect-src 'self' https://api.stripe.com; " +
+		"frame-src https://js.stripe.com; " +
+		"object-src 'none'; " +
+		"base-uri 'self'; " +
+		"form-action 'self'; " +
+		"frame-ancestors 'none'; " +
+		"upgrade-insecure-requests"
+}
+
 // DefaultSecurityHeadersConfig returns secure default headers
 func DefaultSecurityHeadersConfig() SecurityHeadersConfig {
 	return SecurityHeadersConfig{
-		CSP: "default-src 'self'; " +
-			"script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.stripe.com; " +
-			"style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; " +
-			"img-src 'self' data: https:; " +
-			"font-src 'self' data: https://fonts.gstatic.com; " +
-			"connect-src 'self' https://api.stripe.com; " +
-			"frame-src https://js.stripe.com; " +
-			"object-src 'none'; " +
-			"base-uri 'self'; " +
-			"form-action 'self'; " +
-			"frame-ancestors 'none'; " +
-			"upgrade-insecure-requests",
+		CSP:                DefaultContentSecurityPolicy(),
 		HSTS:               "max-age=31536000; includeSubDomains; preload",
 		FrameOptions:       "DENY",
 		ContentTypeOptions: "nosniff",

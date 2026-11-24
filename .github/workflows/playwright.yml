@@ -13,24 +13,33 @@ jobs:
       FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
     steps:
       - uses: actions/checkout@v4
+
       - name: Setup Go
-        uses: actions/setup-go@v4
+        uses: actions/setup-go@v5
         with:
           go-version: '1.24'
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '24'
+
+      - name: Install Node dependencies
+        run: npm install # sostituisci con "npm ci" se hai package-lock.json nel repo
+
       - name: Install Playwright deps
         run: npx playwright install --with-deps
+
       - name: Build Go app
         run: go build -o qr-menu .
+
       - name: Start Go app (file-fallback mode)
         run: |
           ./qr-menu > app.log 2>&1 &
           echo $! > app.pid
         env:
           PORT: 8080
+
       - name: Wait for app to be ready
         run: |
           for i in {1..30}; do
@@ -44,10 +53,12 @@ jobs:
           echo "App failed to start in time"
           cat app.log
           exit 1
+
       - name: Run Playwright tests
-        run: npx playwright test --config=tests/e2e/playwright.config.js
+        run: npm run test:e2e
         env:
           BASE_URL: http://localhost:8080
+
       - name: Cleanup
         if: always()
         run: |

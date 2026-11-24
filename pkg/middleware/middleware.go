@@ -8,6 +8,7 @@ import (
 	"qr-menu/logger"
 	"qr-menu/pkg/errors"
 	httputil "qr-menu/pkg/http"
+	"qr-menu/security"
 )
 
 // Middleware is a function that wraps an HTTP handler
@@ -215,7 +216,7 @@ func SecurityHeaders() Middleware {
 			w.Header().Set("X-Frame-Options", "DENY")
 			w.Header().Set("X-XSS-Protection", "1; mode=block")
 			w.Header().Set("Strict-Transport-Security", "max-age=31536000; includeSubDomains")
-			w.Header().Set("Content-Security-Policy", "default-src 'self'")
+			w.Header().Set("Content-Security-Policy", security.DefaultContentSecurityPolicy())
 
 			next.ServeHTTP(w, r)
 		})
