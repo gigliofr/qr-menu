@@ -28,7 +28,7 @@ jobs:
         run: npm install # sostituisci con "npm ci" se hai package-lock.json nel repo
 
       - name: Install Playwright deps
-        run: npx playwright install --with-deps
+        run: npx playwright install --with-deps chromium
 
       - name: Build Go app
         run: go build -o qr-menu .
