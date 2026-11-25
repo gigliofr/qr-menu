@@ -1,17 +1,25 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"net"
 	"net/http"
 	"os"
+	"os/signal"
 	"strconv"
 	"strings"
+	"syscall"
+	"time"
 
 	"qr-menu/db"
 	"qr-menu/logger"
 	"qr-menu/pkg/app"
+	pkgmw "qr-menu/pkg/middleware"
+
+	"github.com/gigliofr/gokit/httpx"
+	"github.com/gigliofr/gokit/notifyx"
 )
 
 func main() {
@@ -32,6 +40,12 @@ func main() {
 		log.Printf("⚠️ Errore nell'inizializzazione del logger: %v (continuo con log.Println)", err)
 	}
 	defer logger.Close()
+
+	// Avvisi operativi su Telegram (OPS_TELEGRAM_BOT_TOKEN / OPS_TELEGRAM_CHAT_ID).
+	ops := notifyx.OpsFromEnv("qr-menu")
+	pkgmw.PanicHook = ops.PanicHook()
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer stop()
 	
 	logger.Info("🚀 QR Menu System starting...", map[string]interface{}{
 		"version": "1.0.0",
@@ -51,10 +65,15 @@ func main() {
 			"  - MONGODB_CERT_CONTENT: contenuto del certificato PEM (solo X.509)\n"+
 			"  - MONGODB_CERT_PATH: path al file certificato (solo X.509 locale)\n"+
 			"  - MONGODB_DB_NAME: nome del database (default: qr-menu)", err)
+		ops.Error("mongo-init", "avvio fallito: MongoDB non raggiungibile", err)
+		ops.Flush()
 		log.Fatal(errMsg)
 		logger.Fatal("Errore connessione MongoDB", map[string]interface{}{"error": err.Error()})
 	}
 	log.Println("✓ MongoDB connesso con successo")
+	if db.MongoInstance != nil && db.MongoInstance.DB != nil {
+		ops.Watch(ctx, "MongoDB", time.Minute, db.MongoInstance.Ping)
+	}
 	logger.Info("✅ MongoDB connesso con successo", nil)
 	
 	// Carica i template HTML (con embed per Railway)
@@ -115,10 +134,16 @@ func main() {
 		"api_health": "http://localhost:" + port + "/api/v1/health",
 	})
 
-	// Avvia server
-	if err := http.ListenAndServe(":"+port, router); err != nil {
-		logger.Fatal("Server failed", map[string]interface{}{"error": err.Error()})
+	// Avvia server con timeout (gokit/httpx) e arresto ordinato su SIGTERM:
+	// prima http.ListenAndServe non aveva timeout e i defer non venivano mai eseguiti.
+	ops.Started("1.0.0")
+	if err := httpx.Run(ctx, httpx.NewServer(":"+port, router), 10*time.Second); err != nil {
+		ops.Error("server", "server HTTP arrestato per errore", err)
+		ops.Flush()
+		logger.Error("Server failed", map[string]interface{}{"error": err.Error()})
+		return
 	}
+	ops.Stopping("arresto richiesto (SIGTERM)")
 }
 
 // httpsRedirectMiddleware forza HTTPS in produzione/staging

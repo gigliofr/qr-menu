@@ -5,6 +5,8 @@ import (
 	"qr-menu/logger"
 	"strings"
 	"time"
+
+	"github.com/gigliofr/gokit/httpx"
 )
 
 // ResponseWriter wrapper per catturare status code e response size
@@ -181,19 +183,8 @@ func AuthMiddleware(next http.Handler) http.Handler {
 
 // Funzioni helper
 
-func getClientIP(r *http.Request) string {
-	// Cerca in vari header per l'IP reale
-	headers := []string{"X-Forwarded-For", "X-Real-Ip", "X-Client-Ip"}
-
-	for _, header := range headers {
-		ip := r.Header.Get(header)
-		if ip != "" {
-			return ip
-		}
-	}
-
-	return r.RemoteAddr
-}
+// getClientIP: vedi httpx.ClientIP (CF-Connecting-IP, poi l'ultimo X-Forwarded-For).
+func getClientIP(r *http.Request) string { return httpx.ClientIP(r, true) }
 
 func generateRequestID() string {
 	// Genera un ID univoco per la richiesta

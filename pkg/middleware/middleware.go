@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"runtime/debug"
 	"fmt"
 	"net/http"
 	"time"
@@ -9,6 +10,8 @@ import (
 	"qr-menu/pkg/errors"
 	httputil "qr-menu/pkg/http"
 	"qr-menu/security"
+
+	"github.com/gigliofr/gokit/httpx"
 )
 
 // Middleware is a function that wraps an HTTP handler
@@ -62,6 +65,10 @@ func Logging() Middleware {
 	}
 }
 
+// PanicHook, se impostato, riceve i panic recuperati
+// (es. notifyx.Ops.PanicHook() per l'avviso su Telegram).
+var PanicHook func(r *http.Request, v any, stack []byte)
+
 // ErrorRecovery middleware recovers from panics
 func ErrorRecovery() Middleware {
 	return func(next http.Handler) http.Handler {
@@ -74,6 +81,9 @@ func ErrorRecovery() Middleware {
 						"path":       r.RequestURI,
 						"user_agent": r.UserAgent(),
 					})
+					if PanicHook != nil {
+						PanicHook(r, err, debug.Stack())
+					}
 
 					appErr := errors.InternalError("Internal server error").
 						WithDetails("An unexpected error occurred")
@@ -275,20 +285,8 @@ func (rl *rateLimiter) Allow() bool {
 
 // Helper functions
 
-func getClientIP(r *http.Request) string {
-	// Check X-Forwarded-For first (proxy)
-	if xff := r.Header.Get("X-Forwarded-For"); xff != "" {
-		return xff
-	}
-
-	// Check X-Real-IP (nginx)
-	if xri := r.Header.Get("X-Real-IP"); xri != "" {
-		return xri
-	}
-
-	// Fall back to RemoteAddr
-	return r.RemoteAddr
-}
+// getClientIP: vedi httpx.ClientIP (CF-Connecting-IP, poi l'ultimo X-Forwarded-For).
+func getClientIP(r *http.Request) string { return httpx.ClientIP(r, true) }
 
 func isOriginAllowed(origin string, allowedOrigins []string) bool {
 	for _, allowed := range allowedOrigins {

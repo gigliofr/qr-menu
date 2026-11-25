@@ -21,6 +21,8 @@ import (
 	"github.com/google/uuid"
 	"github.com/gorilla/sessions"
 	"golang.org/x/crypto/bcrypt"
+
+	"github.com/gigliofr/gokit/httpx"
 )
 
 var (
@@ -847,15 +849,5 @@ func loadRestaurantsFromStorage() {
 // }
 
 // getClientIP estrae l'IP reale del client considerando proxy e load balancer
-func getClientIP(r *http.Request) string {
-	headers := []string{"X-Forwarded-For", "X-Real-Ip", "X-Client-Ip"}
-
-	for _, header := range headers {
-		ip := r.Header.Get(header)
-		if ip != "" {
-			return ip
-		}
-	}
-
-	return r.RemoteAddr
-}
+// Il primo valore di X-Forwarded-For lo sceglie il client: vedi httpx.ClientIP.
+func getClientIP(r *http.Request) string { return httpx.ClientIP(r, true) }

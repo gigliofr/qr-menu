@@ -17,6 +17,8 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
+
+	"github.com/gigliofr/gokit/mongox"
 )
 
 // MongoClient wrapper per MongoDB Atlas con autenticazione X.509
@@ -65,22 +67,13 @@ func Connect() error {
 
 	// Opzioni di connessione
 	opts := options.Client().
-		ApplyURI(mongoURI).
 		SetTLSConfig(tlsConfig).
 		SetServerSelectionTimeout(5 * time.Second)
 
-	// Crea client
-	client, err := mongo.Connect(ctx, opts)
+	// Connessione + ping sul primario (gokit/mongox chiude il client se il ping fallisce)
+	client, err := mongox.Connect(ctx, mongoURI, mongox.WithAppName("qr-menu"), mongox.WithClientOptions(opts))
 	if err != nil {
-		return fmt.Errorf("errore connessione MongoDB: %v", err)
-	}
-
-	// Verifica connessione
-	ctx2, cancel2 := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel2()
-
-	if err := client.Ping(ctx2, nil); err != nil {
-		return fmt.Errorf("errore ping MongoDB: %v", err)
+		return err
 	}
 
 	// Salva istanza
@@ -138,10 +131,9 @@ func (m *MongoClient) Disconnect() error {
 		return nil
 	}
 
+	// prima si annullava m.ctx e poi lo si passava a Disconnect, che falliva sempre
 	m.cancel()
-	if err := m.client.Disconnect(m.ctx); err != nil {
-		return fmt.Errorf("errore disconnessione MongoDB: %v", err)
-	}
+	mongox.Disconnect(m.client, 10*time.Second)
 
 	log.Println("✓ Disconnesso da MongoDB")
 	return nil
@@ -841,7 +833,7 @@ func (m *MongoClient) createIndexes() error {
 
 // Ping verifica la connessione
 func (m *MongoClient) Ping(ctx context.Context) error {
-	return m.client.Ping(ctx, nil)
+	return mongox.Ping(ctx, m.client)
 }
 
 // GetHealthStatus restituisce lo stato di salute di Mongo (o file-fallback)
