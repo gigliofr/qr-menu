@@ -64,23 +64,21 @@ func NewInMemoryCache() *InMemoryCache {
 
 // Get retrieves a value from cache
 func (c *InMemoryCache) Get(key string) (interface{}, bool) {
-	c.mu.RLock()
+	// Lock esclusivo: Get aggiorna statistiche e voce (HitCount, AccessedAt);
+	// farlo sotto RLock era una data race (test di concorrenza instabile).
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
 	entry, exists := c.items[key]
 	if !exists {
-		c.mu.RUnlock()
-		c.mu.Lock()
 		c.stats.Misses++
-		c.mu.Unlock()
 		return nil, false
 	}
 
 	// Check if expired
 	if time.Now().After(entry.ExpiresAt) {
-		c.mu.RUnlock()
-		c.mu.Lock()
 		delete(c.items, key)
 		c.stats.Misses++
-		c.mu.Unlock()
 		return nil, false
 	}
 
@@ -88,7 +86,6 @@ func (c *InMemoryCache) Get(key string) (interface{}, bool) {
 	entry.AccessedAt = time.Now()
 	entry.HitCount++
 	c.stats.Hits++
-	c.mu.RUnlock()
 
 	return entry.Value, true
 }
