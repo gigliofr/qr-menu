@@ -443,9 +443,11 @@ func TestGetClientIP(t *testing.T) {
 		expectedIP   string
 	}{
 		{
+			// Il primo valore lo scrive il client (falsificabile): conta l'ultimo,
+			// aggiunto dal proxy davanti all'app.
 			name:         "X-Forwarded-For",
 			forwardedFor: "192.168.1.1, 10.0.0.1",
-			expectedIP:   "192.168.1.1",
+			expectedIP:   "10.0.0.1",
 		},
 		{
 			name:       "X-Real-IP",

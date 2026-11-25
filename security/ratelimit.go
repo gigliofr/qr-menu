@@ -2,13 +2,13 @@ package security
 
 import (
 	"net/http"
-	"net"
 	"strconv"
-	"strings"
 	"sync"
 	"time"
 
 	"github.com/gorilla/mux"
+
+	"github.com/gigliofr/gokit/httpx"
 )
 
 // RateLimiter implements token bucket rate limiting
@@ -200,28 +200,9 @@ func formatInt(i int) string {
 	return strconv.Itoa(i)
 }
 
-func extractClientIP(r *http.Request) string {
-	if xff := strings.TrimSpace(r.Header.Get("X-Forwarded-For")); xff != "" {
-		parts := strings.Split(xff, ",")
-		for _, part := range parts {
-			candidate := strings.TrimSpace(part)
-			if candidate != "" {
-				return candidate
-			}
-		}
-	}
-
-	if xrip := strings.TrimSpace(r.Header.Get("X-Real-Ip")); xrip != "" {
-		return xrip
-	}
-
-	host, _, err := net.SplitHostPort(strings.TrimSpace(r.RemoteAddr))
-	if err == nil && host != "" {
-		return host
-	}
-
-	return strings.TrimSpace(r.RemoteAddr)
-}
+// extractClientIP: il primo valore di X-Forwarded-For lo sceglie il client e
+// permetteva di aggirare il rate limit; vedi httpx.ClientIP.
+func extractClientIP(r *http.Request) string { return httpx.ClientIP(r, true) }
 
 // Stop stops the rate limiter cleanup goroutine
 func (rl *RateLimiter) Stop() {
