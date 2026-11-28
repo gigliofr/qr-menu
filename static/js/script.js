@@ -21,6 +21,8 @@ class MenuAPI {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
+                    // Token CSRF inserito dal server nella <meta name="csrf-token">
+                    'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]')?.content || '',
                 },
                 body: JSON.stringify(data)
             });

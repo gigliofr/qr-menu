@@ -23,7 +23,6 @@ import (
 )
 
 var (
-	csrfTokens        = make(map[string]time.Time)    // CSRF protection
 	maxFileSize       = int64(5 << 20)                // 5MB max file size
 	allowedImageTypes = map[string]bool{
 		"image/jpeg": true,
@@ -40,8 +39,6 @@ func init() {
 	createDirectories()
 	// Templates sono ora caricati da main.InitTemplates()
 	// Nota: loadMenusFromStorage() rimosso - i menu sono ora caricati direttamente da MongoDB
-	// Pulisci i token CSRF scaduti periodicamente
-	go cleanupCSRFTokens()
 }
 
 // Menu handlers moved to handlers/menu.go
@@ -100,11 +97,11 @@ func AdminHandler(w http.ResponseWriter, r *http.Request) {
 		Stats:        stats,
 		ActiveMenuID: activeMenuID,
 		BaseURL:      getBaseURL(r),
-		CSRFToken:    generateCSRFToken(),
+		CSRFToken:    csrfToken(r),
 	}
 
 	log.Printf("✅ AdminHandler: Rendering template 'admin' con %d menu, ActiveMenuID=%s", len(data.Menus), data.ActiveMenuID)
-	renderTemplate(w, "admin", data)
+	renderTemplate(w, r, "admin", data)
 }
 
 // SelectRestaurantHandler mostra la pagina di selezione ristorante (GET)
@@ -148,7 +145,7 @@ func SelectRestaurantHandler(w http.ResponseWriter, r *http.Request) {
 		RestaurantCount: len(restaurants),
 	}
 	
-	renderTemplate(w, "select_restaurant", data)
+	renderTemplate(w, r, "select_restaurant", data)
 }
 
 // SelectRestaurantPostHandler gestisce la selezione del ristorante (POST)
@@ -249,7 +246,7 @@ func AddRestaurantHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	}{}
 	
-	renderTemplate(w, "add_restaurant", data)
+	renderTemplate(w, r, "add_restaurant", data)
 }
 
 // AddRestaurantPostHandler gestisce la creazione di un nuovo ristorante (POST)
@@ -314,7 +311,7 @@ func AddRestaurantPostHandler(w http.ResponseWriter, r *http.Request) {
 		data.FormData.Address = address
 		data.FormData.Phone = phone
 		
-		renderTemplate(w, "add_restaurant", data)
+		renderTemplate(w, r, "add_restaurant", data)
 		return
 	}
 	
@@ -343,7 +340,7 @@ func AddRestaurantPostHandler(w http.ResponseWriter, r *http.Request) {
 		data.FormData.Address = address
 		data.FormData.Phone = phone
 
-		renderTemplate(w, "add_restaurant", data)
+		renderTemplate(w, r, "add_restaurant", data)
 		return
 	}
 	
@@ -379,7 +376,7 @@ func AddRestaurantPostHandler(w http.ResponseWriter, r *http.Request) {
 		data.FormData.Address = address
 		data.FormData.Phone = phone
 		
-		renderTemplate(w, "add_restaurant", data)
+		renderTemplate(w, r, "add_restaurant", data)
 		return
 	}
 	
@@ -415,15 +412,12 @@ func updateSessionInMemory(session *models.Session) {
 // CreateMenuHandler mostra il form per creare un nuovo menu
 func CreateMenuHandler(w http.ResponseWriter, r *http.Request) {
 	setSecurityHeaders(w)
-	renderTemplate(w, "create_menu", struct{ CSRFToken string }{CSRFToken: generateCSRFToken()})
+	renderTemplate(w, r, "create_menu", struct{ CSRFToken string }{CSRFToken: csrfToken(r)})
 }
 
 // CreateMenuPostHandler gestisce la creazione di un nuovo menu
 func CreateMenuPostHandler(w http.ResponseWriter, r *http.Request) {
 	setSecurityHeaders(w)
-	if !requireValidCSRF(w, r) {
-		return
-	}
 	// Verifica autenticazione
 	restaurant, err := getCurrentRestaurant(r)
 	if handleAuthError(w, r, err) {
@@ -540,7 +534,7 @@ func EditMenuHandler(w http.ResponseWriter, r *http.Request) {
 			Message: "Il menu richiesto non esiste o non hai i permessi per modificarlo.",
 		}
 		w.WriteHeader(http.StatusNotFound)
-		renderTemplate(w, "404", data)
+		renderTemplate(w, r, "404", data)
 		return
 	}
 
@@ -560,17 +554,14 @@ func EditMenuHandler(w http.ResponseWriter, r *http.Request) {
 	}{
 		Menu:       menu,
 		Restaurant: restaurant,
-		CSRFToken:  generateCSRFToken(),
+		CSRFToken:  csrfToken(r),
 	}
 
-	renderTemplate(w, "edit_menu", data)
+	renderTemplate(w, r, "edit_menu", data)
 }
 
 // UpdateMenuHandler aggiorna un menu esistente
 func UpdateMenuHandler(w http.ResponseWriter, r *http.Request) {
-	if !requireValidCSRF(w, r) {
-		return
-	}
 	// Verifica autenticazione
 	restaurant, err := getCurrentRestaurant(r)
 	if handleAuthError(w, r, err) {
@@ -611,9 +602,6 @@ func UpdateMenuHandler(w http.ResponseWriter, r *http.Request) {
 
 // CompleteMenuHandler marca un menu come completato e genera il QR code
 func CompleteMenuHandler(w http.ResponseWriter, r *http.Request) {
-	if !requireValidCSRF(w, r) {
-		return
-	}
 	// Verifica autenticazione
 	restaurant, err := getCurrentRestaurant(r)
 	if handleAuthError(w, r, err) {
@@ -728,7 +716,7 @@ func AnalyticsDashboardHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Render del template
-	renderTemplate(w, "analytics_dashboard", data)
+	renderTemplate(w, r, "analytics_dashboard", data)
 }
 
 // AnalyticsAPIHandler gestisce le richieste API per gli analytics

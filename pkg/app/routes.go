@@ -1,7 +1,12 @@
 package app
 
 import (
+	"crypto/subtle"
 	"net/http"
+	"os"
+	"strings"
+
+	"github.com/gigliofr/gokit/authx/session"
 	// "qr-menu/api" // Temporaneamente disabilitato - API legacy non compatibili
 	"qr-menu/handlers"
 	"qr-menu/middleware"
@@ -31,6 +36,16 @@ func SetupRouter(services *Services) *mux.Router {
 	// Middleware stack (ordine importante!)
 	r.Use(services.CORSMiddleware.Middleware)
 	r.Use(services.SecurityHeaders.Middleware)
+	// CSRF su tutte le richieste che modificano dati: controllo dell'origine e
+	// token "double submit" (cookie csrf_token + campo o intestazione X-CSRF-Token).
+	// renderTemplate inserisce il token in ogni form POST.
+	r.Use(mux.MiddlewareFunc(session.CSRF(session.CSRFOptions{
+		Secure: isProductionEnv(),
+		Exempt: func(req *http.Request) bool {
+			// Beacon anonimo delle condivisioni dai menu pubblici: nessuna sessione da proteggere.
+			return req.URL.Path == "/api/track/share"
+		},
+	})))
 	r.Use(services.RateLimiter.RateLimitMiddleware)
 	r.Use(security.NewAuditMiddleware(services.AuditLogger).Middleware)
 	// Metrics middleware (Prometheus)
@@ -92,10 +107,10 @@ func setupPublicRoutes(r *mux.Router) {
 	r.HandleFunc("/menu/{id}/qr-download", handlers.DownloadQRHandler).Methods("GET")
 
 	// Prometheus metrics endpoint
-	r.Handle("/metrics", prometheusHandler())
+	r.Handle("/metrics", requireMetricsToken(prometheusHandler()))
 
 	// Cache endpoint (public stats endpoint)
-	r.HandleFunc("/cache/stats", handlers.CacheStatsHandler).Methods("GET")
+	r.Handle("/cache/stats", requireMetricsToken(http.HandlerFunc(handlers.CacheStatsHandler))).Methods("GET")
 
 	// Analytics tracking
 	// Health check (used by platforms like Railway)
@@ -157,4 +172,23 @@ func setupProtectedRoutes(r *mux.Router) {
 
 func setupAdminRoutes(r *mux.Router) {
 	// Admin routes reserved for future features
+}
+
+func isProductionEnv() bool {
+	env := strings.ToLower(os.Getenv("ENVIRONMENT"))
+	return env == "production" || env == "staging"
+}
+
+// requireMetricsToken espone metriche e statistiche interne solo a chi presenta
+// "Authorization: Bearer $METRICS_TOKEN"; senza METRICS_TOKEN restano nascoste (404).
+func requireMetricsToken(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		token := os.Getenv("METRICS_TOKEN")
+		got := strings.TrimSpace(strings.TrimPrefix(r.Header.Get("Authorization"), "Bearer "))
+		if token == "" || subtle.ConstantTimeCompare([]byte(got), []byte(token)) != 1 {
+			http.NotFound(w, r)
+			return
+		}
+		next.ServeHTTP(w, r)
+	})
 }
