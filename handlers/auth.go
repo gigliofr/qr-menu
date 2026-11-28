@@ -128,8 +128,17 @@ func init() {
 func getOrCreateSessionKey() string {
 	// 🔐 PRIORITÀ 1: Env var (PRODUCTION/STAGING)
 	if key := os.Getenv("SESSION_SECRET"); key != "" {
+		if len(key) < 32 {
+			log.Fatal("SESSION_SECRET troppo corta: servono almeno 32 caratteri casuali")
+		}
 		log.Println("✅ Using SESSION_SECRET from environment variable")
 		return key
+	}
+
+	// In produzione la chiave deve arrivare dall'ambiente: una chiave generata al volo
+	// cambierebbe a ogni riavvio, e una letta da file potrebbe finire nel repository.
+	if env := os.Getenv("ENVIRONMENT"); env == "production" || env == "staging" {
+		log.Fatal("SESSION_SECRET non impostata: obbligatoria con ENVIRONMENT=" + env)
 	}
 
 	// 📁 PRIORITÀ 2: File (DEVELOPMENT ONLY)

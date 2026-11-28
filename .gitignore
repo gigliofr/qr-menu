@@ -52,3 +52,8 @@ temp/
 backups/
 *.backup
 *.bak
+# Dati locali di sviluppo: sessioni, chiavi e vecchio storage JSON (contengono dati personali)
+storage/
+handlers/storage/
+session_key.txt
+temp_login.html
