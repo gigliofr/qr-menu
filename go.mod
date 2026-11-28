@@ -3,7 +3,7 @@ module qr-menu
 go 1.24.0
 
 require (
-	github.com/gigliofr/gokit v0.2.0
+	github.com/gigliofr/gokit v0.4.0
 	github.com/golang-jwt/jwt/v5 v5.3.1
 	github.com/google/uuid v1.6.0
 	github.com/gorilla/mux v1.8.1

@@ -105,9 +105,6 @@ func CreateMenuAPIHandler(w http.ResponseWriter, r *http.Request) {
 
 // SetActiveMenuHandler imposta un menu come attivo
 func SetActiveMenuHandler(w http.ResponseWriter, r *http.Request) {
-	if !requireValidCSRF(w, r) {
-		return
-	}
 	// Verifica autenticazione
 	restaurant, err := getCurrentRestaurant(r)
 	if handleAuthError(w, r, err) {
@@ -156,9 +153,6 @@ func SetActiveMenuHandler(w http.ResponseWriter, r *http.Request) {
 
 // DeleteMenuHandler elimina un menu
 func DeleteMenuHandler(w http.ResponseWriter, r *http.Request) {
-	if !requireValidCSRF(w, r) {
-		return
-	}
 	// Verifica autenticazione
 	restaurant, err := getCurrentRestaurant(r)
 	if handleAuthError(w, r, err) {
@@ -253,7 +247,7 @@ func PublicMenuHandler(w http.ResponseWriter, r *http.Request) {
 			Message: "Il menu che stai cercando non esiste più o è stato rimosso dal ristorante.",
 		}
 		w.WriteHeader(http.StatusNotFound)
-		renderTemplate(w, "404", data)
+		renderTemplate(w, r, "404", data)
 		return
 	}
 
@@ -291,7 +285,7 @@ func PublicMenuHandler(w http.ResponseWriter, r *http.Request) {
 		Restaurant: restaurant,
 	}
 
-	renderTemplate(w, "public_menu", data)
+	renderTemplate(w, r, "public_menu", data)
 }
 
 // GenerateQRHandler genera il QR code per un menu
@@ -463,9 +457,6 @@ func DuplicateItemHandler(w http.ResponseWriter, r *http.Request) {
 
 // DuplicateMenuHandler duplica un menu completo
 func DuplicateMenuHandler(w http.ResponseWriter, r *http.Request) {
-	if !requireValidCSRF(w, r) {
-		return
-	}
 	// Verifica autenticazione
 	restaurant, err := getCurrentRestaurant(r)
 	if err != nil {

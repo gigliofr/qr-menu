@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"github.com/gigliofr/gokit/authx/lockout"
 	"context"
 	"crypto/rand"
 	"encoding/hex"
@@ -333,11 +334,15 @@ func handleAuthError(w http.ResponseWriter, r *http.Request, err error) bool {
 }
 
 
+// loginLocks blocca un account per 15 minuti dopo 5 password sbagliate in 15
+// minuti; i blocchi successivi raddoppiano (gokit/authx/lockout).
+var loginLocks = lockout.New(5, 15*time.Minute, 15*time.Minute)
+
 // LoginHandler gestisce il login con supporto multi-ristorante
 func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	setSecurityHeaders(w)
 	if r.Method == "GET" {
-		renderTemplate(w, "login", nil)
+		renderTemplate(w, r, "login", nil)
 		return
 	}
 
@@ -352,6 +357,21 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 
 	ip := getClientIP(r)
 	userAgent := r.UserAgent()
+
+	// Blocco per account dopo troppi tentativi (si somma al limite per IP).
+	lockKey := strings.ToLower(username)
+	if ok, wait := loginLocks.Allowed(lockKey); !ok {
+		minutes := int(wait.Minutes()) + 1
+		w.WriteHeader(http.StatusTooManyRequests)
+		renderTemplate(w, r, "login", struct {
+			Error    string
+			Username string
+		}{
+			Error:    fmt.Sprintf("Troppi tentativi non riusciti. Riprova tra %d minuti.", minutes),
+			Username: username,
+		})
+		return
+	}
 
 	// Log tentativo di login
 	logger.AuditLog("LOGIN_ATTEMPT", "authentication",
@@ -372,6 +392,7 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 
 	// ⭐ STEP 2: Verifica credenziali su User
 	if user == nil || !user.IsActive || !checkPassword(user.PasswordHash, password) {
+		loginLocks.Fail(lockKey)
 		// Log login fallito
 		logger.SecurityEvent("LOGIN_FAILED", "Credenziali non valide",
 			"", ip, userAgent,
@@ -387,9 +408,11 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 			Error:    "Username o password non validi",
 			Username: username,
 		}
-		renderTemplate(w, "login", data)
+		renderTemplate(w, r, "login", data)
 		return
 	}
+
+	loginLocks.Reset(lockKey)
 
 	// ⭐ STEP 3: Ottieni tutti i ristoranti dell'utente
 	restaurants, err := db.MongoInstance.GetRestaurantsByOwnerID(ctx, user.ID)
@@ -495,7 +518,7 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 	setSecurityHeaders(w)
 	if r.Method == "GET" {
-		renderTemplate(w, "register", nil)
+		renderTemplate(w, r, "register", nil)
 		return
 	}
 
@@ -578,7 +601,7 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 			Address:        address,
 			Phone:          phone,
 		}
-		renderTemplate(w, "register", data)
+		renderTemplate(w, r, "register", data)
 		return
 	}
 
